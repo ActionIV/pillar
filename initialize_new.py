@@ -6,8 +6,8 @@ import pandas
 import random
 import operator
 
-path1 = r"K:\FFL2 Data.xlsx"
-path2 = r"K:\Battle Log.xlsx"
+path1 = r"FFL2 Data.xlsx"
+path2 = r"Battle Log.xlsx"
 
 workbook = pandas.ExcelFile(path1)
 log = pandas.ExcelFile(path2)
