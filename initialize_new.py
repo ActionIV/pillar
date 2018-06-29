@@ -5,6 +5,7 @@
 import pandas
 import random
 import operator
+from classes import *
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -22,109 +23,9 @@ players = workbook.parse("Players", index_col = 'Index', dtype = str)
 
 # Loop through each sheet of the battle log, appending each to the battles list
 battles = []
-count = 0
 
 for count in range(len(log.sheet_names)):
 	battles.append(log.parse(count, index_col = 'Index', dtype = str))
-
-# Battles list print for testing
-#for count in range(len(log.sheet_names)):
-#	print(battles[count])
-
-# Testing monsters table to print a row based on monster name
-#print(monsters.loc["MadCedar"])
-
-# Testing commands table to print based on Name and Symbol
-#print(commands.loc["FlareBook"])
-
-# Testing Probability table to print a row based on MS
-#print(ms_prob.loc[2])
-
-# Testing Battle Log load
-#print(players)
-
-class Actor(object):
-	names = []
-	def __init__(self, name):
-		self.name = name
-		Actor.names.append(name)
-		
-	def getName(self):
-		return self.name
-
-	def __str__(self):
-		return "%s is a %s and its command is %s" % (self.name, self.role, self.command)
-
-	def add_action(self, command):
-		self.actions_taken.append(command)
-
-	role = ""
-	lives = 1
-	position = 0
-	initiative = 0
-	current_HP = 0
-	current_Str = 0
-	current_Agl = 0
-	current_Mana = 0
-	current_Def = 0
-	command = ""
-	target = ""
-	status = ""
-	actions_taken = []
-		
-class Enemy(Actor):
-	def __init__(self, name):
-		Actor.__init__(self, name)
-		self.skills = []
-	
-	def getRole(self):
-	 	return self.role
-
-	role = "Enemy"
-	MS = 0
-	DS = 0
-	Type = 0
-	HP = 0
-	Str = 0
-	Agl = 0
-	Mana = 0
-	Def = 0
-		
-class Player(Actor):
-	role = "Player"
-	Class = ""
-	DS = 0
-	Type = 0
-	HP = 0
-	Str = 0
-	Agl = 0
-	Mana = 0
-	Def = 0
-
-	def __init__(self, name):
-		Actor.__init__(self, name)
-		self.skills = []
-	
-	def getRole(self):
-	 	return self.role
-
-class NPC:
-	role = "NPC"
-	MS = 0
-	DS = 0
-	Type = 0
-	HP = 0
-	Str = 0
-	Agl = 0
-	Mana = 0
-	Def = 0
-
-	def __init__(self, name):
-		Actor.__init__(self, name)
-		self.skills = []
-	
-	def getRole(self):
-	 	return self.role
 
 # This is where a function for creating the combatants list from a battle should be. Call would pass an int to say from which Log sheet to pull
 # Might even pass the sheet itself from battles[]. Would return combatants list
@@ -162,7 +63,8 @@ for count in range(len(battles[i].index)):
 		combatants[count].position = battles[i].iloc[count,3]
 		place += 1
 
-# Loop through the combatants list, capture general Actor data, find out the role, and store its attributes from the corresponding DataFrame
+# DATA ASSIGNMENT LOOP
+# Ridiculously big loop to go through combatants list, assign static values, retrieve dynamnic combat info, determine initiative, and assign commands
 for count in range(len(combatants)):
 	current_com = combatants[count]
 
@@ -176,6 +78,7 @@ for count in range(len(combatants)):
 	current_com.target = battles[i].loc[current_com.name, "TARGET"]
 	current_com.status = battles[i].loc[current_com.name, "STATUS"]
 	
+	# Lookup the static Enemy data
 	if current_com.role == "Enemy":
 		current_com.DS = monsters.loc[current_com.name,"DS"]
 		current_com.MS = monsters.loc[current_com.name,"MS"]
@@ -196,8 +99,8 @@ for count in range(len(combatants)):
 		current_com.skills.append(monsters.loc[current_com.name,"S6"])
 		current_com.skills.append(monsters.loc[current_com.name,"S7"])
 
+	# Lookup the static player data
 	elif current_com.role == "Player":
-		#current_com.DS = monsters.loc[current_com.name,"DS"]
 		current_com.Class = players.loc[current_com.name,"CLASS"]
 		current_com.Type = players.loc[current_com.name,"TYPE"]
 		current_com.HP = players.loc[current_com.name,"HP"]
@@ -216,21 +119,16 @@ for count in range(len(combatants)):
 		current_com.skills.append(players.loc[current_com.name,"S6"])
 		current_com.skills.append(players.loc[current_com.name,"S7"])
 
-	#Should be NPC code, but no separate sheet for that yet
+	# Should be NPC code, but no separate sheet for that yet
 	else:
 		break
 
-# INITIATIVE
-# Should use current_AGL, but just use Agl for now. Also want to make it more variable at some point
-for count in range(len(combatants)):
+	# INITIATIVE
+	# Should use current_AGL, but just use Agl for now. Also want to make it more variable at some point
 	combatants[count].initiative = float(combatants[count].Agl) * (1+(random.randint(1,25)/100))
 
-# Sort actors based on initiative score
-combatants = sorted(combatants, key = operator.attrgetter("initiative"))
-
-# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
-# Could also be used for random ability selection for players if an appropriate MS were assigned
-for count in range(len(combatants)):
+	# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
+	# Could also be used for random ability selection for players if an appropriate MS were assigned
 	if combatants[count].command == 'nan':
 		row = combatants[count].MS
 		for choice in range(7):
@@ -240,6 +138,15 @@ for count in range(len(combatants)):
 				break
 			else:
 				continue
+	# Based on the Command, assign the Target Type to the Target line
+	if combatants[count].role != "Player":
+		combatants[count].target = commands.loc[combatants[count].command, "Target Type"]
+
+	# Convert the Target Type to an actual target where applicable (i.e. not the "All" abilities)
+	# QUESTION TO SELF:  For abilites that hit Groups, how to handle since monsters are individually broken out now?
+
+# Sort actors based on initiative score
+combatants = sorted(combatants, key = operator.attrgetter("initiative"))
 
 for count in range(len(combatants)):
 	print(combatants[count])
