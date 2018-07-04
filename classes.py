@@ -2,6 +2,7 @@ class Actor(object):
 	names = []
 	def __init__(self, name):
 		self.name = name
+		self.actions_taken = []
 		Actor.names.append(name)
 		
 	def getName(self):
@@ -25,7 +26,6 @@ class Actor(object):
 	command = ""
 	target = ""
 	status = ""
-	actions_taken = []
 		
 class Enemy(Actor):
 	def __init__(self, name):

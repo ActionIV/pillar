@@ -1,7 +1,3 @@
-#
-#
-#
-
 import pandas
 import random
 import operator
@@ -40,27 +36,28 @@ i=i-1
 
 # Need to track the right spot in combatants, which conflicts with 'count' due to enemy "lives" inflating the list vs the Log
 place = 0
+party_order = []
 
 # I would prefer to be doing label lookups with Pandas loc instead of iloc, but I can't get the indexing right (at load time)
 for count in range(len(battles[i].index)):
-	#combatants.append(Actor(battles[i].iloc[count,0]))
-
 	# Enemy groups require a for loop to create individual Actors for tracking initiative, deaths, etc.
 	if battles[i].iloc[count,1] == "Enemy":
-		for position in range(int(battles[i].iloc[count,2])):
+		for pos in range(int(battles[i].iloc[count,2])):
 			combatants.append(Enemy(battles[i].iloc[count,0]))
-			combatants[place].position = position + 1
+			combatants[place].position = pos + 1
 			combatants[place].lives = 1
 			place += 1
 
 	elif battles[i].iloc[count,1] == "Player":
 		combatants.append(Player(battles[i].iloc[count,0]))
 		combatants[count].position = battles[i].iloc[count,3]
+		party_order.append(tuple((combatants[count].name, combatants[count].position)))
 		place += 1
 
 	else:
 		combatants.append(NPC(battles[i].iloc[count,0]))
 		combatants[count].position = battles[i].iloc[count,3]
+		party_order.append(tuple((combatants[count].name, combatants[count].position)))
 		place += 1
 
 # DATA ASSIGNMENT LOOP
@@ -150,3 +147,6 @@ combatants = sorted(combatants, key = operator.attrgetter("initiative"))
 
 for count in range(len(combatants)):
 	print(combatants[count])
+
+party_order.sort(key = operator.itemgetter(1))
+print(party_order)
