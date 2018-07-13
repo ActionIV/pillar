@@ -60,6 +60,8 @@ for count in range(len(battles[i].index)):
 		party_order.append(tuple((combatants[count].name, combatants[count].position)))
 		place += 1
 
+party_order.sort(key = operator.itemgetter(1))
+
 # DATA ASSIGNMENT LOOP
 # Ridiculously big loop to go through combatants list, assign static values, retrieve dynamnic combat info, determine initiative, and assign commands
 for count in range(len(combatants)):
@@ -129,7 +131,7 @@ for count in range(len(combatants)):
 	if combatants[count].command == 'nan':
 		row = combatants[count].MS
 		for choice in range(7):
-			roll = random.randint(1,255)
+			roll = random.randint(0,255)
 			if roll < ms_prob.iloc[int(row), choice+1]:
 				combatants[count].command = combatants[count].skills[choice]
 				break
@@ -141,12 +143,24 @@ for count in range(len(combatants)):
 
 	# Convert the Target Type to an actual target where applicable (i.e. not the "All" abilities)
 	# QUESTION TO SELF:  For abilites that hit Groups, how to handle since monsters are individually broken out now?
+	actual_target = ""
+	if combatants[count].target == "Single":
+		for choice in range(len(party_order)):
+			roll = random.randint(1,100)
+			if roll < 51:
+				actual_target = party_order[choice][0]
+			else:
+				continue
+
+		# COME BACK HERE FOR RANDOM TARGET FUNCTION
+		if not actual_target:
+			roll = random.randint(1,range(len(party_order)))
+			actual_target = party_order[roll][0]
+		combatants[count].target = actual_target
+
 
 # Sort actors based on initiative score
 combatants = sorted(combatants, key = operator.attrgetter("initiative"))
 
 for count in range(len(combatants)):
 	print(combatants[count])
-
-party_order.sort(key = operator.itemgetter(1))
-print(party_order)
