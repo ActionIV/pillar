@@ -3,16 +3,20 @@ class Actor(object):
 	def __init__(self, name):
 		self.name = name
 		self.actions_taken = []
+		self.targets = []
 		Actor.names.append(name)
 		
 	def getName(self):
 		return self.name
 
 	def __str__(self):
-		return "%s is a %s, its command is %s, and its target is %s" % (self.name, self.role, self.command, self.target)
+		return "%s is a %s, its command is %s, and its target is %s, hitting %s" % (self.name, self.role, self.command, self.target_type, self.targets)
 
 	def add_action(self, command):
 		self.actions_taken.append(command)
+
+	def add_target(self, target):
+		self.targets.append(target)
 
 	role = ""
 	lives = 1
@@ -24,7 +28,7 @@ class Actor(object):
 	current_Mana = 0
 	current_Def = 0
 	command = ""
-	target = ""
+	target_type = ""
 	status = ""
 		
 class Enemy(Actor):

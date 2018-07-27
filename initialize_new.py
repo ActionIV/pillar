@@ -75,7 +75,7 @@ for count in range(len(combatants)):
 	current_com.current_Mana = battles[i].loc[current_com.name, "CURRENT MANA"]
 	current_com.current_Def = battles[i].loc[current_com.name, "CURRENT DEF"]
 	current_com.command = battles[i].loc[current_com.name, "COMMAND"]
-	current_com.target = battles[i].loc[current_com.name, "TARGET"]
+	current_com.target_type = battles[i].loc[current_com.name, "TARGET"]
 	current_com.status = battles[i].loc[current_com.name, "STATUS"]
 	
 	# Lookup the static Enemy data
@@ -140,24 +140,29 @@ for count in range(len(combatants)):
 				continue
 	# Based on the Command, assign the Target Type to the Target line
 	if combatants[count].role != "Player":
-		combatants[count].target = commands.loc[combatants[count].command, "Target Type"]
+		combatants[count].target_type = commands.loc[combatants[count].command, "Target Type"]
 
 	# Convert the Target Type to an actual target where applicable (i.e. not the "All" abilities)
-	# QUESTION TO SELF:  For abilites that hit Groups, how to handle since monsters are individually broken out now?
-	actual_target = ""
-	if combatants[count].target == "Single":
+	# Should this go in the combat code instead of setup?
+	sel_target = ""
+	if combatants[count].target_type == "Single":
 		for choice in range(len(party_order)):
 			roll = random.randint(1,100)
 			if roll < 51:
-				actual_target = party_order[choice][0]
+				sel_target = party_order[choice][0]
 			else:
 				continue
 
-		if not actual_target:
-			actual_target = random_target(party_order)
-	
-	combatants[count].target = actual_target
+		if not sel_target:
+			sel_target = random_target(party_order)
 
+		combatants[count].add_target(sel_target)
+
+#	elif combatants[count].target == "Group":
+#		for choice in range(len(party_order)):
+
+#			roll = random.randint(1,100)
+#			if roll < combatants[count].current_Mana
 
 # Sort actors based on initiative score
 combatants = sorted(combatants, key = operator.attrgetter("initiative"))
