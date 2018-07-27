@@ -1,7 +1,8 @@
 import pandas
 import random
 import operator
-from classes import *
+from classes import Player, Enemy, NPC, Actor
+from combat import random_target
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -29,7 +30,7 @@ combatants = []
 
 print(log.sheet_names)
 i = int(input("Which battle do you want to run? Enter a number: "))
-print("Running a round for Battle ", i)
+print("Running a round for Battle", i)
 
 # Setting to the list index of the number chosen
 i=i-1
@@ -152,11 +153,10 @@ for count in range(len(combatants)):
 			else:
 				continue
 
-		# COME BACK HERE FOR RANDOM TARGET FUNCTION
 		if not actual_target:
-			roll = random.randint(1,range(len(party_order)))
-			actual_target = party_order[roll][0]
-		combatants[count].target = actual_target
+			actual_target = random_target(party_order)
+	
+	combatants[count].target = actual_target
 
 
 # Sort actors based on initiative score
