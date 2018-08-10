@@ -68,7 +68,6 @@ party_order.sort(key = operator.itemgetter(1))
 for count in range(len(combatants)):
 	current_com = combatants[count]
 
-	current_com.initiative = battles[i].loc[current_com.name, "Initiative"]
 	current_com.current_HP = battles[i].loc[current_com.name, "CURRENT HP"]
 	current_com.current_Str = battles[i].loc[current_com.name, "CURRENT STR"]
 	current_com.current_Agl = battles[i].loc[current_com.name, "CURRENT AGL"]
@@ -123,9 +122,16 @@ for count in range(len(combatants)):
 	else:
 		break
 
+# BEGIN COMBAT ROUND - should eventually be a repeatable function based on number of rounds to run
+for count in range(len(combatants)):
 	# INITIATIVE
 	# Should use current_AGL, but just use Agl for now. Also want to make it more variable at some point
 	combatants[count].initiative = float(combatants[count].Agl) * (1+(random.randint(1,25)/100))
+
+	# Sort actors based on initiative score
+	combatants = sorted(combatants, key = operator.attrgetter("initiative"))
+
+	# STATUS CHECK
 
 	# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
 	# Could also be used for random ability selection for players if an appropriate MS were assigned
@@ -158,14 +164,10 @@ for count in range(len(combatants)):
 
 		combatants[count].add_target(sel_target)
 
-#	elif combatants[count].target == "Group":
-#		for choice in range(len(party_order)):
-
-#			roll = random.randint(1,100)
-#			if roll < combatants[count].current_Mana
-
-# Sort actors based on initiative score
-combatants = sorted(combatants, key = operator.attrgetter("initiative"))
+	# elif combatants[count].target_type == "Group":
+	# 	for choice in range(len(party_order)):
+	# 		roll = random.randint(1,100)
+	# 		if roll < combatants[count].current_Mana
 
 for count in range(len(combatants)):
 	print(combatants[count])
