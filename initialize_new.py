@@ -10,13 +10,13 @@ path2 = r"Battle Log.xlsx"
 workbook = pandas.ExcelFile(path1)
 log = pandas.ExcelFile(path2)
 
-monsters = workbook.parse("Monster", index_col = 'Index', dtype = str)
+monsters = workbook.parse("Monster", index_col = 'Index')
 #monsters = pandas.read_excel(workbook, "Monster", index_col = 0)
-commands = workbook.parse("Weapon", index_col = 'Index', dtype = str)
+commands = workbook.parse("Weapon", index_col = 'Index')
 #commands = pandas.read_excel(workbook, 'Weapon')
 ms_prob = workbook.parse("Move Probability")
 #ms_prob = pandas.read_excel(workbook, 'Move Probability')
-players = workbook.parse("Players", index_col = 'Index', dtype = str)
+players = workbook.parse("Players", index_col = 'Index')
 
 # Loop through each sheet of the battle log, appending each to the battles list
 battles = []
@@ -30,7 +30,9 @@ combatants = []
 
 print(log.sheet_names)
 i = int(input("Which battle do you want to run? Enter a number: "))
-print("Running a round for Battle", i)
+#rounds = int(input("For how many rounds? "))
+rounds = 1
+print("Executing Battle", i)
 
 # Setting to the list index of the number chosen
 i=i-1
@@ -87,7 +89,7 @@ for count in range(len(combatants)):
 		current_com.Agl = monsters.loc[current_com.name,"Agl"]
 		current_com.Mana = monsters.loc[current_com.name,"Mana"]
 		current_com.Def = monsters.loc[current_com.name,"Def"]
-		
+	
 		#There should be a better way to do this...but here's the lazy way
 		current_com.skills.append(monsters.loc[current_com.name,"S0"])
 		current_com.skills.append(monsters.loc[current_com.name,"S1"])
@@ -122,52 +124,75 @@ for count in range(len(combatants)):
 	else:
 		break
 
-# BEGIN COMBAT ROUND - should eventually be a repeatable function based on number of rounds to run
-for count in range(len(combatants)):
-	# INITIATIVE
-	# Should use current_AGL, but just use Agl for now. Also want to make it more variable at some point
-	combatants[count].initiative = float(combatants[count].Agl) * (1+(random.randint(1,25)/100))
+# EXECUTE COMBAT ROUND - should eventually be a repeatable function based on number of rounds to run
+for rd in range(rounds):
 
-	# Sort actors based on initiative score
-	combatants = sorted(combatants, key = operator.attrgetter("initiative"))
+	# SET CURRENT STATS (in Round 1 only), ROLL INITIATIVE, AND SORT
+	if rd == 0:
+		for count in range(len(combatants)):
+			combatants[count].current_HP = combatants[count].HP
+			combatants[count].current_Str = combatants[count].Str
+			combatants[count].current_Agl = combatants[count].Agl
+			combatants[count].current_Mana = combatants[count].Mana
+			combatants[count].current_Def = combatants[count].Def
 
-	# STATUS CHECK
+		# INITIATIVE
+		# Should use current_AGL, but just use Agl for now. Also want to make it more variable at some point
+		combatants[count].initiative = float(combatants[count].Agl) * (1+(random.randint(1,25)/100))
 
-	# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
-	# Could also be used for random ability selection for players if an appropriate MS were assigned
-	if combatants[count].command == 'nan':
-		row = combatants[count].MS
-		for choice in range(7):
-			roll = random.randint(0,255)
-			if roll < ms_prob.iloc[int(row), choice+1]:
-				combatants[count].command = combatants[count].skills[choice]
-				break
-			else:
-				continue
-	# Based on the Command, assign the Target Type to the Target line
-	if combatants[count].role != "Player":
-		combatants[count].target_type = commands.loc[combatants[count].command, "Target Type"]
+		# Sort actors based on initiative score
+		combatants = sorted(combatants, key = operator.attrgetter("initiative"))
 
-	# Convert the Target Type to an actual target where applicable (i.e. not the "All" abilities)
-	# Should this go in the combat code instead of setup?
-	sel_target = ""
-	if combatants[count].target_type == "Single":
-		for choice in range(len(party_order)):
-			roll = random.randint(1,100)
-			if roll < 51:
-				sel_target = party_order[choice][0]
-			else:
-				continue
+	# TARGETING AND COMMAND EXECUTION
+	for count in range(len(combatants)):
+		# STATUS CHECK
 
-		if not sel_target:
-			sel_target = random_target(party_order)
+		# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
+		# Could also be used for random ability selection for players if an appropriate MS were assigned
+		if combatants[count].command == 'nan':
+			row = combatants[count].MS
+			for choice in range(7):
+				roll = random.randint(0,255)
+				if roll < ms_prob.iloc[int(row), choice+1]:
+					combatants[count].command = combatants[count].skills[choice]
+					break
+				else:
+					continue
+		# Based on the Command, assign the Target Type to the Target line
+		if combatants[count].role != "Player":
+			combatants[count].target_type = commands.loc[combatants[count].command, "Target Type"]
 
-		combatants[count].add_target(sel_target)
+		# Convert the Target Type to an actual target where applicable (i.e. not the "All" abilities)
+		sel_target = ""
+		if combatants[count].target_type == "Single":
+			for choice in range(len(party_order)):
+				roll = random.randint(1,100)
+				if roll < 51:
+					sel_target = party_order[choice][0]
+				else:
+					continue
 
-	# elif combatants[count].target_type == "Group":
-	# 	for choice in range(len(party_order)):
-	# 		roll = random.randint(1,100)
-	# 		if roll < combatants[count].current_Mana
+			if not sel_target:
+				sel_target = random_target(party_order)
+
+			combatants[count].add_target(sel_target)
+
+		# elif combatants[count].target_type == "Group":
+		# 	for choice in range(len(party_order)):
+		# 		roll = random.randint(1,100)
+		# 		if roll < combatants[count].current_Mana
+
+		# This will only work for single targets for PCs for now. Needs more in the long run.
+		else:
+			combatants[count].add_target(combatants[count].target_type)
+
+
+		# DAMAGE
+		weapon_multiplier = commands.loc[combatants[count].command, "Multiplier"]
+		atk_power = combatants[count].current_Str * weapon_multiplier + random.randint(1,combatants[count].current_Str)
+#		defense = target's current DEF * 5
+		damage = atk_power
+		print("%s deals %d damage to %s" % (combatants[count].name, damage, combatants[count].targets[0]))
 
 for count in range(len(combatants)):
 	print(combatants[count])
