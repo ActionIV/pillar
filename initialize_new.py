@@ -136,12 +136,15 @@ for rd in range(rounds):
 			combatants[count].current_Mana = combatants[count].Mana
 			combatants[count].current_Def = combatants[count].Def
 
-		# INITIATIVE
-		# Should use current_AGL, but just use Agl for now. Also want to make it more variable at some point
-		combatants[count].initiative = float(combatants[count].Agl) * (1+(random.randint(1,25)/100))
+		# SURPRISE CHECK FOR ROUND 1
 
-		# Sort actors based on initiative score
-		combatants = sorted(combatants, key = operator.attrgetter("initiative"))
+	# INITIATIVE
+	for count in range(len(combatants)):
+		variable = (1+(random.randint(1,25)/100))
+		combatants[count].initiative = float(combatants[count].current_Agl) * variable
+
+	# Sort actors based on initiative score
+	combatants = sorted(combatants, key = operator.attrgetter("initiative"), reverse=True)
 
 	# TARGETING AND COMMAND EXECUTION
 	for count in range(len(combatants)):
@@ -167,7 +170,7 @@ for rd in range(rounds):
 		if combatants[count].target_type == "Single":
 			for choice in range(len(party_order)):
 				roll = random.randint(1,100)
-				if roll < 51:
+				if (roll < 51):
 					sel_target = party_order[choice][0]
 				else:
 					continue
@@ -186,13 +189,24 @@ for rd in range(rounds):
 		else:
 			combatants[count].add_target(combatants[count].target_type)
 
-
 		# DAMAGE
+		defender = 100
+		for tar in range(len(combatants)):
+			if (combatants[tar].name == combatants[count].targets[0]) and (int(combatants[tar].position) < defender):
+				defender = tar
+				
 		weapon_multiplier = commands.loc[combatants[count].command, "Multiplier"]
 		atk_power = combatants[count].current_Str * weapon_multiplier + random.randint(1,combatants[count].current_Str)
-#		defense = target's current DEF * 5
-		damage = atk_power
-		print("%s deals %d damage to %s" % (combatants[count].name, damage, combatants[count].targets[0]))
+		defense = combatants[defender].Def * 5
+		damage = atk_power - defense
+		if damage < 0:
+			damage = 0
+		print("%s deals %d damage to %s." % (combatants[count].name, damage, combatants[count].targets[0]))
+		combatants[defender].current_HP -= damage
+		if combatants[defender].current_HP < 0:
+			combatants[defender].current_HP = 0
+			print("%s fell." % combatants[defender].name)
+		
 
 for count in range(len(combatants)):
 	print(combatants[count])
