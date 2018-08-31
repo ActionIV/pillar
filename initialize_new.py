@@ -77,7 +77,14 @@ for count in range(len(combatants)):
 	current_com.current_Def = battles[i].loc[current_com.name, "CURRENT DEF"]
 	current_com.command = battles[i].loc[current_com.name, "COMMAND"]
 	current_com.target_type = battles[i].loc[current_com.name, "TARGET"]
-	current_com.status = battles[i].loc[current_com.name, "STATUS"]
+	current_com.stoned = battles[i].loc[current_com.name, "Stoned"]
+	current_com.cursed = battles[i].loc[current_com.name, "Cursed"]
+	current_com.blinded = battles[i].loc[current_com.name, "Blinded"]
+	current_com.stunned = battles[i].loc[current_com.name, "Stunned"]
+	current_com.paralyzed = battles[i].loc[current_com.name, "Paralyzed"]
+	current_com.poisoned = battles[i].loc[current_com.name, "Poisoned"]
+	current_com.confused = battles[i].loc[current_com.name, "Confused"]
+	current_com.stoned = battles[i].loc[current_com.name, "Stoned"]
 	
 	# Lookup the static Enemy data
 	if current_com.role == "Enemy":
@@ -170,7 +177,7 @@ for rd in range(rounds):
 		if combatants[count].target_type == "Single":
 			for choice in range(len(party_order)):
 				roll = random.randint(1,100)
-				if (roll < 51):
+				if roll < 51:
 					sel_target = party_order[choice][0]
 				else:
 					continue
@@ -191,6 +198,8 @@ for rd in range(rounds):
 
 		# DAMAGE
 		defender = 100
+
+		# Select the front-most member of a group with the same name (i.e. attack the front-most enemy of a group)
 		for tar in range(len(combatants)):
 			if (combatants[tar].name == combatants[count].targets[0]) and (int(combatants[tar].position) < defender):
 				defender = tar
@@ -205,7 +214,9 @@ for rd in range(rounds):
 		combatants[defender].current_HP -= damage
 		if combatants[defender].current_HP < 0:
 			combatants[defender].current_HP = 0
-			print("%s fell." % combatants[defender].name)
+			combatants[defender].lives -= 1
+			if combatants[defender].isDead():
+				print("%s fell." % combatants[defender].name)
 		
 
 for count in range(len(combatants)):

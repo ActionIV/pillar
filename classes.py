@@ -18,6 +18,60 @@ class Actor(object):
 	def add_target(self, target):
 		self.targets.append(target)
 
+	def isStoned(self):
+		if self.stoned == "y":
+			return True
+		else:
+			return False
+		
+	def isCursed(self):
+		if self.cursed == "y":
+			return True
+		else:
+			return False
+		
+	def isBlinded(self):
+		if self.blinded == "y":
+			return True
+		else:
+			return False
+
+	def isCursed(self):
+		if self.cursed == "y":
+			return True
+		else:
+			return False
+
+	def isStunned(self):
+		if self.stunned == "y":
+			return True
+		else:
+			return False
+
+	def isParalyzed(self):
+		if self.paralyzed == "y":
+			return True
+		else:
+			return False
+
+	def isPoisoned(self):
+		if self.poisoned == "y":
+			return True
+		else:
+			return False
+
+	def isConfused(self):
+		if self.confused == "y":
+			return True
+		else:
+			return False
+
+	def isDead(self):
+		if self.lives == 0:
+			return True
+		else:
+			return False
+
 	role = ""
 	lives = 1
 	position = 0
@@ -29,7 +83,13 @@ class Actor(object):
 	current_Def = 0
 	command = ""
 	target_type = ""
-	status = ""
+	stoned = "n"
+	cursed = "n"
+	blinded = "n"
+	stunned = "n"
+	paralyzed = "n"
+	poisoned = "n"
+	confused = "n"
 		
 class Enemy(Actor):
 	def __init__(self, name):
