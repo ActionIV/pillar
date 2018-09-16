@@ -10,7 +10,7 @@ class Actor(object):
 		return self.name
 
 	def __str__(self):
-		return "%s is a %s, its command is %s, and its target is %s, hitting %s" % (self.name, self.role, self.command, self.target_type, self.targets)
+		return "%s = %s, command = %s, target = %s, hit = %s" % (self.name, self.role, self.command, self.target_type, self.targets)
 
 	def add_action(self, command):
 		self.actions_taken.append(command)
@@ -32,12 +32,6 @@ class Actor(object):
 		
 	def isBlinded(self):
 		if self.blinded == "y":
-			return True
-		else:
-			return False
-
-	def isCursed(self):
-		if self.cursed == "y":
 			return True
 		else:
 			return False
@@ -66,6 +60,7 @@ class Actor(object):
 		else:
 			return False
 
+	# Decrement lives upon death. Shouldn't need a dead flag that way
 	def isDead(self):
 		if self.lives == 0:
 			return True
