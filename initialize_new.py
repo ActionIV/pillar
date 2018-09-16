@@ -2,7 +2,7 @@ import pandas
 import random
 import operator
 from classes import Player, Enemy, NPC, Actor
-from combat import random_target
+from combat import random_target, battle_status
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -54,16 +54,16 @@ for count in range(len(battles[i].index)):
 	elif battles[i].iloc[count,1] == "Player":
 		combatants.append(Player(battles[i].iloc[count,0]))
 		combatants[count].position = battles[i].iloc[count,3]
-		party_order.append(tuple((combatants[count].name, combatants[count].position)))
+		party_order.append(tuple((combatants[count].name, combatants[count].position, count)))
 		place += 1
 
 	else:
 		combatants.append(NPC(battles[i].iloc[count,0]))
 		combatants[count].position = battles[i].iloc[count,3]
-		party_order.append(tuple((combatants[count].name, combatants[count].position)))
+		party_order.append(tuple((combatants[count].name, combatants[count].position, count)))
 		place += 1
 
-party_order.sort(key = operator.itemgetter(1))
+party_order = sorted(party_order, key = operator.itemgetter(1), reverse = False)
 
 # DATA ASSIGNMENT LOOP
 # Ridiculously big loop to go through combatants list, assign static values, retrieve dynamnic combat info, determine initiative, and assign commands
@@ -84,7 +84,6 @@ for count in range(len(combatants)):
 	current_com.paralyzed = battles[i].loc[current_com.name, "Paralyzed"]
 	current_com.poisoned = battles[i].loc[current_com.name, "Poisoned"]
 	current_com.confused = battles[i].loc[current_com.name, "Confused"]
-	current_com.stoned = battles[i].loc[current_com.name, "Stoned"]
 	
 	# Lookup the static Enemy data
 	if current_com.role == "Enemy":
@@ -155,69 +154,80 @@ for rd in range(rounds):
 
 	# TARGETING AND COMMAND EXECUTION
 	for count in range(len(combatants)):
+		attacker = combatants[count]
+
 		# STATUS CHECK
 
 		# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
 		# Could also be used for random ability selection for players if an appropriate MS were assigned
-		if combatants[count].command == 'nan':
-			row = combatants[count].MS
+		if attacker.command == 'nan':
+			row = attacker.MS
 			for choice in range(7):
 				roll = random.randint(0,255)
 				if roll < ms_prob.iloc[int(row), choice+1]:
-					combatants[count].command = combatants[count].skills[choice]
+					attacker.command = attacker.skills[choice]
 					break
 				else:
 					continue
 		# Based on the Command, assign the Target Type to the Target line
-		if combatants[count].role != "Player":
-			combatants[count].target_type = commands.loc[combatants[count].command, "Target Type"]
+		if attacker.role != "Player":
+			attacker.target_type = commands.loc[attacker.command, "Target Type"]
 
-		# Convert the Target Type to an actual target where applicable (i.e. not the "All" abilities)
+		# Find an actual target based on Target Type, where applicable (i.e. not the "All" abilities)
 		sel_target = ""
-		if combatants[count].target_type == "Single":
+		if attacker.target_type == "Single":
 			for choice in range(len(party_order)):
 				roll = random.randint(1,100)
 				if roll < 51:
 					sel_target = party_order[choice][0]
-				else:
-					continue
 
-			if not sel_target:
-				sel_target = random_target(party_order)
+			while sel_target == "":
+				roll_target = random_target(party_order)
+				if combatants[roll_target[2]].isDead() == False:
+					sel_target = roll_target[0]
+					break
 
-			combatants[count].add_target(sel_target)
+			attacker.add_target(sel_target)
 
-		# elif combatants[count].target_type == "Group":
+		# elif attacker.target_type == "Group":
 		# 	for choice in range(len(party_order)):
 		# 		roll = random.randint(1,100)
-		# 		if roll < combatants[count].current_Mana
+		# 		if roll < attacker.current_Mana
 
 		# This will only work for single targets for PCs for now. Needs more in the long run.
 		else:
-			combatants[count].add_target(combatants[count].target_type)
+			attacker.add_target(attacker.target_type)
 
-		# DAMAGE
+		# DAMAGE ASSIGNMENT
 		defender = 100
 
 		# Select the front-most member of a group with the same name (i.e. attack the front-most enemy of a group)
 		for tar in range(len(combatants)):
-			if (combatants[tar].name == combatants[count].targets[0]) and (int(combatants[tar].position) < defender):
+			if (combatants[tar].name == attacker.targets[0]) and (int(combatants[tar].position) < defender):
 				defender = tar
+
+		# Something is very wrong with targeting. It is failing to see the second player as a target. This is causing combat to fail. It occurred due
+		# to something I must have done with tuples or flag code
+		if defender == 100:
+			break
 				
-		weapon_multiplier = commands.loc[combatants[count].command, "Multiplier"]
-		atk_power = combatants[count].current_Str * weapon_multiplier + random.randint(1,combatants[count].current_Str)
+		weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
+		atk_power = attacker.current_Str * weapon_multiplier + random.randint(1,attacker.current_Str)
 		defense = combatants[defender].Def * 5
 		damage = atk_power - defense
 		if damage < 0:
 			damage = 0
-		print("%s deals %d damage to %s." % (combatants[count].name, damage, combatants[count].targets[0]))
+		print("%s deals %d damage to %s." % (attacker.name, damage, attacker.targets[0]))
 		combatants[defender].current_HP -= damage
 		if combatants[defender].current_HP < 0:
 			combatants[defender].current_HP = 0
 			combatants[defender].lives -= 1
 			if combatants[defender].isDead():
 				print("%s fell." % combatants[defender].name)
-		
 
+		combatants[count] = attacker
+		if not battle_status(combatants):
+			break
+		
 for count in range(len(combatants)):
 	print(combatants[count])
