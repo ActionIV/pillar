@@ -1,14 +1,14 @@
 import random
 
-def random_target(party):
-	roll = random.randint(1,(len(party)-1))
-	return party[roll]
+def random_target(party_size):
+	roll = random.randint(1,party_size)
+	return roll-1
 
 def battle_status(survivors):
 	players = 0
 	enemies = 0
 	for count in range(len(survivors)):
-		if survivors[count].role == "Enemy" and survivors[count].isDead() == False:
+		if (survivors[count].role == "Enemy") and (survivors[count].isDead() == False):
 			enemies += 1
 		elif (survivors[count].role == "Player" or "NPC") and (survivors[count].isDead() == False):
 			players += 1
