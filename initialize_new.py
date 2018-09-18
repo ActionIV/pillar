@@ -31,7 +31,7 @@ combatants = []
 print(log.sheet_names)
 i = int(input("Which battle do you want to run? Enter a number: "))
 #rounds = int(input("For how many rounds? "))
-rounds = 1
+#rounds = 1
 print("Executing Battle", i)
 
 # Setting to the list index of the number chosen
@@ -39,7 +39,7 @@ i=i-1
 
 # Need to track the right spot in combatants, which conflicts with 'count' due to enemy "lives" inflating the list vs the Log
 place = 0
-party_order = []
+#party_order = []
 
 # I would prefer to be doing label lookups with Pandas loc instead of iloc, but I can't get the indexing right (at load time)
 for count in range(len(battles[i].index)):
@@ -54,16 +54,12 @@ for count in range(len(battles[i].index)):
 	elif battles[i].iloc[count,1] == "Player":
 		combatants.append(Player(battles[i].iloc[count,0]))
 		combatants[count].position = battles[i].iloc[count,3]
-		party_order.append(tuple((combatants[count].name, combatants[count].position, count)))
 		place += 1
 
 	else:
 		combatants.append(NPC(battles[i].iloc[count,0]))
 		combatants[count].position = battles[i].iloc[count,3]
-		party_order.append(tuple((combatants[count].name, combatants[count].position, count)))
 		place += 1
-
-party_order = sorted(party_order, key = operator.itemgetter(1), reverse = False)
 
 # DATA ASSIGNMENT LOOP
 # Ridiculously big loop to go through combatants list, assign static values, retrieve dynamnic combat info, determine initiative, and assign commands
@@ -130,9 +126,11 @@ for count in range(len(combatants)):
 	else:
 		break
 
+rd = 0
+rounds = 1
 # EXECUTE COMBAT ROUND - should eventually be a repeatable function based on number of rounds to run
-for rd in range(rounds):
-
+while rd < rounds:
+	print("~~~ Round %d ~~~" % rd)
 	# SET CURRENT STATS (in Round 1 only), ROLL INITIATIVE, AND SORT
 	if rd == 0:
 		for count in range(len(combatants)):
@@ -149,14 +147,21 @@ for rd in range(rounds):
 		variable = (1+(random.randint(1,25)/100))
 		combatants[count].initiative = float(combatants[count].current_Agl) * variable
 
+	party_order = []
 	# Sort actors based on initiative score
 	combatants = sorted(combatants, key = operator.attrgetter("initiative"), reverse=True)
+	for count in range(len(combatants)):
+		if combatants[count].role == ("Player" or "NPC"):
+			party_order.append(tuple((combatants[count].name, combatants[count].position, count)))
+	party_order = sorted(party_order, key = operator.itemgetter(1), reverse=True)
 
 	# TARGETING AND COMMAND EXECUTION
 	for count in range(len(combatants)):
 		attacker = combatants[count]
 
 		# STATUS CHECK
+		if attacker.isDead():
+			continue
 
 		# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
 		# Could also be used for random ability selection for players if an appropriate MS were assigned
@@ -178,14 +183,20 @@ for rd in range(rounds):
 		if attacker.target_type == "Single":
 			for choice in range(len(party_order)):
 				roll = random.randint(1,100)
-				if roll < 51:
+				if roll < 51 and combatants[party_order[choice][2]].isDead() == False:
 					sel_target = party_order[choice][0]
+				else:
+					continue
+#				elif roll < 51 and combatants[party_order[choice][2]].isDead() == True:
 
 			while sel_target == "":
-				roll_target = random_target(party_order)
-				if combatants[roll_target[2]].isDead() == False:
-					sel_target = roll_target[0]
+				random_roll = random_target(len(party_order))
+				random_who = party_order[random_roll][2]
+				if combatants[random_who].isDead() == False:
+					sel_target = party_order[random_roll][0]
 					break
+				else:
+					continue
 
 			attacker.add_target(sel_target)
 
@@ -199,17 +210,14 @@ for rd in range(rounds):
 			attacker.add_target(attacker.target_type)
 
 		# DAMAGE ASSIGNMENT
-		defender = 100
+		priority = 100
+		defender = 0
 
 		# Select the front-most member of a group with the same name (i.e. attack the front-most enemy of a group)
 		for tar in range(len(combatants)):
-			if (combatants[tar].name == attacker.targets[0]) and (int(combatants[tar].position) < defender):
+			if (combatants[tar].name == attacker.targets[0]) and (int(combatants[tar].position) < priority) and (combatants[tar].isDead() == False):
+				priority = combatants[tar].position
 				defender = tar
-
-		# Something is very wrong with targeting. It is failing to see the second player as a target. This is causing combat to fail. It occurred due
-		# to something I must have done with tuples or flag code
-		if defender == 100:
-			break
 				
 		weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
 		atk_power = attacker.current_Str * weapon_multiplier + random.randint(1,attacker.current_Str)
@@ -219,7 +227,7 @@ for rd in range(rounds):
 			damage = 0
 		print("%s deals %d damage to %s." % (attacker.name, damage, attacker.targets[0]))
 		combatants[defender].current_HP -= damage
-		if combatants[defender].current_HP < 0:
+		if combatants[defender].current_HP <= 0:
 			combatants[defender].current_HP = 0
 			combatants[defender].lives -= 1
 			if combatants[defender].isDead():
@@ -228,6 +236,14 @@ for rd in range(rounds):
 		combatants[count] = attacker
 		if not battle_status(combatants):
 			break
+
+	one_more = input("Run another round (y/n)?: ")
+	if one_more == "y":
+		rounds += 1
+		rd += 1
+	else:
+		rd += 1
+		print("Battle paused.")
 		
 for count in range(len(combatants)):
 	print(combatants[count])
