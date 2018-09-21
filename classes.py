@@ -10,7 +10,7 @@ class Actor(object):
 		return self.name
 
 	def __str__(self):
-		return "%s = %s, command = %s, target = %s, hit = %s" % (self.name, self.role, self.command, self.target_type, self.targets)
+		return "%s = %s, commands = %s, target = %s" % (self.name, self.role, self.actions_taken, self.target_type)
 
 	def add_action(self, command):
 		self.actions_taken.append(command)

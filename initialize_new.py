@@ -147,9 +147,11 @@ while rd < rounds:
 		variable = (1+(random.randint(1,25)/100))
 		combatants[count].initiative = float(combatants[count].current_Agl) * variable
 
-	party_order = []
 	# Sort actors based on initiative score
 	combatants = sorted(combatants, key = operator.attrgetter("initiative"), reverse=True)
+
+	# Create party formation
+	party_order = []
 	for count in range(len(combatants)):
 		if combatants[count].role == ("Player" or "NPC"):
 			party_order.append(tuple((combatants[count].name, combatants[count].position, count)))
@@ -185,8 +187,7 @@ while rd < rounds:
 				roll = random.randint(1,100)
 				if roll < 51 and combatants[party_order[choice][2]].isDead() == False:
 					sel_target = party_order[choice][0]
-				else:
-					continue
+
 #				elif roll < 51 and combatants[party_order[choice][2]].isDead() == True:
 
 			while sel_target == "":
@@ -220,8 +221,21 @@ while rd < rounds:
 				defender = tar
 				
 		weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
-		atk_power = attacker.current_Str * weapon_multiplier + random.randint(1,attacker.current_Str)
-		defense = combatants[defender].Def * 5
+		damage_stat = commands.loc[attacker.command, "Damage Stat"]
+
+		if damage_stat == "Str":
+			atk_power = attacker.current_Str * weapon_multiplier + random.randint(1,attacker.current_Str)
+			defense = combatants[defender].current_Def * 5
+		elif damage_stat == "Agi":
+			atk_power = attacker.current_Agl * weapon_multiplier + random.randint(1,attacker.current_Agl)
+			defense = combatants[defender].current_Def * 5
+		elif damage_stat == "Mana":
+			atk_power = attacker.current_Mana * weapon_multiplier + random.randint(1,attacker.current_Mana)
+			defense = combatants[defender].current_Mana * 5
+		# Else will have to handle special attacks later. For now, make atk_power zero
+		else:
+			atk_power = 0
+
 		damage = atk_power - defense
 		if damage < 0:
 			damage = 0
@@ -233,6 +247,9 @@ while rd < rounds:
 			if combatants[defender].isDead():
 				print("%s fell." % combatants[defender].name)
 
+		# Post-action tracking
+		attacker.add_action(attacker.command)
+		attacker.targets.clear()
 		combatants[count] = attacker
 		if not battle_status(combatants):
 			break
