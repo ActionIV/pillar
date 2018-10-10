@@ -67,6 +67,34 @@ class Actor(object):
 		else:
 			return False
 
+	def isActive(self):
+		if (self.isDead() or self.isStoned()):
+			return False
+		else:
+			return True
+
+	def characterStatus(self):
+		status = []
+		if self.isDead():
+			return "STUN"
+		if self.isStoned():
+			status.append("STON")
+		if self.isCursed():
+			status.append("CURS")
+		if self.isBlinded():
+			status.append("BLND")
+		if self.isParalyzed():
+			status.append("PARA")
+		if self.isPoisoned():
+			status.append("POIS")
+		if self.isConfused():
+			status.append("CONF")
+		if not status:
+			return "GOOD"
+		
+		condition = ",".join(status)
+		return condition
+
 	role = ""
 	lives = 1
 	position = 0

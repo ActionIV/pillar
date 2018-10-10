@@ -1,6 +1,7 @@
 import pandas
 import random
 import operator
+from collections import Counter 
 from classes import Player, Enemy, NPC, Actor
 from combat import random_target, battle_status
 
@@ -39,7 +40,6 @@ i=i-1
 
 # Need to track the right spot in combatants, which conflicts with 'count' due to enemy "lives" inflating the list vs the Log
 place = 0
-#party_order = []
 
 # I would prefer to be doing label lookups with Pandas loc instead of iloc, but I can't get the indexing right (at load time)
 for count in range(len(battles[i].index)):
@@ -260,7 +260,26 @@ while rd < rounds:
 		rd += 1
 	else:
 		rd += 1
-		print("Battle paused.")
-		
+
+# Print party status line at the end of a simulation
+for count in range(len(combatants)):
+	if combatants[count].role == ("Player" or "NPC"):
+		print("| %s: %d/%d %s" % (combatants[count].name, combatants[count].current_HP, combatants[count].HP, combatants[count].characterStatus()), end = " |")
+
+# Need only for endline during testing phase
+print("")
+
+# Print enemy status line at the end of a simulation
+enemy_list = []
+for count in range(len(combatants)):
+	if (combatants[count].role == "Enemy") and (combatants[count].isActive()):
+		enemy_list.append(combatants[count].name)
+
+remaining_enemies = Counter(enemy_list)
+remaining_enemies.keys()
+for key, number in remaining_enemies.items():
+	print("{ %s - %d" % (key, number), end = " }")
+print("")
+	
 for count in range(len(combatants)):
 	print(combatants[count])
