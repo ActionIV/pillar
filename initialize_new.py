@@ -3,7 +3,7 @@ import random
 import operator
 from collections import Counter 
 from classes import Player, Enemy, NPC, Actor
-from combat import random_target, battle_status
+from combat import randomTarget, battleStatus, calculateDamage
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -176,39 +176,43 @@ while rd < rounds:
 					break
 				else:
 					continue
-		# Based on the Command, assign the Target Type to the Target line
-		if attacker.role != "Player":
-			attacker.target_type = commands.loc[attacker.command, "Target Type"]
 
 		# Find an actual target based on Target Type, where applicable (i.e. not the "All" abilities)
 		sel_target = ""
-		if attacker.target_type == "Single":
-			for choice in range(len(party_order)):
-				roll = random.randint(1,100)
-				if roll < 51 and combatants[party_order[choice][2]].isDead() == False:
-					sel_target = party_order[choice][0]
+		if attacker.role != "Player":
 
-#				elif roll < 51 and combatants[party_order[choice][2]].isDead() == True:
+			# Based on the Command, assign the Target Type to the Target line
+			attacker.target_type = commands.loc[attacker.command, "Target Type"]
 
-			while sel_target == "":
-				random_roll = random_target(len(party_order))
-				random_who = party_order[random_roll][2]
-				if combatants[random_who].isDead() == False:
-					sel_target = party_order[random_roll][0]
-					break
-				else:
-					continue
+			if attacker.target_type == "Single":
+				for choice in range(len(party_order)):
+					roll = random.randint(1,100)
+					if roll < 51 and combatants[party_order[choice][2]].isDead() == False:
+						sel_target = party_order[choice][0]
 
-			attacker.add_target(sel_target)
+	#				elif roll < 51 and combatants[party_order[choice][2]].isDead() == True:
 
-		# elif attacker.target_type == "Group":
-		# 	for choice in range(len(party_order)):
-		# 		roll = random.randint(1,100)
-		# 		if roll < attacker.current_Mana
+				while sel_target == "":
+					random_roll = randomTarget(len(party_order))
+					random_who = party_order[random_roll][2]
+					if combatants[random_who].isDead() == False:
+						sel_target = party_order[random_roll][0]
+						break
+					else:
+						continue
+
+				attacker.add_target(sel_target)
+
+			# elif attacker.target_type == "Group":
+			# 	for choice in range(len(party_order)):
+			# 		roll = random.randint(1,100)
+			# 		if roll < attacker.current_Mana
 
 		# This will only work for single targets for PCs for now. Needs more in the long run.
 		else:
-			attacker.add_target(attacker.target_type)
+			temp_target = commands.loc[attacker.command, "Target Type"]
+			if temp_target == "Single":
+				attacker.add_target(attacker.target_type)
 
 		# DAMAGE ASSIGNMENT
 		priority = 100
@@ -224,19 +228,16 @@ while rd < rounds:
 		damage_stat = commands.loc[attacker.command, "Damage Stat"]
 
 		if damage_stat == "Str":
-			atk_power = attacker.current_Str * weapon_multiplier + random.randint(1,attacker.current_Str)
-			defense = combatants[defender].current_Def * 5
-		elif damage_stat == "Agi":
-			atk_power = attacker.current_Agl * weapon_multiplier + random.randint(1,attacker.current_Agl)
-			defense = combatants[defender].current_Def * 5
+			damage = calculateDamage(attacker.current_Str, weapon_multiplier, combatants[defender].current_Def)
+		elif damage_stat == "Agl":
+			damage = calculateDamage(attacker.current_Agl, weapon_multiplier, combatants[defender].current_Def)
 		elif damage_stat == "Mana":
-			atk_power = attacker.current_Mana * weapon_multiplier + random.randint(1,attacker.current_Mana)
-			defense = combatants[defender].current_Mana * 5
-		# Else will have to handle special attacks later. For now, make atk_power zero
-		else:
-			atk_power = 0
+			damage = calculateDamage(attacker.current_Agl, weapon_multiplier, combatants[defender].current_Mana)
 
-		damage = atk_power - defense
+		# Else will have to handle special attacks later. For now, make damage zero
+		else:
+			damage = 0
+
 		if damage < 0:
 			damage = 0
 		print("%s deals %d damage to %s." % (attacker.name, damage, attacker.targets[0]))
@@ -251,7 +252,7 @@ while rd < rounds:
 		attacker.add_action(attacker.command)
 		attacker.targets.clear()
 		combatants[count] = attacker
-		if not battle_status(combatants):
+		if not battleStatus(combatants):
 			break
 
 	one_more = input("Run another round (y/n)?: ")

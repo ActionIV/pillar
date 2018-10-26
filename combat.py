@@ -1,10 +1,15 @@
 import random
 
-def random_target(party_size):
+def randomTarget(party_size):
 	roll = random.randint(1,party_size)
 	return roll-1
 
-def battle_status(survivors):
+def calculateDamage(stat, multiplier, defense):
+	atk_power = stat * multiplier + random.randint(1, stat)
+	reduction = defense * 5
+	return atk_power - reduction
+
+def battleStatus(survivors):
 	players = 0
 	enemies = 0
 	for count in range(len(survivors)):
