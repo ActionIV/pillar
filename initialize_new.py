@@ -223,6 +223,11 @@ while rd < rounds:
 			if (combatants[tar].name == attacker.targets[0]) and (int(combatants[tar].position) < priority) and (combatants[tar].isDead() == False):
 				priority = combatants[tar].position
 				defender = tar
+
+		# HIT LOGIC
+		# Need:  Target Agility, Target Blind status, Speed Magi, Target command (does item provide a block)
+		# Need:  Attacker Agility
+		# Calc:  2*Attacker score - Defender score, then 97 - the result
 				
 		weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
 		damage_stat = commands.loc[attacker.command, "Damage Stat"]
