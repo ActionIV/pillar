@@ -157,7 +157,7 @@ while rd < rounds:
 			party_order.append(tuple((combatants[count].name, combatants[count].position, count)))
 	party_order = sorted(party_order, key = operator.itemgetter(1), reverse=True)
 
-	# TARGETING AND COMMAND EXECUTION
+	# COMMAND SELECTION
 	for count in range(len(combatants)):
 		attacker = combatants[count]
 
@@ -176,6 +176,14 @@ while rd < rounds:
 					break
 				else:
 					continue
+
+	# TARGETING AND COMMAND EXECUTION
+	for count in range(len(combatants)):
+		attacker = combatants[count]
+
+		# STATUS CHECK
+		if attacker.isDead():
+			continue
 
 		# Find an actual target based on Target Type, where applicable (i.e. not the "All" abilities)
 		sel_target = ""
@@ -214,7 +222,7 @@ while rd < rounds:
 			if temp_target == "Single":
 				attacker.add_target(attacker.target_type)
 
-		# DAMAGE ASSIGNMENT
+		# SINGLE TARGET SELECTION
 		priority = 100
 		defender = 0
 
@@ -236,15 +244,13 @@ while rd < rounds:
 		if combatants[defender].isBlinded:
 			defender_score = defender_score / 2
 		# Need MAGI logic here
-# FUNDAMENTAL COMMAND REWRITE REQUIRED. Need to determine commands at the start of a round and create a function to reassign commands if the target is no
-# longer legal. Commenting out blocking logic until then.
-#		def_command_type = commands.loc[combatants[defender].command, "Type"]
-#		if commands.loc[attacker.command, "Type"] == "Melee" or (commands.loc[attacker.command, "Type"] == "Ranged":
-#			blockable = True
-#		if def_command_type == "Shield" and blockable:
-#			block_roll = random.randint(1,100)
-#			if block_roll <= (commands.loc[combatants[defender.command], "Percent"] + defender_score):
-#				blocked = 1
+		def_command_type = commands.loc[combatants[defender].command, "Type"]
+		if commands.loc[attacker.command, "Type"] == "Melee" or (commands.loc[attacker.command, "Type"] == "Ranged"):
+			blockable = True
+		if def_command_type == "Shield" and blockable:
+			block_roll = random.randint(1,100)
+			if block_roll <= (commands.loc[combatants[defender.command], "Percent"] + defender_score):
+				blocked = 1
 
 		difference = defender_score - attacker_hit*2
 		hit_chance = 97 - difference
@@ -254,6 +260,8 @@ while rd < rounds:
 			print("Missed!")
 		elif blocked == True:
 			print("%s defended against %s with %s." % (combatants[defender], attacker.command, combatants[defender].command))
+
+		# DAMAGE ASSIGNMENT
 		else:		
 			weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
 			damage_stat = commands.loc[attacker.command, "Damage Stat"]
