@@ -227,31 +227,57 @@ while rd < rounds:
 		# HIT LOGIC
 		# Need:  Target Agility, Target Blind status, Speed Magi, Target command (does item provide a block)
 		# Need:  Attacker Agility
-		# Calc:  2*Attacker score - Defender score, then 97 - the result
-				
-		weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
-		damage_stat = commands.loc[attacker.command, "Damage Stat"]
+		# Calc:  Defender score - 2x Attacker.AGL, then 97 - the result
+		print("%s attacks %s with %s." % (attacker.name, combatants[defender].name, attacker.command))
+		attacker_hit = attacker.current_Agl
+		defender_score = combatants[defender].current_Agl
+		blocked = False
+		blockable = False
+		if combatants[defender].isBlinded:
+			defender_score = defender_score / 2
+		# Need MAGI logic here
+# FUNDAMENTAL COMMAND REWRITE REQUIRED. Need to determine commands at the start of a round and create a function to reassign commands if the target is no
+# longer legal. Commenting out blocking logic until then.
+#		def_command_type = commands.loc[combatants[defender].command, "Type"]
+#		if commands.loc[attacker.command, "Type"] == "Melee" or (commands.loc[attacker.command, "Type"] == "Ranged":
+#			blockable = True
+#		if def_command_type == "Shield" and blockable:
+#			block_roll = random.randint(1,100)
+#			if block_roll <= (commands.loc[combatants[defender.command], "Percent"] + defender_score):
+#				blocked = 1
 
-		if damage_stat == "Str":
-			damage = calculateDamage(attacker.current_Str, weapon_multiplier, combatants[defender].current_Def)
-		elif damage_stat == "Agl":
-			damage = calculateDamage(attacker.current_Agl, weapon_multiplier, combatants[defender].current_Def)
-		elif damage_stat == "Mana":
-			damage = calculateDamage(attacker.current_Agl, weapon_multiplier, combatants[defender].current_Mana)
+		difference = defender_score - attacker_hit*2
+		hit_chance = 97 - difference
 
-		# Else will have to handle special attacks later. For now, make damage zero
-		else:
-			damage = 0
+		hit_roll = random.randint(1,100)
+		if hit_roll > hit_chance:
+			print("Missed!")
+		elif blocked == True:
+			print("%s defended against %s with %s." % (combatants[defender], attacker.command, combatants[defender].command))
+		else:		
+			weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
+			damage_stat = commands.loc[attacker.command, "Damage Stat"]
 
-		if damage < 0:
-			damage = 0
-		print("%s deals %d damage to %s." % (attacker.name, damage, attacker.targets[0]))
-		combatants[defender].current_HP -= damage
-		if combatants[defender].current_HP <= 0:
-			combatants[defender].current_HP = 0
-			combatants[defender].lives -= 1
-			if combatants[defender].isDead():
-				print("%s fell." % combatants[defender].name)
+			if damage_stat == "Str":
+				damage = calculateDamage(attacker.current_Str, weapon_multiplier, combatants[defender].current_Def)
+			elif damage_stat == "Agl":
+				damage = calculateDamage(attacker.current_Agl, weapon_multiplier, combatants[defender].current_Def)
+			elif damage_stat == "Mana":
+				damage = calculateDamage(attacker.current_Agl, weapon_multiplier, combatants[defender].current_Mana)
+
+			# Else will have to handle special attacks later. For now, make damage zero
+			else:
+				damage = 0
+
+			if damage < 0:
+				damage = 0
+			print("%d damage to %s." % (damage, attacker.targets[0]))
+			combatants[defender].current_HP -= damage
+			if combatants[defender].current_HP <= 0:
+				combatants[defender].current_HP = 0
+				combatants[defender].lives -= 1
+				if combatants[defender].isDead():
+					print("%s fell." % combatants[defender].name)
 
 		# Post-action tracking
 		attacker.add_action(attacker.command)
