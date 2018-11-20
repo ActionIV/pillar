@@ -26,3 +26,8 @@ def battleStatus(survivors):
 		return False
 	else:
 		return True
+
+def afterTurn(attacker):
+	attacker.add_action(attacker.command)
+	attacker.targets.clear()
+	return attacker

@@ -3,7 +3,7 @@ import random
 import operator
 from collections import Counter 
 from classes import Player, Enemy, NPC, Actor
-from combat import randomTarget, battleStatus, calculateDamage
+from combat import randomTarget, battleStatus, calculateDamage, afterTurn
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -130,7 +130,7 @@ rd = 0
 rounds = 1
 # EXECUTE COMBAT ROUND - should eventually be a repeatable function based on number of rounds to run
 while rd < rounds:
-	print("~~~ Round %d ~~~" % rd)
+	print("~~~ Round %d ~~~" % (rd+1))
 	# SET CURRENT STATS (in Round 1 only), ROLL INITIATIVE, AND SORT
 	if rd == 0:
 		for count in range(len(combatants)):
@@ -221,6 +221,13 @@ while rd < rounds:
 			temp_target = commands.loc[attacker.command, "Target Type"]
 			if temp_target == "Single":
 				attacker.add_target(attacker.target_type)
+			elif temp_target == "Block":
+				print("%s is defending with %s." % (attacker.name, attacker.command))
+				combatants[count] = afterTurn(attacker)
+				continue
+			elif temp_target == "Counter":
+				print("%s is waiting for the attack." % attacker.name)
+				continue
 
 		# SINGLE TARGET SELECTION
 		priority = 100
@@ -245,12 +252,14 @@ while rd < rounds:
 			defender_score = defender_score / 2
 		# Need MAGI logic here
 		def_command_type = commands.loc[combatants[defender].command, "Type"]
+
+		# Blockable logic
 		if commands.loc[attacker.command, "Type"] == "Melee" or (commands.loc[attacker.command, "Type"] == "Ranged"):
 			blockable = True
 		if def_command_type == "Shield" and blockable:
 			block_roll = random.randint(1,100)
-			if block_roll <= (commands.loc[combatants[defender.command], "Percent"] + defender_score):
-				blocked = 1
+			if block_roll <= (commands.loc[combatants[defender].command, "Percent"] + defender_score):
+				blocked = True
 
 		difference = defender_score - attacker_hit*2
 		hit_chance = 97 - difference
@@ -258,8 +267,9 @@ while rd < rounds:
 		hit_roll = random.randint(1,100)
 		if hit_roll > hit_chance:
 			print("Missed!")
-		elif blocked == True:
-			print("%s defended against %s with %s." % (combatants[defender], attacker.command, combatants[defender].command))
+		# If I choose to make blocking make an attack miss the defender...
+#		elif blocked == True:
+#			print("%s defended against %s with %s." % (combatants[defender].name, attacker.command, combatants[defender].command))
 
 		# DAMAGE ASSIGNMENT
 		else:		
@@ -277,6 +287,10 @@ while rd < rounds:
 			else:
 				damage = 0
 
+			if blocked == True:
+				damage = damage / 2
+				print("%s defended against %s with %s." % (combatants[defender].name, attacker.command, combatants[defender].command))
+
 			if damage < 0:
 				damage = 0
 			print("%d damage to %s." % (damage, attacker.targets[0]))
@@ -288,9 +302,7 @@ while rd < rounds:
 					print("%s fell." % combatants[defender].name)
 
 		# Post-action tracking
-		attacker.add_action(attacker.command)
-		attacker.targets.clear()
-		combatants[count] = attacker
+		combatants[count] = afterTurn(attacker)
 		if not battleStatus(combatants):
 			break
 
