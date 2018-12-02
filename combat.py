@@ -6,8 +6,7 @@ def randomTarget(party_size):
 
 def calculateDamage(stat, multiplier, defense):
 	atk_power = stat * multiplier + random.randint(1, stat)
-	reduction = defense * 5
-	return atk_power - reduction
+	return atk_power - defense
 
 def battleStatus(survivors):
 	players = 0

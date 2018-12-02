@@ -98,6 +98,7 @@ class Actor(object):
 	role = ""
 	lives = 1
 	position = 0
+	group = 0
 	initiative = 0
 	current_HP = 0
 	current_Str = 0
