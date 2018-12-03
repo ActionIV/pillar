@@ -12,11 +12,8 @@ workbook = pandas.ExcelFile(path1)
 log = pandas.ExcelFile(path2)
 
 monsters = workbook.parse("Monster", index_col = 'Index')
-#monsters = pandas.read_excel(workbook, "Monster", index_col = 0)
 commands = workbook.parse("Weapon", index_col = 'Index')
-#commands = pandas.read_excel(workbook, 'Weapon')
 ms_prob = workbook.parse("Move Probability")
-#ms_prob = pandas.read_excel(workbook, 'Move Probability')
 players = workbook.parse("Players", index_col = 'Index')
 
 # Loop through each sheet of the battle log, appending each to the battles list
@@ -27,16 +24,16 @@ for count in range(len(log.sheet_names)):
 
 # This is where a function for creating the combatants list from a battle should be. Call would pass an int to say from which Log sheet to pull
 # Might even pass the sheet itself from battles[]. Would return combatants list
-combatants = []	
+combatants = []
+enemy_groups = []
 
-print(log.sheet_names)
+for bat in range(len(battles)):
+	print("%d. %s" % (bat+1, log.sheet_names[bat]))
 i = int(input("Which battle do you want to run? Enter a number: "))
-#rounds = int(input("For how many rounds? "))
-#rounds = 1
-print("Executing Battle", i)
 
 # Setting to the list index of the number chosen
 i=i-1
+print("Executing Battle: %s" % log.sheet_names[i])
 
 # Need to track the right spot in combatants, which conflicts with 'count' due to enemy "lives" inflating the list vs the Log
 place = 0
@@ -50,6 +47,7 @@ for count in range(len(battles[i].index)):
 			combatants[place].position = pos + 1
 			combatants[place].lives = 1
 			combatants[place].group = count
+			enemy_groups.append(tuple((combatants[place].name, combatants[place].group)))
 			place += 1
 
 	elif battles[i].iloc[count,1] == "Player":
@@ -64,8 +62,12 @@ for count in range(len(battles[i].index)):
 		combatants[place].group = count
 		place += 1
 
+# Create a unique list of enemy groups
+enemy_groups = set(enemy_groups)
+enemy_groups = list(enemy_groups)
+
 # DATA ASSIGNMENT LOOP
-# Ridiculously big loop to go through combatants list, assign static values, retrieve dynamnic combat info, determine initiative, and assign commands
+# Ridiculously big loop to go through combatants list, assign static values
 for count in range(len(combatants)):
 	current_com = combatants[count]
 
@@ -199,7 +201,7 @@ while rd < rounds:
 			# Based on the Command, assign the Target Type to the Target line
 			attacker.target_type = commands.loc[attacker.command, "Target Type"]
 
-			if attacker.target_type == "Single":
+			if (attacker.target_type == "Single") or (attacker.target_type == "Group"):
 				for choice in range(len(party_order)):
 					roll = random.randint(1,100)
 					if roll < 51 and combatants[party_order[choice][2]].isDead() == False:
@@ -223,10 +225,14 @@ while rd < rounds:
 			# 		roll = random.randint(1,100)
 			# 		if roll < attacker.current_Mana
 
+			elif (attacker.target_type == "All Enemies"):
+				for each in range(len(party_order)):
+					attacker.add_target(party_order[each][0])
+
 		# PC TARGET SETTING
 		else:
 			temp_target = commands.loc[attacker.command, "Target Type"]
-			if temp_target == "Single":
+			if temp_target == ("Single" or "Group"):
 				attacker.add_target(attacker.target_type)
 			elif temp_target == "Block":
 				print("%s is defending with %s." % (attacker.name, attacker.command))
@@ -235,10 +241,13 @@ while rd < rounds:
 			elif temp_target == "Counter":
 				print("%s is waiting for the attack." % attacker.name)
 				continue
-			elif temp_target == "Group":
+#			elif temp_target == "Group":
 #				for tar in range(len(combatants)):
 #					if (combatants[tar].role == "Enemy") and (combatants[tar].name == attacker.target_type):
-				attacker.add_target(attacker.target_type)
+#				attacker.add_target(attacker.target_type)
+			elif temp_target == "All Enemies":
+				for each in range(len(enemy_groups)):
+					attacker.targets.append(enemy_groups[each][0])
 
 		# SINGLE TARGET SELECTION
 		priority = 100
@@ -339,13 +348,51 @@ while rd < rounds:
 					# Need to check resistances
 					damage = calculateDamage(attacker.current_Mana, weapon_multiplier, 0)
 					defense = damage * combatants[defender].current_Mana / 200
-					damage = damage - defense
-					print("%d damage to %s group." % (damage, attacker.targets[foe]))
+
+				damage = damage - defense
+				print("%d damage to %s group." % (damage, attacker.targets[foe]))
 
 				if damage < 0:
 					damage = 0
 
-				# Loop through combatants to deal damage to all members of a group. No differentiation between them yet.
+				# Loop through combatants to deal damage to all members of a group. No differentiation (e.g. buffs) between them yet.
+				body_count = 0
+				for who in range(len(combatants)):
+					if combatants[who].name == attacker.targets[foe]:
+						combatants[who].current_HP -= damage
+						if combatants[who].current_HP <= 0:
+							combatants[who].current_HP = 0
+							combatants[who].lives -= 1
+							body_count += 1
+				if body_count > 0:
+					print("Defeated %d." % body_count)
+
+			# Need to bring the targets list loop in here. Also, need to make combatants[defender] change for each group
+			elif commands.loc[attacker.command, "Target Type"] == "All Enemies": 	
+				print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
+				weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
+				damage_stat = commands.loc[attacker.command, "Damage Stat"]
+
+				if combatants[defender].isCursed == True:
+					defense = round(combatants[defender].current_Def / 2)
+
+				# Determine the driving stat. Need to add "Set" here eventually
+				if damage_stat == "Str":
+					damage = calculateDamage(attacker.current_Str, weapon_multiplier, defense)
+				elif damage_stat == "Agl":
+					damage = calculateDamage(attacker.current_Agl, weapon_multiplier, defense)
+				elif damage_stat == "Mana":
+					# Need to check resistances
+					damage = calculateDamage(attacker.current_Mana, weapon_multiplier, 0)
+					defense = damage * combatants[defender].current_Mana / 200
+
+				damage = damage - defense
+				print("%d damage to %s group." % (damage, attacker.targets[foe]))
+
+				if damage < 0:
+					damage = 0
+
+				# Loop through combatants to deal damage to all members of a group. No differentiation (e.g. buffs) between them yet.
 				body_count = 0
 				for who in range(len(combatants)):
 					if combatants[who].name == attacker.targets[foe]:

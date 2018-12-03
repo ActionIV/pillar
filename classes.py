@@ -168,7 +168,3 @@ class NPC:
 	
 	def getRole(self):
 	 	return self.role
-
-
-
-
