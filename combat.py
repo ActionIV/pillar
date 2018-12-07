@@ -30,3 +30,26 @@ def afterTurn(attacker):
 	attacker.add_action(attacker.command)
 	attacker.targets.clear()
 	return attacker
+
+def frontOfGroup(combatants, att, foe):
+	attacker = combatants[att]
+	priority = 100
+	defender = 0
+
+	for tar in range(len(combatants)):
+		if (combatants[tar].name == attacker.targets[foe]) and (int(combatants[tar].position) < priority) and (combatants[tar].isDead() == False):
+			priority = combatants[tar].position
+			defender = tar
+	return defender
+
+def groupAttack(combatants, name, damage):
+	body_count = 0
+	for who in range(len(combatants)):
+		if combatants[who].name == name:
+			combatants[who].current_HP -= damage
+			if combatants[who].current_HP <= 0:
+				combatants[who].current_HP = 0
+				combatants[who].lives -= 1
+				body_count += 1
+	if body_count > 0:
+		print("Defeated %d." % body_count)

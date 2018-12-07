@@ -3,7 +3,7 @@ import random
 import operator
 from collections import Counter 
 from classes import Player, Enemy, NPC, Actor
-from combat import randomTarget, battleStatus, calculateDamage, afterTurn
+from combat import randomTarget, battleStatus, calculateDamage, afterTurn, frontOfGroup, groupAttack
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -38,6 +38,7 @@ print("Executing Battle: %s" % log.sheet_names[i])
 # Need to track the right spot in combatants, which conflicts with 'count' due to enemy "lives" inflating the list vs the Log
 place = 0
 
+# Populate the Combatants list
 # I would prefer to be doing label lookups with Pandas loc instead of iloc, but I can't get the indexing right (at load time)
 for count in range(len(battles[i].index)):
 	# Enemy groups require a for loop to create individual Actors for tracking initiative, deaths, etc.
@@ -232,7 +233,7 @@ while rd < rounds:
 		# PC TARGET SETTING
 		else:
 			temp_target = commands.loc[attacker.command, "Target Type"]
-			if temp_target == ("Single" or "Group"):
+			if temp_target in ("Single", "Group"):
 				attacker.add_target(attacker.target_type)
 			elif temp_target == "Block":
 				print("%s is defending with %s." % (attacker.name, attacker.command))
@@ -249,18 +250,10 @@ while rd < rounds:
 				for each in range(len(enemy_groups)):
 					attacker.targets.append(enemy_groups[each][0])
 
-		# SINGLE TARGET SELECTION
-		priority = 100
-		defender = 0
-	############################
-	# Indent here. May need to cycle through a count of the target list
-	############################
+		# Cycle through targets for attacks
 		for foe in range(len(attacker.targets)):
 			# Select the front-most member of a group with the same name (i.e. attack the front-most enemy of a group)
-			for tar in range(len(combatants)):
-				if (combatants[tar].name == attacker.targets[foe]) and (int(combatants[tar].position) < priority) and (combatants[tar].isDead() == False):
-					priority = combatants[tar].position
-					defender = tar
+			defender = frontOfGroup(combatants, count, foe)
 
 			if commands.loc[attacker.command, "Target Type"] == "Single":
 				# HIT LOGIC
@@ -278,7 +271,7 @@ while rd < rounds:
 				def_command_type = commands.loc[combatants[defender].command, "Type"]
 
 				# Blockable logic
-				if commands.loc[attacker.command, "Type"] == "Melee" or (commands.loc[attacker.command, "Type"] == "Ranged"):
+				if commands.loc[attacker.command, "Type"] in ("Melee", "Ranged"):
 					blockable = True
 				if def_command_type == "Shield" and blockable:
 					block_roll = random.randint(1,100)
@@ -355,21 +348,14 @@ while rd < rounds:
 				if damage < 0:
 					damage = 0
 
-				# Loop through combatants to deal damage to all members of a group. No differentiation (e.g. buffs) between them yet.
-				body_count = 0
-				for who in range(len(combatants)):
-					if combatants[who].name == attacker.targets[foe]:
-						combatants[who].current_HP -= damage
-						if combatants[who].current_HP <= 0:
-							combatants[who].current_HP = 0
-							combatants[who].lives -= 1
-							body_count += 1
-				if body_count > 0:
-					print("Defeated %d." % body_count)
+				# Loop through combatants to deal damage to all members of a group. No differentiation (e.g. buffs) between them yet
+				groupAttack(combatants, attacker.targets[foe], damage)
 
 			# Need to bring the targets list loop in here. Also, need to make combatants[defender] change for each group
-			elif commands.loc[attacker.command, "Target Type"] == "All Enemies": 	
-				print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
+			elif commands.loc[attacker.command, "Target Type"] == "All Enemies":
+				# Only print the command text the first time through
+				if foe == 0:
+					print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
 				weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
 				damage_stat = commands.loc[attacker.command, "Damage Stat"]
 
@@ -392,21 +378,8 @@ while rd < rounds:
 				if damage < 0:
 					damage = 0
 
-				# Loop through combatants to deal damage to all members of a group. No differentiation (e.g. buffs) between them yet.
-				body_count = 0
-				for who in range(len(combatants)):
-					if combatants[who].name == attacker.targets[foe]:
-						combatants[who].current_HP -= damage
-						if combatants[who].current_HP <= 0:
-							combatants[who].current_HP = 0
-							combatants[who].lives -= 1
-							body_count += 1
-				if body_count > 0:
-					print("Defeated %d." % body_count)
-
-	############################
-	# End indent here, presumably
-	############################
+				# Loop through combatants to deal damage to all members of each group
+				groupAttack(combatants, attacker.targets[foe], damage)
 
 		# Post-action tracking
 		combatants[count] = afterTurn(attacker)
