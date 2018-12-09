@@ -4,9 +4,9 @@ def randomTarget(party_size):
 	roll = random.randint(1,party_size)
 	return roll-1
 
-def calculateDamage(stat, multiplier, defense):
+def calculateDamage(stat, multiplier):
 	atk_power = stat * multiplier + random.randint(1, stat)
-	return atk_power - defense
+	return atk_power
 
 def battleStatus(survivors):
 	players = 0
@@ -43,6 +43,11 @@ def frontOfGroup(combatants, att, foe):
 	return defender
 
 def groupAttack(combatants, name, damage):
+	if damage < 0:
+		damage = 0
+		print("No damage.")
+	else:
+		print("%d damage to %s group." % (damage, name))
 	body_count = 0
 	for who in range(len(combatants)):
 		if combatants[who].name == name:
@@ -53,3 +58,26 @@ def groupAttack(combatants, name, damage):
 				body_count += 1
 	if body_count > 0:
 		print("Defeated %d." % body_count)
+
+def rollDamage(stat, attacker, multiplier):
+	if stat == "Str":
+		damage = calculateDamage(attacker.current_Str, multiplier)
+	elif stat == "Agl":
+		damage = calculateDamage(attacker.current_Agl, multiplier)
+	elif stat == "Mana":
+		# Need to check resistances
+		damage = calculateDamage(attacker.current_Mana, multiplier)
+	else:
+		damage = 0
+	return damage
+
+def determineDefense(defender, attack_type, damage):
+	if attack_type in ("Melee", "Ranged"):
+		defense = defender.current_Def
+		if defender.isCursed() == True:
+			defense = round(defense / 2)
+		defense = defender.current_Def * 5
+		return damage - defense
+	elif attack_type == "Magic":
+		# Still need to add resistance checks (traits, equipment, MAGI)
+		return damage * defender.current_Mana / 200

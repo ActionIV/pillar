@@ -3,7 +3,7 @@ import random
 import operator
 from collections import Counter 
 from classes import Player, Enemy, NPC, Actor
-from combat import randomTarget, battleStatus, calculateDamage, afterTurn, frontOfGroup, groupAttack
+from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -254,6 +254,9 @@ while rd < rounds:
 		for foe in range(len(attacker.targets)):
 			# Select the front-most member of a group with the same name (i.e. attack the front-most enemy of a group)
 			defender = frontOfGroup(combatants, count, foe)
+			attack_type = commands.loc[attacker.command, "Type"]
+			weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
+			damage_stat = commands.loc[attacker.command, "Damage Stat"]
 
 			if commands.loc[attacker.command, "Target Type"] == "Single":
 				# HIT LOGIC
@@ -261,17 +264,18 @@ while rd < rounds:
 				# Need:  Attacker Agility
 				# Calc:  Defender score - 2x Attacker.AGL, then 97 - the result
 				print("%s attacks %s with %s." % (attacker.name, combatants[defender].name, attacker.command))
-				attacker_hit = attacker.current_Agl
+				attacker_hit = attacker.current_Agl				
 				defender_score = combatants[defender].current_Agl
-				blocked = False
-				blockable = False
+
 				if combatants[defender].isBlinded == True:
 					defender_score = round(defender_score / 2)
 				# Need MAGI logic here
 				def_command_type = commands.loc[combatants[defender].command, "Type"]
 
 				# Blockable logic
-				if commands.loc[attacker.command, "Type"] in ("Melee", "Ranged"):
+				blocked = False
+				blockable = False
+				if attack_type in ("Melee", "Ranged"):
 					blockable = True
 				if def_command_type == "Shield" and blockable:
 					block_roll = random.randint(1,100)
@@ -289,34 +293,15 @@ while rd < rounds:
 					print("%s defended against %s with %s." % (combatants[defender].name, attacker.command, combatants[defender].command))
 
 				# DAMAGE ASSIGNMENT
-				else:		
-					weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
-					damage_stat = commands.loc[attacker.command, "Damage Stat"]
-
-					defense = combatants[defender].current_Def * 5
-
-					if combatants[defender].isCursed == True:
-						defense = round(combatants[defender].current_Def / 2)
-
-					if damage_stat == "Str":
-						damage = calculateDamage(attacker.current_Str, weapon_multiplier, defense)
-					elif damage_stat == "Agl":
-						damage = calculateDamage(attacker.current_Agl, weapon_multiplier, defense)
-					elif damage_stat == "Mana":
-						damage = calculateDamage(attacker.current_Mana, weapon_multiplier, defense)
-					# Need more elif for guns, bows, and other static attacks
-
-					# Else will have to handle special attacks later. For now, make damage zero
-					else:
-						damage = 0
-
-#					if blocked == True:
-#						damage = damage / 2
-#						print("%s defended against %s with %s." % (combatants[defender].name, attacker.command, combatants[defender].command))
+				else:
+					offense = rollDamage(damage_stat, attacker, weapon_multiplier)
+					damage = determineDefense(combatants[defender], attack_type, offense)
 
 					if damage < 0:
 						damage = 0
-					print("%d damage to %s." % (damage, attacker.targets[0]))
+						print("No damage.")
+					else:
+						print("%d damage to %s." % (damage, attacker.targets[foe]))
 					combatants[defender].current_HP -= damage
 					if combatants[defender].current_HP <= 0:
 						combatants[defender].current_HP = 0
@@ -326,27 +311,9 @@ while rd < rounds:
 
 			elif commands.loc[attacker.command, "Target Type"] == "Group":
 				print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command))
-				weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
-				damage_stat = commands.loc[attacker.command, "Damage Stat"]
-
-				if combatants[defender].isCursed == True:
-					defense = round(combatants[defender].current_Def / 2)
-
-				# Determine the driving stat. Need to add "Set" here eventually
-				if damage_stat == "Str":
-					damage = calculateDamage(attacker.current_Str, weapon_multiplier, defense)
-				elif damage_stat == "Agl":
-					damage = calculateDamage(attacker.current_Agl, weapon_multiplier, defense)
-				elif damage_stat == "Mana":
-					# Need to check resistances
-					damage = calculateDamage(attacker.current_Mana, weapon_multiplier, 0)
-					defense = damage * combatants[defender].current_Mana / 200
-
-				damage = damage - defense
-				print("%d damage to %s group." % (damage, attacker.targets[foe]))
-
-				if damage < 0:
-					damage = 0
+				offense = rollDamage(damage_stat, attacker, weapon_multiplier)
+				defense = determineDefense(combatants[defender], attack_type, offense)
+				damage = offense - defense
 
 				# Loop through combatants to deal damage to all members of a group. No differentiation (e.g. buffs) between them yet
 				groupAttack(combatants, attacker.targets[foe], damage)
@@ -356,27 +323,9 @@ while rd < rounds:
 				# Only print the command text the first time through
 				if foe == 0:
 					print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
-				weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
-				damage_stat = commands.loc[attacker.command, "Damage Stat"]
-
-				if combatants[defender].isCursed == True:
-					defense = round(combatants[defender].current_Def / 2)
-
-				# Determine the driving stat. Need to add "Set" here eventually
-				if damage_stat == "Str":
-					damage = calculateDamage(attacker.current_Str, weapon_multiplier, defense)
-				elif damage_stat == "Agl":
-					damage = calculateDamage(attacker.current_Agl, weapon_multiplier, defense)
-				elif damage_stat == "Mana":
-					# Need to check resistances
-					damage = calculateDamage(attacker.current_Mana, weapon_multiplier, 0)
-					defense = damage * combatants[defender].current_Mana / 200
-
-				damage = damage - defense
-				print("%d damage to %s group." % (damage, attacker.targets[foe]))
-
-				if damage < 0:
-					damage = 0
+				offense = rollDamage(damage_stat, attacker, weapon_multiplier)
+				defense = determineDefense(combatants[defender], attack_type, offense)
+				damage = offense - defense
 
 				# Loop through combatants to deal damage to all members of each group
 				groupAttack(combatants, attacker.targets[foe], damage)
