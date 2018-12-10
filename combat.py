@@ -59,7 +59,9 @@ def groupAttack(combatants, name, damage):
 	if body_count > 0:
 		print("Defeated %d." % body_count)
 
-def rollDamage(stat, attacker, multiplier):
+def rollDamage(command, attacker):
+	stat = command.stat
+	multiplier = command.multiplier
 	if stat == "Str":
 		damage = calculateDamage(attacker.current_Str, multiplier)
 	elif stat == "Agl":
@@ -68,7 +70,8 @@ def rollDamage(stat, attacker, multiplier):
 		# Need to check resistances
 		damage = calculateDamage(attacker.current_Mana, multiplier)
 	elif stat == "Set":
-		damage = 0
+		# Need to add race_bonus eventually
+		damage = command.min_dmg + random.randint(1,command.rand_dmg)
 	else:
 		damage = 0
 	return damage

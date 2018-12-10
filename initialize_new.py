@@ -239,25 +239,22 @@ while rd < rounds:
 				for each in range(len(enemy_groups)):
 					attacker.targets.append(enemy_groups[each][0])
 
-		# command = Command(attacker.command)
-		# command.stat = commands.loc[command.name,"Damage Stat"]
-		# command.multiplier = commands.loc[command.name,"Multiplier"]
-		# command.att_type = commands.loc[command.name,"Type"]
-		# command.targeting = commands.loc[command.name,"Target Type"]
-		# command.element = commands.loc[command.name,"Element"]
-		# command.min_dmg = commands.loc[command.name,"Min DMG"]
-		# command.rand_dmg = commands.loc[command.name,"Rand DMG"]
-		# command.effect = commands.loc[command.name,"Effect"]
-		# command.percent = commands.loc[command.name,"Percent"]
+		# Construct the command class for this instance
+		command = Command(attacker.command)
+		command.stat = commands.loc[command.name,"Damage Stat"]
+		command.multiplier = commands.loc[command.name,"Multiplier"]
+		command.att_type = commands.loc[command.name,"Type"]
+		command.targeting = commands.loc[command.name,"Target Type"]
+		command.element = commands.loc[command.name,"Element"]
+		command.min_dmg = commands.loc[command.name,"Min DMG"]
+		command.rand_dmg = commands.loc[command.name,"Rand DMG"]
+		command.effect = commands.loc[command.name,"Effect"]
+		command.percent = commands.loc[command.name,"Percent"]
 
 		# Cycle through targets for attacks
 		for foe in range(len(attacker.targets)):
 			# Select the front-most member of a group with the same name (i.e. attack the front-most enemy of a group)
 			defender = frontOfGroup(combatants, count, foe)
-
-			attack_type = commands.loc[attacker.command, "Type"]
-			weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
-			damage_stat = commands.loc[attacker.command, "Damage Stat"]
 
 			if commands.loc[attacker.command, "Target Type"] == "Single":
 				# HIT LOGIC
@@ -276,7 +273,7 @@ while rd < rounds:
 				# Blockable logic
 				blocked = False
 				blockable = False
-				if attack_type in ("Melee", "Ranged"):
+				if command.att_type in ("Melee", "Ranged"):
 					blockable = True
 				if def_command_type == "Shield" and blockable:
 					block_roll = random.randint(1,100)
@@ -295,8 +292,8 @@ while rd < rounds:
 
 				# DAMAGE ASSIGNMENT
 				else:
-					offense = rollDamage(damage_stat, attacker, weapon_multiplier)
-					damage = determineDefense(combatants[defender], attack_type, offense)
+					offense = rollDamage(command, attacker)
+					damage = determineDefense(combatants[defender], command.att_type, offense)
 
 					if damage < 0:
 						damage = 0
@@ -312,8 +309,8 @@ while rd < rounds:
 
 			elif commands.loc[attacker.command, "Target Type"] == "Group":
 				print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command))
-				offense = rollDamage(damage_stat, attacker, weapon_multiplier)
-				defense = determineDefense(combatants[defender], attack_type, offense)
+				offense = rollDamage(command, attacker)
+				defense = determineDefense(combatants[defender], command.att_type, offense)
 				damage = offense - defense
 
 				# Loop through combatants to deal damage to all members of a group
@@ -323,8 +320,8 @@ while rd < rounds:
 				# Only print the command text the first time through
 				if foe == 0:
 					print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
-				offense = rollDamage(damage_stat, attacker, weapon_multiplier)
-				defense = determineDefense(combatants[defender], attack_type, offense)
+				offense = rollDamage(command, attacker)
+				defense = determineDefense(combatants[defender], command.att_type, offense)
 				damage = offense - defense
 
 				# Loop through combatants to deal damage to all members of each group
