@@ -168,3 +168,17 @@ class NPC:
 	
 	def getRole(self):
 	 	return self.role
+
+class Command:
+	stat = ""
+	multiplier = 0
+	att_type = ""
+	targeting = ""
+	element = ""
+	min_dmg = 0
+	rand_dmg = 0
+	effect = ""
+	percent = 0
+
+	def __init__(self, name):
+		self.name = name

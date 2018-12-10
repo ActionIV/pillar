@@ -67,6 +67,8 @@ def rollDamage(stat, attacker, multiplier):
 	elif stat == "Mana":
 		# Need to check resistances
 		damage = calculateDamage(attacker.current_Mana, multiplier)
+	elif stat == "Set":
+		damage = 0
 	else:
 		damage = 0
 	return damage

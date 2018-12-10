@@ -2,7 +2,7 @@ import pandas
 import random
 import operator
 from collections import Counter 
-from classes import Player, Enemy, NPC, Actor
+from classes import Player, Enemy, NPC, Actor, Command
 from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense
 
 path1 = r"FFL2 Data.xlsx"
@@ -202,13 +202,11 @@ while rd < rounds:
 			# Based on the Command, assign the Target Type to the Target line
 			attacker.target_type = commands.loc[attacker.command, "Target Type"]
 
-			if (attacker.target_type == "Single") or (attacker.target_type == "Group"):
+			if (attacker.target_type in ("Single", "Group")):
 				for choice in range(len(party_order)):
 					roll = random.randint(1,100)
 					if roll < 51 and combatants[party_order[choice][2]].isDead() == False:
 						sel_target = party_order[choice][0]
-
-	#				elif roll < 51 and combatants[party_order[choice][2]].isDead() == True:
 
 				while sel_target == "":
 					random_roll = randomTarget(len(party_order))
@@ -220,11 +218,6 @@ while rd < rounds:
 						continue
 
 				attacker.add_target(sel_target)
-
-			# elif attacker.target_type == "Group":
-			# 	for choice in range(len(party_order)):
-			# 		roll = random.randint(1,100)
-			# 		if roll < attacker.current_Mana
 
 			elif (attacker.target_type == "All Enemies"):
 				for each in range(len(party_order)):
@@ -242,18 +235,26 @@ while rd < rounds:
 			elif temp_target == "Counter":
 				print("%s is waiting for the attack." % attacker.name)
 				continue
-#			elif temp_target == "Group":
-#				for tar in range(len(combatants)):
-#					if (combatants[tar].role == "Enemy") and (combatants[tar].name == attacker.target_type):
-#				attacker.add_target(attacker.target_type)
 			elif temp_target == "All Enemies":
 				for each in range(len(enemy_groups)):
 					attacker.targets.append(enemy_groups[each][0])
+
+		# command = Command(attacker.command)
+		# command.stat = commands.loc[command.name,"Damage Stat"]
+		# command.multiplier = commands.loc[command.name,"Multiplier"]
+		# command.att_type = commands.loc[command.name,"Type"]
+		# command.targeting = commands.loc[command.name,"Target Type"]
+		# command.element = commands.loc[command.name,"Element"]
+		# command.min_dmg = commands.loc[command.name,"Min DMG"]
+		# command.rand_dmg = commands.loc[command.name,"Rand DMG"]
+		# command.effect = commands.loc[command.name,"Effect"]
+		# command.percent = commands.loc[command.name,"Percent"]
 
 		# Cycle through targets for attacks
 		for foe in range(len(attacker.targets)):
 			# Select the front-most member of a group with the same name (i.e. attack the front-most enemy of a group)
 			defender = frontOfGroup(combatants, count, foe)
+
 			attack_type = commands.loc[attacker.command, "Type"]
 			weapon_multiplier = commands.loc[attacker.command, "Multiplier"]
 			damage_stat = commands.loc[attacker.command, "Damage Stat"]
@@ -315,10 +316,9 @@ while rd < rounds:
 				defense = determineDefense(combatants[defender], attack_type, offense)
 				damage = offense - defense
 
-				# Loop through combatants to deal damage to all members of a group. No differentiation (e.g. buffs) between them yet
+				# Loop through combatants to deal damage to all members of a group
 				groupAttack(combatants, attacker.targets[foe], damage)
 
-			# Need to bring the targets list loop in here. Also, need to make combatants[defender] change for each group
 			elif commands.loc[attacker.command, "Target Type"] == "All Enemies":
 				# Only print the command text the first time through
 				if foe == 0:
