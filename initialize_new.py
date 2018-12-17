@@ -134,7 +134,7 @@ for count in range(len(combatants)):
 
 rd = 0
 rounds = 1
-# EXECUTE COMBAT ROUND - should eventually be a repeatable function based on number of rounds to run
+# EXECUTE COMBAT ROUND
 while rd < rounds:
 	print("~~~ Round %d ~~~" % (rd+1))
 	# SET CURRENT STATS (in Round 1 only), ROLL INITIATIVE, AND SORT
@@ -202,7 +202,7 @@ while rd < rounds:
 			# Based on the Command, assign the Target Type to the Target line
 			attacker.target_type = commands.loc[attacker.command, "Target Type"]
 
-			if (attacker.target_type in ("Single", "Group")):
+			if attacker.target_type in ("Single", "Group"):
 				for choice in range(len(party_order)):
 					roll = random.randint(1,100)
 					if roll < 51 and combatants[party_order[choice][2]].isDead() == False:
@@ -219,25 +219,56 @@ while rd < rounds:
 
 				attacker.add_target(sel_target)
 
-			elif (attacker.target_type == "All Enemies"):
+			elif attacker.target_type == "Block":
+				print("%s is defending with %s." % (attacker.name, attacker.command))
+				combatants[count] = afterTurn(attacker)
+				continue
+			elif attacker.target_type in ("Counter", "Reflect"):
+				print("%s is waiting for the attack." % attacker.name)
+				combatants[count] = afterTurn(attacker)
+				continue
+			elif attacker.target_type == "All Enemies":
 				for each in range(len(party_order)):
 					attacker.add_target(party_order[each][0])
+			elif attacker.target_type == "Allies":
+				for each in range(len(enemy_groups)):
+					attacker.targets.append(enemy_groups[each][0])
+			elif attacker.target_type == "All":
+				for each in range(len(enemy_groups)):
+					attacker.targets.append(enemy_groups[each][0])
+				for each in range(len(party_order)):
+					attacker.targets.append(party_order[each][0])
 
 		# PC TARGET SETTING
 		else:
 			temp_target = commands.loc[attacker.command, "Target Type"]
-			if temp_target in ("Single", "Group"):
+			if temp_target in ("Single", "Group", "Ally"):
 				attacker.add_target(attacker.target_type)
+			elif temp_target == "Self":
+				attacker.add_target(attacker.name)
 			elif temp_target == "Block":
 				print("%s is defending with %s." % (attacker.name, attacker.command))
 				combatants[count] = afterTurn(attacker)
 				continue
-			elif temp_target == "Counter":
+			# May need logic to set a counter/reflect flag at beginning of a round so not every attack or spell is countered
+			elif temp_target in ("Counter", "Reflect"):
 				print("%s is waiting for the attack." % attacker.name)
+				combatants[count] = afterTurn(attacker)
 				continue
 			elif temp_target == "All Enemies":
 				for each in range(len(enemy_groups)):
 					attacker.targets.append(enemy_groups[each][0])
+			elif temp_target == "Allies":
+				for each in range(len(party_order)):
+					attacker.targets.append(party_order[each][0])
+			elif temp_target == "All":
+				for each in range(len(enemy_groups)):
+					attacker.targets.append(enemy_groups[each][0])
+				for each in range(len(party_order)):
+					attacker.targets.append(party_order[each][0])
+			else:
+				print("Invalid target!")
+				break
 
 		# Construct the command class for this instance
 		command = Command(attacker.command)
@@ -293,7 +324,8 @@ while rd < rounds:
 				# DAMAGE ASSIGNMENT
 				else:
 					offense = rollDamage(command, attacker)
-					damage = determineDefense(combatants[defender], command.att_type, offense)
+					defense = determineDefense(combatants[defender], command.att_type, offense)
+					damage = offense - defense
 
 					if damage < 0:
 						damage = 0

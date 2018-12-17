@@ -71,7 +71,11 @@ def rollDamage(command, attacker):
 		damage = calculateDamage(attacker.current_Mana, multiplier)
 	elif stat == "Set":
 		# Need to add race_bonus eventually
-		damage = command.min_dmg + random.randint(1,command.rand_dmg)
+		# What is the random component to damage here?
+		if command.rand_dmg > 0:
+			damage = command.min_dmg + random.randint(1,command.rand_dmg)
+		else:
+			damage = command.min_dmg
 	else:
 		damage = 0
 	return damage
@@ -82,7 +86,7 @@ def determineDefense(defender, attack_type, damage):
 		if defender.isCursed() == True:
 			defense = round(defense / 2)
 		defense = defender.current_Def * 5
-		return damage - defense
+		return defense
 	elif attack_type == "Magic":
 		# Still need to add resistance checks (traits, equipment, MAGI)
 		return damage * defender.current_Mana / 200
