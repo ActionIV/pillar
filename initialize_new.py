@@ -287,7 +287,7 @@ while rd < rounds:
 			# Select the front-most member of a group with the same name (i.e. attack the front-most enemy of a group)
 			defender = frontOfGroup(combatants, count, foe)
 
-			if commands.loc[attacker.command, "Target Type"] == "Single":
+			if command.targeting == "Single":
 				# HIT LOGIC
 				# Need:  Target Agility, Target Blind status, Speed Magi, Target command (does item provide a block)
 				# Need:  Attacker Agility
@@ -339,7 +339,7 @@ while rd < rounds:
 						if combatants[defender].isDead():
 							print("%s fell." % combatants[defender].name)
 
-			elif commands.loc[attacker.command, "Target Type"] == "Group":
+			elif command.targeting == "Group":
 				print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command))
 				offense = rollDamage(command, attacker)
 				defense = determineDefense(combatants[defender], command.att_type, offense)
@@ -348,7 +348,7 @@ while rd < rounds:
 				# Loop through combatants to deal damage to all members of a group
 				groupAttack(combatants, attacker.targets[foe], damage)
 
-			elif commands.loc[attacker.command, "Target Type"] == "All Enemies":
+			elif command.targeting == "All Enemies":
 				# Only print the command text the first time through
 				if foe == 0:
 					print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
