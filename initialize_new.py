@@ -3,7 +3,7 @@ import random
 import operator
 from collections import Counter 
 from classes import Player, Enemy, NPC, Actor, Command
-from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense
+from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -14,13 +14,16 @@ log = pandas.ExcelFile(path2)
 monsters = workbook.parse("Monster", index_col = 'Index')
 commands = workbook.parse("Weapon", index_col = 'Index')
 ms_prob = workbook.parse("Move Probability")
-players = workbook.parse("Players", index_col = 'Index')
+#players = workbook.parse("Players", index_col = 'Index')
 
 # Loop through each sheet of the battle log, appending each to the battles list
 battles = []
 
 for count in range(len(log.sheet_names)):
-	battles.append(log.parse(count, index_col = 'Index', dtype = str))
+	if count == 0:
+		players = log.parse("Players", index_col = 'Index')
+	else:
+		battles.append(log.parse(count, index_col = 'Index', dtype = str))
 
 # This is where a function for creating the combatants list from a battle should be. Call would pass an int to say from which Log sheet to pull
 # Might even pass the sheet itself from battles[]. Would return combatants list
@@ -28,7 +31,7 @@ combatants = []
 enemy_groups = []
 
 for bat in range(len(battles)):
-	print("%d. %s" % (bat+1, log.sheet_names[bat]))
+	print("%d. %s" % (bat+1, log.sheet_names[bat+1]))
 i = int(input("Which battle do you want to run? Enter a number: "))
 
 # Setting to the list index of the number chosen
@@ -140,7 +143,10 @@ while rd < rounds:
 	# SET CURRENT STATS (in Round 1 only), ROLL INITIATIVE, AND SORT
 	if rd == 0:
 		for count in range(len(combatants)):
-			combatants[count].current_HP = combatants[count].HP
+			if combatants[count].current_HP == 'nan':
+				combatants[count].current_HP = combatants[count].HP
+			else:
+				combatants[count].current_HP = int(combatants[count].current_HP)
 			combatants[count].current_Str = combatants[count].Str
 			combatants[count].current_Agl = combatants[count].Agl
 			combatants[count].current_Mana = combatants[count].Mana
@@ -238,6 +244,8 @@ while rd < rounds:
 					attacker.targets.append(enemy_groups[each][0])
 				for each in range(len(party_order)):
 					attacker.targets.append(party_order[each][0])
+			elif attacker.target_type == "Self":
+				attacker.add_target(attacker.name)
 
 		# PC TARGET SETTING
 		else:
@@ -358,6 +366,28 @@ while rd < rounds:
 
 				# Loop through combatants to deal damage to all members of each group
 				groupAttack(combatants, attacker.targets[foe], damage)
+
+			elif command.targeting == "Ally":
+				print("%s used %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
+				if command.effect == "Heal":
+					if command.att_type == "Magic":
+						heal = (attacker.current_Mana + combatants[defender].current_Mana) * command.multiplier + random.randint(1,attacker.current_Mana)
+					else:
+						heal = command.min_dmg
+					if (combatants[defender].current_HP + heal) > combatants[defender].HP:
+						heal = combatants[defender].HP - combatants[defender].current_HP
+						combatants[defender].current_HP = combatants[defender].HP
+					else:
+						combatants[defender].current_HP += heal
+					print("%s recovered %d HP." % (combatants[defender].name, heal))
+				elif command.effect == "Buff":
+					combatants[defender] = affectStat(combatants[defender], command.effect, command.min_dmg)
+					print("%s increased by %d." % (command.effect, command.min_dmg))
+			
+			elif command.targeting == "Self":
+				if command.att_type == "Buff":
+					attacker = affectStat(attacker, command.effect, command.min_dmg)
+					print("%s used %s. %s increased by %d." % (attacker.name, attacker.command, command.effect, command.min_dmg))
 
 		# Post-action tracking
 		combatants[count] = afterTurn(attacker)

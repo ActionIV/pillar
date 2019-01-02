@@ -90,3 +90,14 @@ def determineDefense(defender, attack_type, damage):
 	elif attack_type == "Magic":
 		# Still need to add resistance checks (traits, equipment, MAGI)
 		return damage * defender.current_Mana / 200
+
+def affectStat(target, stat, amount):
+	if stat == "STR":
+		target.current_Str += amount
+	elif stat == "AGL":
+		target.current_Agl += amount
+	elif stat == "MANA":
+		target.current_Mana += amount
+	elif stat == "DEF":
+		target.current_Def += amount
+	return target
