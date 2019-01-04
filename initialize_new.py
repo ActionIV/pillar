@@ -3,7 +3,7 @@ import random
 import operator
 from collections import Counter 
 from classes import Player, Enemy, NPC, Actor, Command
-from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat
+from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -300,7 +300,7 @@ while rd < rounds:
 				# Need:  Target Agility, Target Blind status, Speed Magi, Target command (does item provide a block)
 				# Need:  Attacker Agility
 				# Calc:  Defender score - 2x Attacker.AGL, then 97 - the result
-				print("%s attacks %s with %s." % (attacker.name, combatants[defender].name, attacker.command))
+				print("%s attacks %s with %s." % (attacker.name, combatants[defender].name, attacker.command), end = " ")
 				attacker_hit = attacker.current_Agl				
 				defender_score = combatants[defender].current_Agl
 
@@ -368,26 +368,28 @@ while rd < rounds:
 				groupAttack(combatants, attacker.targets[foe], damage)
 
 			elif command.targeting == "Ally":
-				print("%s used %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
+				print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
 				if command.effect == "Heal":
-					if command.att_type == "Magic":
-						heal = (attacker.current_Mana + combatants[defender].current_Mana) * command.multiplier + random.randint(1,attacker.current_Mana)
-					else:
-						heal = command.min_dmg
-					if (combatants[defender].current_HP + heal) > combatants[defender].HP:
-						heal = combatants[defender].HP - combatants[defender].current_HP
-						combatants[defender].current_HP = combatants[defender].HP
-					else:
-						combatants[defender].current_HP += heal
-					print("%s recovered %d HP." % (combatants[defender].name, heal))
+					rollHeal(command, attacker, combatants[defender])
 				elif command.effect == "Buff":
 					combatants[defender] = affectStat(combatants[defender], command.effect, command.min_dmg)
-					print("%s increased by %d." % (command.effect, command.min_dmg))
+					print("%s increases by %d." % (command.effect, command.min_dmg))
 			
 			elif command.targeting == "Self":
 				if command.att_type == "Buff":
 					attacker = affectStat(attacker, command.effect, command.min_dmg)
-					print("%s used %s. %s increased by %d." % (attacker.name, attacker.command, command.effect, command.min_dmg))
+					print("%s uses %s." % (attacker.name, attacker.command), end = " ")
+
+			elif command.targeting == "Allies":
+				if foe == 0:
+					print("%s uses %s." % (attacker.name, attacker.command))
+				for who in range(len(combatants)):
+					if combatants[who].name == attacker.targets[foe]:
+						if command.effect == "Heal":
+							rollHeal(command, attacker, combatants[who])
+						elif command.effect == "Buff":
+							print("%s's" % combatants[who], end = " ")
+							combatants[who] == affectStat(combatants[who], command.effect, command.min_dmg)
 
 		# Post-action tracking
 		combatants[count] = afterTurn(attacker)

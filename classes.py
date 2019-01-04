@@ -42,6 +42,12 @@ class Actor(object):
 		else:
 			return False
 
+	def isAsleep(self):
+		if self.asleep == "y":
+			return True
+		else:
+			return False
+
 	def isParalyzed(self):
 		if self.paralyzed == "y":
 			return True
@@ -83,6 +89,8 @@ class Actor(object):
 			status.append("CURS")
 		if self.isBlinded():
 			status.append("BLND")
+		if self.isAsleep():
+			status.append("SLEP")
 		if self.isParalyzed():
 			status.append("PARA")
 		if self.isPoisoned():
@@ -110,6 +118,7 @@ class Actor(object):
 	stoned = "n"
 	cursed = "n"
 	blinded = "n"
+	asleep = "n"
 	stunned = "n"
 	paralyzed = "n"
 	poisoned = "n"

@@ -59,6 +59,21 @@ def groupAttack(combatants, name, damage):
 	if body_count > 0:
 		print("Defeated %d." % body_count)
 
+def rollHeal(command, healer, ally):
+	if command.att_type == "Magic":
+		heal = (healer.current_Mana + ally.current_Mana) * command.multiplier + random.randint(1, healer.current_Mana)
+	else:
+		heal = command.min_dmg
+	if ally.isDead():
+		print("No effect.")
+		return
+	elif (ally.current_HP + heal) > ally.HP:
+		heal = ally.HP - ally.current_HP
+		ally.current_HP = ally.HP
+	else:
+		ally.current_HP += heal
+	print("%s recovers %d HP." % (ally.name, heal))
+
 def rollDamage(command, attacker):
 	stat = command.stat
 	multiplier = command.multiplier
@@ -100,4 +115,5 @@ def affectStat(target, stat, amount):
 		target.current_Mana += amount
 	elif stat == "DEF":
 		target.current_Def += amount
+	print("%s increases by %d." % (stat, amount))
 	return target
