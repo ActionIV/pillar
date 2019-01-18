@@ -117,3 +117,11 @@ def affectStat(target, stat, amount):
 		target.current_Def += amount
 	print("%s increases by %d." % (stat, amount))
 	return target
+
+def inflictCondition(command, attacker, defender):
+	hit_chance = attacker.current_Mana - (defender.current_Mana * 2) + 50
+	roll = random.randint(1,100)
+	if hit_chance < roll:
+		return command.effect
+	else:
+		return "Resisted!"

@@ -3,7 +3,7 @@ import random
 import operator
 from collections import Counter 
 from classes import Player, Enemy, NPC, Actor, Command
-from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal
+from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal, inflictCondition
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -326,7 +326,7 @@ while rd < rounds:
 				if hit_roll > hit_chance:
 					print("Missed!")
 				# If I choose to make blocking make an attack miss the defender...
-				elif blocked == True:
+				elif (blocked == True) and (command.att_type == "Melee"):
 					print("%s defended against %s with %s." % (combatants[defender].name, attacker.command, combatants[defender].command))
 
 				# DAMAGE ASSIGNMENT
@@ -334,7 +334,8 @@ while rd < rounds:
 					offense = rollDamage(command, attacker)
 					defense = determineDefense(combatants[defender], command.att_type, offense)
 					damage = offense - defense
-
+					if blocked == True:
+						damage = round(damage/2)
 					if damage < 0:
 						damage = 0
 						print("No damage.")
