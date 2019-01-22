@@ -86,7 +86,6 @@ def rollDamage(command, attacker):
 		damage = calculateDamage(attacker.current_Mana, multiplier)
 	elif stat == "Set":
 		# Need to add race_bonus eventually
-		# What is the random component to damage here?
 		if command.rand_dmg > 0:
 			damage = command.min_dmg + random.randint(1,command.rand_dmg)
 		else:
@@ -125,3 +124,41 @@ def inflictCondition(command, attacker, defender):
 		return command.effect
 	else:
 		return "Resisted!"
+
+def checkResistance(skills, effect, resist_table):
+	resist_list = []
+	# Initial loop to get all elemental resists
+	for count in range(len(skills)):
+		if skills[count] == "blank":
+			break
+		else:
+			# CURRENTLY APPENDING A LIST. NEED TO APPEND EACH ELEMENT. HOW TO TELL STRING FROM LIST EASILY?
+			result = separateResists(skills[count], resist_table)
+			if isinstance(result, list) == True:
+				resist_list.extend(separateResists(skills[count], resist_table))
+			else:
+				resist_list.append(separateResists(skills[count], resist_table))
+
+	# Dynamic loop to remove all O- skills and replace them with base resistances
+	if not resist_list:
+		return False
+	else:
+		while count < len(resist_list):
+			if resist_list[count].startswith("O-"):
+				resist_list.append(separateResists(resist_list[count], resist_table))
+
+	# Check the total list for the resistance in question
+	for count in range(len(resist_list)):
+		if resist_list[count] == effect:
+			return True
+	
+	# If no resistance was found
+	return False
+
+def separateResists(check, resist_table):
+	# Only take the element field if the check is against armor, traits, or MAGI
+	if (resist_table.loc[check, "Type"] in ("Armor", "Trait", "MAGI")) and (resist_table.loc[check, "Element"] != "None"):
+		element = resist_table.loc[check, "Element"]
+		elements = []
+		elements = element.split(', ')
+		return elements

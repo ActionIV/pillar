@@ -19,10 +19,10 @@ class Actor(object):
 		self.targets.append(target)
 
 	def isStoned(self):
-		if self.stoned == "y":
-			return True
-		else:
-			return False
+		return True if self.stoned == "y" else False
+		# 	return True
+		# else:
+		# 	return False
 		
 	def isCursed(self):
 		if self.cursed == "y":

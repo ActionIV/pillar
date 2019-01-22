@@ -3,7 +3,7 @@ import random
 import operator
 from collections import Counter 
 from classes import Player, Enemy, NPC, Actor, Command
-from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal, inflictCondition
+from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal, inflictCondition, checkResistance
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -25,6 +25,12 @@ for count in range(len(log.sheet_names)):
 	else:
 		battles.append(log.parse(count, index_col = 'Index', dtype = str))
 
+# Remove NaN entries from certain sheets and columns
+monsters.fillna("blank", inplace = True)
+commands["Element"].fillna("None", inplace = True)
+commands["Effect"].fillna("None", inplace = True)
+players.fillna("blank", inplace = True)
+
 # This is where a function for creating the combatants list from a battle should be. Call would pass an int to say from which Log sheet to pull
 # Might even pass the sheet itself from battles[]. Would return combatants list
 combatants = []
@@ -36,7 +42,7 @@ i = int(input("Which battle do you want to run? Enter a number: "))
 
 # Setting to the list index of the number chosen
 i=i-1
-print("Executing Battle: %s" % log.sheet_names[i])
+print("Executing Battle: %s" % log.sheet_names[i+1])
 
 # Need to track the right spot in combatants, which conflicts with 'count' due to enemy "lives" inflating the list vs the Log
 place = 0
@@ -354,8 +360,12 @@ while rd < rounds:
 				defense = determineDefense(combatants[defender], command.att_type, offense)
 				damage = offense - defense
 
-				# Loop through combatants to deal damage to all members of a group
-				groupAttack(combatants, attacker.targets[foe], damage)
+				# Check resistances
+				if checkResistance(combatants[defender].skills, command.element, commands) == True:
+					print("%s is strong against %s." % (attacker.targets[foe], command.name))
+				else:
+					# Loop through combatants to deal damage to all members of a group
+					groupAttack(combatants, attacker.targets[foe], damage)
 
 			elif command.targeting == "All Enemies":
 				# Only print the command text the first time through
@@ -365,8 +375,12 @@ while rd < rounds:
 				defense = determineDefense(combatants[defender], command.att_type, offense)
 				damage = offense - defense
 
-				# Loop through combatants to deal damage to all members of each group
-				groupAttack(combatants, attacker.targets[foe], damage)
+				# Check resistances
+				if checkResistance(combatants[defender].skills, command.element, commands) == True:
+					print("%s is strong against %s." % (attacker.targets[foe], command.name))
+				else:
+					# Loop through combatants to deal damage to all members of a group
+					groupAttack(combatants, attacker.targets[foe], damage)
 
 			elif command.targeting == "Ally":
 				print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
