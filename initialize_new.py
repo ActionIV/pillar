@@ -14,7 +14,6 @@ log = pandas.ExcelFile(path2)
 monsters = workbook.parse("Monster", index_col = 'Index')
 commands = workbook.parse("Weapon", index_col = 'Index')
 ms_prob = workbook.parse("Move Probability")
-#players = workbook.parse("Players", index_col = 'Index')
 
 # Loop through each sheet of the battle log, appending each to the battles list
 battles = []
@@ -41,8 +40,8 @@ for bat in range(len(battles)):
 i = int(input("Which battle do you want to run? Enter a number: "))
 
 # Setting to the list index of the number chosen
+print("Executing Battle: %s" % log.sheet_names[i])
 i=i-1
-print("Executing Battle: %s" % log.sheet_names[i+1])
 
 # Need to track the right spot in combatants, which conflicts with 'count' due to enemy "lives" inflating the list vs the Log
 place = 0
@@ -331,7 +330,7 @@ while rd < rounds:
 				hit_roll = random.randint(1,100)
 				if hit_roll > hit_chance:
 					print("Missed!")
-				# If I choose to make blocking make an attack miss the defender...
+				# Melee attacks get blocked fully
 				elif (blocked == True) and (command.att_type == "Melee"):
 					print("%s defended against %s with %s." % (combatants[defender].name, attacker.command, combatants[defender].command))
 
@@ -340,6 +339,7 @@ while rd < rounds:
 					offense = rollDamage(command, attacker)
 					defense = determineDefense(combatants[defender], command.att_type, offense)
 					damage = offense - defense
+					# Ranged attacks get blocked for 50% damage
 					if blocked == True:
 						damage = round(damage/2)
 					if damage < 0:
@@ -347,12 +347,12 @@ while rd < rounds:
 						print("No damage.")
 					else:
 						print("%d damage to %s." % (damage, attacker.targets[foe]))
-					combatants[defender].current_HP -= damage
-					if combatants[defender].current_HP <= 0:
-						combatants[defender].current_HP = 0
-						combatants[defender].lives -= 1
-						if combatants[defender].isDead():
-							print("%s fell." % combatants[defender].name)
+						combatants[defender].current_HP -= damage
+						if combatants[defender].current_HP <= 0:
+							combatants[defender].current_HP = 0
+							combatants[defender].lives -= 1
+							if combatants[defender].isDead():
+								print("%s fell." % combatants[defender].name)
 
 			elif command.targeting == "Group":
 				print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command))
@@ -360,7 +360,7 @@ while rd < rounds:
 				defense = determineDefense(combatants[defender], command.att_type, offense)
 				damage = offense - defense
 
-				# Check resistances
+				# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. NEEDS FIXING FOR WEAPON-BASED.)
 				if checkResistance(combatants[defender].skills, command.element, commands) == True:
 					print("%s is strong against %s." % (attacker.targets[foe], command.name))
 				else:
@@ -375,7 +375,7 @@ while rd < rounds:
 				defense = determineDefense(combatants[defender], command.att_type, offense)
 				damage = offense - defense
 
-				# Check resistances
+				# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. NEEDS FIXING FOR WEAPON-BASED.)
 				if checkResistance(combatants[defender].skills, command.element, commands) == True:
 					print("%s is strong against %s." % (attacker.targets[foe], command.name))
 				else:

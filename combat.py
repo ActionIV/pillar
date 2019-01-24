@@ -132,7 +132,6 @@ def checkResistance(skills, effect, resist_table):
 		if skills[count] == "blank":
 			break
 		else:
-			# CURRENTLY APPENDING A LIST. NEED TO APPEND EACH ELEMENT. HOW TO TELL STRING FROM LIST EASILY?
 			result = separateResists(skills[count], resist_table)
 			if isinstance(result, list) == True:
 				resist_list.extend(separateResists(skills[count], resist_table))
@@ -146,6 +145,7 @@ def checkResistance(skills, effect, resist_table):
 		while count < len(resist_list):
 			if resist_list[count].startswith("O-"):
 				resist_list.append(separateResists(resist_list[count], resist_table))
+			count += 1
 
 	# Check the total list for the resistance in question
 	for count in range(len(resist_list)):
