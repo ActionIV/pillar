@@ -125,8 +125,13 @@ def inflictCondition(command, attacker, defender):
 	else:
 		return "Resisted!"
 
-def checkResistance(skills, effect, resist_table):
+def checkResistance(skills, element, effect, type, resist_table):
 	resist_list = []
+
+	# If Melee or Ranged attack with no element, the element is Weapon
+	if type in ("Melee", "Ranged") and element == "None":
+		element = "Weapon"
+
 	# Initial loop to get all elemental resists
 	for count in range(len(skills)):
 		if skills[count] == "blank":
@@ -149,7 +154,7 @@ def checkResistance(skills, effect, resist_table):
 
 	# Check the total list for the resistance in question
 	for count in range(len(resist_list)):
-		if resist_list[count] == effect:
+		if resist_list[count] in (effect, element):
 			return True
 	
 	# If no resistance was found
