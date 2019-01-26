@@ -121,11 +121,39 @@ def inflictCondition(command, attacker, defender):
 	hit_chance = attacker.current_Mana - (defender.current_Mana * 2) + 50
 	roll = random.randint(1,100)
 	if hit_chance < roll:
-		return command.effect
+		applyCondition(command.status, defender)
 	else:
-		return "Resisted!"
+		print("Resisted.")
 
-def checkResistance(skills, element, effect, type, resist_table):
+def applyCondition(status, defender):
+	print("%s" % defender.name, end = " ")
+	if status == "Stone":
+		defender.stoned = "y"
+		print("was turned to stone.")
+	if status == "Curse":
+		defender.cursed = "y"
+		print("was cursed.")
+	if status == "Blind":
+		defender.blinded = "y"
+		print("was blinded.")
+	if status == "Sleep":
+		defender.asleep = "y"
+		print("was put to sleep.")
+	if status == "Paralyze":
+		defender.paralyzed = "y"
+		print("was paralyzed.")
+	if status == "Poison":
+		defender.poisoned = "y"
+		print("was poisoned.")
+	if status == "Confuse":
+		defender.confused = "y"
+		print("was confused.")
+	if status == "Stun":
+		print("fell.")
+		defender.current_HP = 0
+		defender.lives -= 1
+
+def checkResistance(skills, element, status, type, resist_table):
 	resist_list = []
 
 	# If Melee or Ranged attack with no element, the element is Weapon
@@ -135,7 +163,7 @@ def checkResistance(skills, element, effect, type, resist_table):
 	# Initial loop to get all elemental resists
 	for count in range(len(skills)):
 		if skills[count] == "blank":
-			break
+			continue
 		else:
 			result = separateResists(skills[count], resist_table)
 			if isinstance(result, list) == True:
@@ -154,7 +182,7 @@ def checkResistance(skills, element, effect, type, resist_table):
 
 	# Check the total list for the resistance in question
 	for count in range(len(resist_list)):
-		if resist_list[count] in (effect, element):
+		if resist_list[count] in (status, element):
 			return True
 	
 	# If no resistance was found
@@ -167,3 +195,8 @@ def separateResists(check, resist_table):
 		elements = []
 		elements = element.split(', ')
 		return elements
+	elif (resist_table.loc[check, "Type"] in ("Armor", "Trait", "MAGI")) and (resist_table.loc[check, "Status"] != "None"):
+		status = resist_table.loc[check, "Status"]
+		statuses = []
+		statuses = status.split(', ')
+		return statuses

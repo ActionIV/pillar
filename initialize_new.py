@@ -27,6 +27,7 @@ for count in range(len(log.sheet_names)):
 # Remove NaN entries from certain sheets and columns
 monsters.fillna("blank", inplace = True)
 commands["Element"].fillna("None", inplace = True)
+commands["Status"].fillna("None", inplace = True)
 commands["Effect"].fillna("None", inplace = True)
 players.fillna("blank", inplace = True)
 
@@ -206,7 +207,7 @@ while run_sim != "n":
 			attacker = combatants[count]
 
 			# STATUS CHECK
-			if attacker.isDead():
+			if not attacker.isActive():
 				continue
 
 			# Find an actual target based on Target Type, where applicable (i.e. not the "All" abilities)
@@ -295,6 +296,7 @@ while run_sim != "n":
 			command.element = commands.loc[command.name,"Element"]
 			command.min_dmg = commands.loc[command.name,"Min DMG"]
 			command.rand_dmg = commands.loc[command.name,"Rand DMG"]
+			command.status = commands.loc[command.name, "Status"]
 			command.effect = commands.loc[command.name,"Effect"]
 			command.percent = commands.loc[command.name,"Percent"]
 
@@ -345,25 +347,30 @@ while run_sim != "n":
 						# Ranged attacks get blocked for 50% damage
 						if blocked == True:
 							damage = round(damage/2)
-						# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. NEEDS FIXING FOR WEAPON-BASED.)
-						if checkResistance(combatants[defender].skills, command.element, command.effect, command.att_type, commands) == True:
-							if (command.element == "None") and (command.effect == "None"):
+						# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. HOW TO MAKE STATUS WORK?)
+						if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands) == True:
+							if (command.element == "None") and (command.status == "None"):
 								damage = round(damage/2)
-								groupAttack(combatants, attacker.targets[foe], damage)
 							else:
 								print("%s is strong against %s." % (attacker.targets[foe], command.name))
+								continue
+						else:	
+							if command.status != "None":
+								inflictCondition(command, attacker, combatants[defender])
+
+						if command.stat == "Status":
+							continue
+						elif damage < 0:
+							damage = 0
+							print("No damage.")
 						else:
-							if damage < 0:
-								damage = 0
-								print("No damage.")
-							else:
-								print("%d damage to %s." % (damage, attacker.targets[foe]))
-								combatants[defender].current_HP -= damage
-								if combatants[defender].current_HP <= 0:
-									combatants[defender].current_HP = 0
-									combatants[defender].lives -= 1
-									if combatants[defender].isDead():
-										print("%s fell." % combatants[defender].name)
+							print("%d damage to %s." % (damage, attacker.targets[foe]))
+							combatants[defender].current_HP -= damage
+							if combatants[defender].current_HP <= 0:
+								combatants[defender].current_HP = 0
+								combatants[defender].lives -= 1
+								if combatants[defender].isDead():
+									print("%s fell." % combatants[defender].name)
 
 				elif command.targeting == "Group":
 					print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command))
@@ -372,7 +379,7 @@ while run_sim != "n":
 					damage = offense - defense
 
 					# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. NEEDS FIXING FOR WEAPON-BASED.)
-					if checkResistance(combatants[defender].skills, command.element, command.effect, command.att_type, commands) == True:
+					if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands) == True:
 						if (command.element == "None") and (command.effect == "None"):
 							damage = round(damage/2)
 							groupAttack(combatants, attacker.targets[foe], damage)
@@ -391,7 +398,7 @@ while run_sim != "n":
 					damage = offense - defense
 
 					# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. NEEDS FIXING FOR WEAPON-BASED.)
-					if checkResistance(combatants[defender].skills, command.element, command.effect, command.att_type, commands) == True:
+					if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands) == True:
 						if (command.element == "None") and (command.effect == "None"):
 							damage = round(damage/2)
 							groupAttack(combatants, attacker.targets[foe], damage)

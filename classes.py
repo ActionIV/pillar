@@ -74,7 +74,7 @@ class Actor(object):
 			return False
 
 	def isActive(self):
-		if (self.isDead() or self.isStoned()):
+		if (self.isDead() or self.isStoned() or self.isParalyzed()):
 			return False
 		else:
 			return True
@@ -186,6 +186,7 @@ class Command:
 	element = ""
 	min_dmg = 0
 	rand_dmg = 0
+	status = ""
 	effect = ""
 	percent = 0
 
