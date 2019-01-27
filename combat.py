@@ -31,6 +31,48 @@ def afterTurn(attacker):
 	attacker.targets.clear()
 	return attacker
 
+def endOfTurn(attacker):
+	if attacker.isParalyzed() == True:
+		roll = random.randint(1,100)
+		if roll <= 15:
+			print("%s was released from paralysis." % attacker.name)
+			attacker.paralyzed = "n"
+		else:
+			print("%s is paralyzed." % attacker.name)
+	if attacker.isAsleep() == True:
+		roll = random.randint(1,100)
+		if roll <= 30:
+			print("%s woke up." % attacker.name)
+			attacker.asleep = "n"
+		else:
+			print("%s is asleep." % attacker.name)
+	if attacker.isPoisoned() == True:
+		roll = random.randint(1,100)
+		if roll <= 20:
+			print("%s's poison was neutralized." % attacker.name)
+			attacker.poisoned = "n"
+		else:
+			print("%s is poisoned." % attacker.name, end = " ")
+			poison_dmg = attacker.HP * 0.1
+			attacker.current_HP -= poison_dmg
+			print("%d damage." % poison_dmg, end = " ")
+			if attacker.current_HP <= 0:
+				attacker.current_HP = 0
+				attacker.lives -= 1
+				if attacker.isDead():
+					print("%s succumbed to the poison." % attacker.name)
+				else:
+					print("")
+	if attacker.isConfused() == True:
+		roll = random.randint(1,100)
+		if roll <= 10:
+			print("%s regained sanity." % attacker.name)
+			attacker.confused = "n"
+		else:
+			print("%s is confused." % attacker.name)
+
+	return attacker
+
 def frontOfGroup(combatants, att, foe):
 	attacker = combatants[att]
 	priority = 100
@@ -126,30 +168,29 @@ def inflictCondition(command, attacker, defender):
 		print("Resisted.")
 
 def applyCondition(status, defender):
-	print("%s" % defender.name, end = " ")
 	if status == "Stone":
 		defender.stoned = "y"
-		print("was turned to stone.")
+		print("Turned to stone.")
 	if status == "Curse":
 		defender.cursed = "y"
-		print("was cursed.")
+		print("Cursed.")
 	if status == "Blind":
 		defender.blinded = "y"
-		print("was blinded.")
+		print("Blinded.")
 	if status == "Sleep":
 		defender.asleep = "y"
-		print("was put to sleep.")
+		print("Put to sleep.")
 	if status == "Paralyze":
 		defender.paralyzed = "y"
-		print("was paralyzed.")
+		print("Paralyzed.")
 	if status == "Poison":
 		defender.poisoned = "y"
-		print("was poisoned.")
+		print("Poisoned.")
 	if status == "Confuse":
 		defender.confused = "y"
-		print("was confused.")
+		print("Confused.")
 	if status == "Stun":
-		print("fell.")
+		print("Slain.")
 		defender.current_HP = 0
 		defender.lives -= 1
 
@@ -167,14 +208,15 @@ def checkResistance(skills, element, status, type, resist_table):
 		else:
 			result = separateResists(skills[count], resist_table)
 			if isinstance(result, list) == True:
-				resist_list.extend(separateResists(skills[count], resist_table))
+				resist_list.extend(result)
 			else:
-				resist_list.append(separateResists(skills[count], resist_table))
+				resist_list.append(result)
 
 	# Dynamic loop to remove all O- skills and replace them with base resistances
 	if not resist_list:
 		return False
 	else:
+		#list(filter("None".__ne__, resist_list))
 		while count < len(resist_list):
 			if resist_list[count].startswith("O-"):
 				resist_list.append(separateResists(resist_list[count], resist_table))
@@ -195,8 +237,8 @@ def separateResists(check, resist_table):
 		elements = []
 		elements = element.split(', ')
 		return elements
-	elif (resist_table.loc[check, "Type"] in ("Armor", "Trait", "MAGI")) and (resist_table.loc[check, "Status"] != "None"):
-		status = resist_table.loc[check, "Status"]
-		statuses = []
-		statuses = status.split(', ')
-		return statuses
+	# elif (resist_table.loc[check, "Type"] in ("Armor", "Trait", "MAGI")) and (resist_table.loc[check, "Status"] != "None"):
+	# 	status = resist_table.loc[check, "Status"]
+	# 	statuses = []
+	# 	statuses = status.split(', ')
+	# 	return statuses

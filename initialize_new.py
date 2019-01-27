@@ -3,7 +3,7 @@ import random
 import operator
 from collections import Counter 
 from classes import Player, Enemy, NPC, Actor, Command
-from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal, inflictCondition, checkResistance
+from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal, inflictCondition, checkResistance, endOfTurn
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -183,7 +183,7 @@ while run_sim != "n":
 			attacker = combatants[count]
 
 			# STATUS CHECK
-			if attacker.isDead():
+			if not attacker.isActive():
 				continue
 
 			# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
@@ -437,6 +437,8 @@ while run_sim != "n":
 			if not battleStatus(combatants):
 				break
 
+		for each in range(len(combatants)):
+			combatants[each] = endOfTurn(combatants[each])
 		one_more = input("Run another round (y/n)?: ")
 		if one_more == "y":
 			rounds += 1

@@ -74,7 +74,7 @@ class Actor(object):
 			return False
 
 	def isActive(self):
-		if (self.isDead() or self.isStoned() or self.isParalyzed()):
+		if (self.isDead() or self.isStoned() or self.isParalyzed() or self.isAsleep()):
 			return False
 		else:
 			return True
