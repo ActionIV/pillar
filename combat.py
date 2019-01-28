@@ -71,6 +71,9 @@ def endOfTurn(attacker):
 		else:
 			print("%s is confused." % attacker.name)
 
+	if attacker.role == "Enemy":
+		attacker.command = 'nan'
+
 	return attacker
 
 def frontOfGroup(combatants, att, foe):

@@ -190,8 +190,9 @@ while run_sim != "n":
 			# Could also be used for random ability selection for players if an appropriate MS were assigned
 			if attacker.command == 'nan':
 				row = attacker.MS
+				roll = random.randint(0,255)
 				for choice in range(7):
-					roll = random.randint(0,255)
+					
 					if roll < ms_prob.iloc[int(row), choice+1]:
 						attacker.command = attacker.skills[choice]
 						break
@@ -347,7 +348,7 @@ while run_sim != "n":
 						# Ranged attacks get blocked for 50% damage
 						if blocked == True:
 							damage = round(damage/2)
-						# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. HOW TO MAKE STATUS WORK?)
+						# Check resistances
 						if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands) == True:
 							if (command.element == "None") and (command.status == "None"):
 								damage = round(damage/2)
@@ -373,7 +374,7 @@ while run_sim != "n":
 									print("%s fell." % combatants[defender].name)
 
 				elif command.targeting == "Group":
-					print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command))
+					print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
 					offense = rollDamage(command, attacker)
 					defense = determineDefense(combatants[defender], command.att_type, offense)
 					damage = offense - defense
@@ -385,6 +386,8 @@ while run_sim != "n":
 							groupAttack(combatants, attacker.targets[foe], damage)
 						else:
 							print("%s is strong against %s." % (attacker.targets[foe], command.name))
+					elif command.status != "None":
+							inflictCondition(command, attacker, combatants[defender])
 					else:
 						# Loop through combatants to deal damage to all members of a group
 						groupAttack(combatants, attacker.targets[foe], damage)
