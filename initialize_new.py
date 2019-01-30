@@ -192,7 +192,6 @@ while run_sim != "n":
 				row = attacker.MS
 				roll = random.randint(0,255)
 				for choice in range(7):
-					
 					if roll < ms_prob.iloc[int(row), choice+1]:
 						attacker.command = attacker.skills[choice]
 						break
@@ -201,7 +200,10 @@ while run_sim != "n":
 
 			##########################
 			# May need logic here for commands that trigger immediately at the start of a round (e.g. shield barriers)
+			# NEW CLASS ATTRIBUTE OR APPEND EFFECT TO SKILL LIST?
 			##########################
+#			if commands.loc[attacker.command,"Target Type"] == "Block":
+				
 
 		# TARGETING AND COMMAND EXECUTION
 		for count in range(len(combatants)):
@@ -319,13 +321,14 @@ while run_sim != "n":
 						defender_score = round(defender_score / 2)
 					# Need MAGI logic here
 					def_command_type = commands.loc[combatants[defender].command, "Type"]
+					def_command_effect = commands.loc[combatants[defender].command, "Effect"]
 
 					# Blockable logic
 					blocked = False
 					blockable = False
 					if command.att_type in ("Melee", "Ranged"):
 						blockable = True
-					if def_command_type == "Shield" and blockable:
+					if (def_command_type == "Shield" or def_command_effect == "Block") and blockable:
 						block_roll = random.randint(1,100)
 						if block_roll <= (commands.loc[combatants[defender].command, "Percent"] + defender_score):
 							blocked = True
@@ -336,9 +339,10 @@ while run_sim != "n":
 					hit_roll = random.randint(1,100)
 					if hit_roll > hit_chance:
 						print("Missed!")
-					# Melee attacks get blocked fully
-					elif (blocked == True) and (command.att_type == "Melee"):
+					# Melee attacks get blocked fully (even status-based ones)
+					elif (blocked == True and command.att_type == "Melee"):
 						print("%s defended against %s with %s." % (combatants[defender].name, attacker.command, combatants[defender].command))
+					# Should ALL Stone effects be blocked by a shield? Doesn't make sense with things like StoneGas...
 
 					# DAMAGE ASSIGNMENT
 					else:
@@ -350,8 +354,12 @@ while run_sim != "n":
 							damage = round(damage/2)
 						# Check resistances
 						if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands) == True:
-							if (command.element == "None") and (command.status == "None"):
+							# Weapon resistance was found
+							if (command.element == "None" and command.status == "None"):
 								damage = round(damage/2)
+							# Elemental resistance was found, but it's a melee attack so it can't be resisted
+							elif (command.element != "None" and command.att_type == "Melee"):
+								pass
 							else:
 								print("%s is strong against %s." % (attacker.targets[foe], command.name))
 								continue
@@ -381,7 +389,7 @@ while run_sim != "n":
 
 					# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. NEEDS FIXING FOR WEAPON-BASED.)
 					if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands) == True:
-						if (command.element == "None") and (command.effect == "None"):
+						if (command.element == "None" and command.effect == "None"):
 							damage = round(damage/2)
 							groupAttack(combatants, attacker.targets[foe], damage)
 						else:
@@ -402,7 +410,7 @@ while run_sim != "n":
 
 					# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. NEEDS FIXING FOR WEAPON-BASED.)
 					if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands) == True:
-						if (command.element == "None") and (command.effect == "None"):
+						if (command.element == "None" and command.effect == "None"):
 							damage = round(damage/2)
 							groupAttack(combatants, attacker.targets[foe], damage)
 						else:
@@ -460,7 +468,7 @@ while run_sim != "n":
 	# Print enemy status line at the end of a simulation
 	enemy_list = []
 	for count in range(len(combatants)):
-		if (combatants[count].role == "Enemy") and (combatants[count].isActive()):
+		if (combatants[count].role == "Enemy" and combatants[count].isActive()):
 			enemy_list.append(combatants[count].name)
 
 	remaining_enemies = Counter(enemy_list)

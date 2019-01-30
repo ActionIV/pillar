@@ -197,6 +197,7 @@ def applyCondition(status, defender):
 		defender.current_HP = 0
 		defender.lives -= 1
 
+# SHOULD THIS EXECUTE IMMEDIATELY AFTER SKILLS ARE ADDED TO THE LIST, OR LEAVE IT AS IS?
 def checkResistance(skills, element, status, type, resist_table):
 	resist_list = []
 
