@@ -79,7 +79,7 @@ def endOfTurn(attacker):
 def frontOfGroup(combatants, att, foe):
 	attacker = combatants[att]
 	priority = 100
-	defender = 0
+	defender = 100
 
 	for tar in range(len(combatants)):
 		if (combatants[tar].name == attacker.targets[foe]) and (int(combatants[tar].position) < priority) and (combatants[tar].isDead() == False):
@@ -92,17 +92,19 @@ def groupAttack(combatants, name, damage):
 		damage = 0
 		print("No damage.")
 	else:
-		print("%d damage to %s group." % (damage, name))
-	body_count = 0
-	for who in range(len(combatants)):
-		if combatants[who].name == name:
-			combatants[who].current_HP -= damage
-			if combatants[who].current_HP <= 0:
-				combatants[who].current_HP = 0
-				combatants[who].lives -= 1
-				body_count += 1
-	if body_count > 0:
-		print("Defeated %d." % body_count)
+		body_count = 0
+		for who in range(len(combatants)):
+			if combatants[who].name == name and combatants[who].isDead() == False and combatants[who].isStoned() == False:
+				combatants[who].current_HP -= damage
+				if combatants[who].current_HP <= 0:
+					combatants[who].current_HP = 0
+					combatants[who].lives -= 1
+					body_count += 1
+		print("%d damage to %s group." % (damage, name), end = " ")
+		if body_count > 0:
+			print("Defeated %d." % body_count)
+		else:
+			print("")
 
 def rollHeal(command, healer, ally):
 	if command.att_type == "Magic":
@@ -173,29 +175,41 @@ def inflictCondition(command, attacker, defender):
 def applyCondition(status, defender):
 	if status == "Stone":
 		defender.stoned = "y"
+		defender.blinded = "n"
+		defender.poisoned = "n"
+		defender.confused = "n"
+		defender.paralyzed = "n"
+		defender.asleep = "n"
+		defender.cursed = "n"
 		print("Turned to stone.")
-	if status == "Curse":
+	elif status == "Curse":
 		defender.cursed = "y"
 		print("Cursed.")
-	if status == "Blind":
+	elif status == "Blind":
 		defender.blinded = "y"
 		print("Blinded.")
-	if status == "Sleep":
+	elif status == "Sleep":
 		defender.asleep = "y"
 		print("Put to sleep.")
-	if status == "Paralyze":
+	elif status == "Paralyze":
 		defender.paralyzed = "y"
 		print("Paralyzed.")
-	if status == "Poison":
+	elif status == "Poison":
 		defender.poisoned = "y"
 		print("Poisoned.")
-	if status == "Confuse":
+	elif status == "Confuse":
 		defender.confused = "y"
 		print("Confused.")
-	if status == "Stun":
+	elif status == "Stun":
 		print("Slain.")
 		defender.current_HP = 0
 		defender.lives -= 1
+		defender.blinded = "n"
+		defender.poisoned = "n"
+		defender.confused = "n"
+		defender.paralyzed = "n"
+		defender.asleep = "n"
+		defender.cursed = "n"
 
 # SHOULD THIS EXECUTE IMMEDIATELY AFTER SKILLS ARE ADDED TO THE LIST, OR LEAVE IT AS IS?
 def checkResistance(skills, element, status, type, resist_table):

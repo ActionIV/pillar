@@ -144,13 +144,14 @@ while run_sim != "n":
 		else:
 			break
 
-	rd = 0
-	rounds = 1
+	round = 0
+	another_round = "y"
 	# EXECUTE COMBAT ROUND
-	while rd < rounds:
-		print("~~~ Round %d ~~~" % (rd+1))
+	while another_round == "y":
+		round += 1
+		print("~~~ Round %d ~~~" % (round))
 		# SET CURRENT STATS (in Round 1 only), ROLL INITIATIVE, AND SORT
-		if rd == 0:
+		if round == 1:
 			for count in range(len(combatants)):
 				if combatants[count].current_HP == 'nan':
 					combatants[count].current_HP = combatants[count].HP
@@ -308,6 +309,10 @@ while run_sim != "n":
 				# Select the front-most member of a group with the same name (i.e. attack the front-most enemy of a group)
 				defender = frontOfGroup(combatants, count, foe)
 
+				# Defender == 100 means that group is gone. Go to the next foe
+				if defender == 100:
+					continue
+
 				if command.targeting == "Single":
 					# HIT LOGIC
 					# Need:  Target Agility, Target Blind status, Speed Magi, Target command (does item provide a block)
@@ -367,7 +372,11 @@ while run_sim != "n":
 							if command.status != "None":
 								inflictCondition(command, attacker, combatants[defender])
 
+						# No damage on pure Status attacks
 						if command.stat == "Status":
+							continue
+						# No damage to dead or stone enemies
+						elif (combatants[defender].isDead() == True or combatants[defender].isStoned() == True):
 							continue
 						elif damage < 0:
 							damage = 0
@@ -395,10 +404,17 @@ while run_sim != "n":
 						else:
 							print("%s is strong against %s." % (attacker.targets[foe], command.name))
 					elif command.status != "None":
-							inflictCondition(command, attacker, combatants[defender])
+						inflictCondition(command, attacker, combatants[defender])
 					else:
-						# Loop through combatants to deal damage to all members of a group
-						groupAttack(combatants, attacker.targets[foe], damage)
+						# No damage on pure Status attacks
+						if command.stat == "Status":
+							continue
+						elif damage < 0:
+							damage = 0
+							print("No damage.")
+						else:
+							# Loop through combatants to deal damage to all members of a group
+							groupAttack(combatants, attacker.targets[foe], damage)
 
 				elif command.targeting == "All Enemies":
 					# Only print the command text the first time through
@@ -416,8 +432,15 @@ while run_sim != "n":
 						else:
 							print("%s is strong against %s." % (attacker.targets[foe], command.name))
 					else:
-						# Loop through combatants to deal damage to all members of a group
-						groupAttack(combatants, attacker.targets[foe], damage)
+						# No damage on pure Status attacks
+						if command.stat == "Status":
+							continue
+						elif damage < 0:
+							damage = 0
+							print("No damage.")
+						else:
+							# Loop through combatants to deal damage to all members of a group
+							groupAttack(combatants, attacker.targets[foe], damage)
 
 				elif command.targeting == "Ally":
 					print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
@@ -446,16 +469,13 @@ while run_sim != "n":
 			# Post-action tracking
 			combatants[count] = afterTurn(attacker)
 			if not battleStatus(combatants):
+				another_round = "n"
 				break
 
 		for each in range(len(combatants)):
 			combatants[each] = endOfTurn(combatants[each])
-		one_more = input("Run another round (y/n)?: ")
-		if one_more == "y":
-			rounds += 1
-			rd += 1
-		else:
-			rd += 1
+		if another_round != "n":
+			another_round = input("Run another round (y/n)?: ")
 
 	# Print party status line at the end of a simulation
 	for count in range(len(combatants)):
@@ -477,7 +497,7 @@ while run_sim != "n":
 		print("{ %s - %d" % (key, number), end = " }")
 	print("")
 	
-	for count in range(len(combatants)):
-		print(combatants[count])
+#	for count in range(len(combatants)):
+#		print(combatants[count])
 
 	run_sim = input("Run another battle (y/n)?: ")
