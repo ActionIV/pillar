@@ -548,3 +548,23 @@ while run_sim != "n":
 #		print(combatants[count])
 
 	run_sim = input("Run another battle (y/n)?: ")
+
+char_sheets = input("Print character sheets (y/n)?: ")
+if char_sheets == "y":
+	for count in range(len(players.index)):
+		print("CHARACTER: %s  PLAYER: %s" % (players.iloc[count, 1], players.iloc[count, 2]))
+		#current_com.Type = players.loc[players[count].name,"TYPE"]
+		#current_com.HP = players.loc[current_com.name,"HP"]
+		#current_com.Str = players.loc[current_com.name,"STR"]
+		#current_com.Agl = players.loc[current_com.name,"AGL"]
+		#current_com.Mana = players.loc[current_com.name,"MANA"]
+		#current_com.Def = players.loc[current_com.name,"DEF"]
+		
+		#current_com.skills.append(players.loc[current_com.name,"S0"])
+		#current_com.skills.append(players.loc[current_com.name,"S1"])
+		#current_com.skills.append(players.loc[current_com.name,"S2"])
+		#current_com.skills.append(players.loc[current_com.name,"S3"])
+		#current_com.skills.append(players.loc[current_com.name,"S4"])
+		#current_com.skills.append(players.loc[current_com.name,"S5"])
+		#current_com.skills.append(players.loc[current_com.name,"S6"])
+		#current_com.skills.append(players.loc[current_com.name,"S7"])
