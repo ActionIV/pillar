@@ -552,7 +552,8 @@ while run_sim != "n":
 char_sheets = input("Print character sheets (y/n)?: ")
 if char_sheets == "y":
 	for count in range(len(players.index)):
-		print("CHARACTER: %s  PLAYER: %s" % (players.iloc[count, 1], players.iloc[count, 2]))
+		print("CHARACTER: %s  PLAYER: %s" % (players.iloc[count, 0], players.iloc[count, 1]))
+		print("CLASS:  %s" % players.iloc[count, 2])
 		#current_com.Type = players.loc[players[count].name,"TYPE"]
 		#current_com.HP = players.loc[current_com.name,"HP"]
 		#current_com.Str = players.loc[current_com.name,"STR"]
