@@ -211,15 +211,7 @@ def applyCondition(status, defender):
 		defender.asleep = "n"
 		defender.cursed = "n"
 
-# SHOULD THIS EXECUTE IMMEDIATELY AFTER SKILLS ARE ADDED TO THE LIST, OR LEAVE IT AS IS?
-def checkResistance(skills, element, status, type, resist_table, barriers):
-	resist_list = barriers.copy()
-
-	# If Melee or Ranged attack with no element, the element is Weapon
-	if type in ("Melee", "Ranged") and element == "None":
-		element = "Weapon"
-
-	# Initial loop to get all elemental resists
+def buildResistances(skills, resist_list, resist_table):
 	for count in range(len(skills)):
 		if skills[count] == "blank":
 			continue
@@ -230,24 +222,34 @@ def checkResistance(skills, element, status, type, resist_table, barriers):
 			else:
 				resist_list.append(result)
 
-	# Dynamic loop to remove all O- skills and replace them with base resistances
-	if not resist_list:
-		return False
-	else:
-		list(filter("None".__ne__, resist_list))
-		count = 0
-		while count < len(resist_list):
-			if resist_list[count].startswith("O-"):
-				result = separateResists(skills[count], resist_table)
-				if isinstance(result, list) == True:
-					resist_list.extend(result)
-				else:
-					resist_list.append(result)
-			count += 1
+	## Dynamic loop to remove all O- skills and replace them with base resistances
+	#if not resist_list:
+	#	return
+	#else:
+	#	list(filter("None".__ne__, resist_list))
+	#	count = 0
+	#	while count < len(resist_list):
+	#		if resist_list[count].startswith("O-"):
+	#			result = separateResists(skills[count], resist_table)
+	#			if isinstance(result, list) == True:
+	#				resist_list.extend(result)
+	#			else:
+	#				resist_list.append(result)
+	#		count += 1
+
+# SHOULD THIS EXECUTE IMMEDIATELY AFTER SKILLS ARE ADDED TO THE LIST, OR LEAVE IT AS IS?
+def checkResistance(resist_list, element, status, type, barriers):
+	total_resists = barriers.copy()
+	total_resists.extend(resist_list)
+	#total_resists.extend(barriers)
+
+	# If Melee or Ranged attack with no element, the element is Weapon
+	if type in ("Melee", "Ranged") and element == "None":
+		element = "Weapon"
 
 	# Check the total list for the resistance in question
 	for count in range(len(resist_list)):
-		if resist_list[count] in (status, element):
+		if total_resists[count] in (status, element) and total_resists[count] != "None":
 			return True
 	
 	# If no resistance was found
@@ -259,11 +261,15 @@ def separateResists(check, resist_table):
 	if (resist_table.loc[check, "Type"] in ("Armor", "Trait", "MAGI")) and (element != "None"):
 		elements = []
 		elements = element.split(', ')
+		count = 0
+		while count < len(elements):
+			if elements[count].startswith("O-"):
+				result = separateResists(elements[count], resist_table)
+				if isinstance(result, list) == True:
+					elements.extend(result)
+				else:
+					elements.append(result)
+			count += 1
 		return elements
 	else:
 		return "None"
-	# elif (resist_table.loc[check, "Type"] in ("Armor", "Trait", "MAGI")) and (resist_table.loc[check, "Status"] != "None"):
-	# 	status = resist_table.loc[check, "Status"]
-	# 	statuses = []
-	# 	statuses = status.split(', ')
-	# 	return statuses

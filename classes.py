@@ -4,6 +4,7 @@ class Actor(object):
 		self.name = name
 		self.actions_taken = []
 		self.targets = []
+		self.resists = []
 		Actor.names.append(name)
 		
 	def getName(self):
@@ -17,6 +18,12 @@ class Actor(object):
 
 	def add_target(self, target):
 		self.targets.append(target)
+
+	def add_resist(self, resist):
+		if isinstance(result, list) == True:
+			resist_list.extend(result)
+		else:
+			resist_list.append(result)
 
 	def isStoned(self):
 		return True if self.stoned == "y" else False

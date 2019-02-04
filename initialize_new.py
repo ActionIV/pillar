@@ -3,7 +3,7 @@ import random
 import operator
 from collections import Counter 
 from classes import Player, Enemy, NPC, Actor, Command
-from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal, inflictCondition, checkResistance, endOfTurn
+from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal, inflictCondition, checkResistance, endOfTurn, buildResistances
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -143,6 +143,8 @@ while run_sim != "n":
 		# Should be NPC code, but no separate sheet for that yet
 		else:
 			break
+
+		buildResistances(current_com.skills, current_com.resists, commands)
 
 	rd = 0
 	another_round = "y"
@@ -392,10 +394,10 @@ while run_sim != "n":
 							damage = round(damage/2)
 						# Check resistances
 						if combatants[defender].role == "Enemy":
-							barriers = enemy_barriers.copy()
+							buildResistances(enemy_barriers, barriers, commands)
 						else:
-							barriers = player_barriers.copy()
-						if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands, barriers) == True:
+							buildResistances(player_barriers, barriers, commands)
+						if checkResistance(combatants[defender].resists, command.element, command.status, command.att_type, barriers) == True:
 							# Weapon resistance was found
 							if (command.element == "None" and command.status == "None"):
 								damage = round(damage/2)
@@ -435,10 +437,10 @@ while run_sim != "n":
 
 					# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. NEEDS FIXING FOR WEAPON-BASED.)
 					if combatants[defender].role == "Enemy":
-						barriers = enemy_barriers
+						buildResistances(enemy_barriers, barriers, commands)
 					else:
-						barriers = player_barriers
-					if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands, barriers) == True:
+						buildResistances(player_barriers, barriers, commands)
+					if checkResistance(combatants[defender].resists, command.element, command.status, command.att_type, barriers) == True:
 						if (command.element == "None" and command.effect == "None"):
 							damage = round(damage/2)
 							groupAttack(combatants, attacker.targets[foe], damage)
@@ -467,10 +469,10 @@ while run_sim != "n":
 
 					# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. NEEDS FIXING FOR WEAPON-BASED.)
 					if combatants[defender].role == "Enemy":
-						barriers = enemy_barriers
+						buildResistances(enemy_barriers, barriers, commands)
 					else:
-						barriers = player_barriers
-					if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands, barriers) == True:
+						buildResistances(player_barriers, barriers, commands)
+					if checkResistance(combatants[defender].resists, command.element, command.status, command.att_type, barriers) == True:
 						if (command.element == "None" and command.effect == "None"):
 							damage = round(damage/2)
 							groupAttack(combatants, attacker.targets[foe], damage)
