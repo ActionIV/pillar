@@ -212,8 +212,8 @@ def applyCondition(status, defender):
 		defender.cursed = "n"
 
 # SHOULD THIS EXECUTE IMMEDIATELY AFTER SKILLS ARE ADDED TO THE LIST, OR LEAVE IT AS IS?
-def checkResistance(skills, element, status, type, resist_table):
-	resist_list = []
+def checkResistance(skills, element, status, type, resist_table, barriers):
+	resist_list = barriers.copy()
 
 	# If Melee or Ranged attack with no element, the element is Weapon
 	if type in ("Melee", "Ranged") and element == "None":
@@ -234,10 +234,15 @@ def checkResistance(skills, element, status, type, resist_table):
 	if not resist_list:
 		return False
 	else:
-		#list(filter("None".__ne__, resist_list))
+		list(filter("None".__ne__, resist_list))
+		count = 0
 		while count < len(resist_list):
 			if resist_list[count].startswith("O-"):
-				resist_list.append(separateResists(resist_list[count], resist_table))
+				result = separateResists(skills[count], resist_table)
+				if isinstance(result, list) == True:
+					resist_list.extend(result)
+				else:
+					resist_list.append(result)
 			count += 1
 
 	# Check the total list for the resistance in question
@@ -250,11 +255,13 @@ def checkResistance(skills, element, status, type, resist_table):
 
 def separateResists(check, resist_table):
 	# Only take the element field if the check is against armor, traits, or MAGI
-	if (resist_table.loc[check, "Type"] in ("Armor", "Trait", "MAGI")) and (resist_table.loc[check, "Element"] != "None"):
-		element = resist_table.loc[check, "Element"]
+	element = resist_table.loc[check, "Element"]
+	if (resist_table.loc[check, "Type"] in ("Armor", "Trait", "MAGI")) and (element != "None"):
 		elements = []
 		elements = element.split(', ')
 		return elements
+	else:
+		return "None"
 	# elif (resist_table.loc[check, "Type"] in ("Armor", "Trait", "MAGI")) and (resist_table.loc[check, "Status"] != "None"):
 	# 	status = resist_table.loc[check, "Status"]
 	# 	statuses = []

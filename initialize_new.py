@@ -144,14 +144,14 @@ while run_sim != "n":
 		else:
 			break
 
-	round = 0
+	rd = 0
 	another_round = "y"
 	# EXECUTE COMBAT ROUND
 	while another_round == "y":
-		round += 1
-		print("~~~ Round %d ~~~" % (round))
+		rd += 1
+		print("~~~ Round %d ~~~" % (rd))
 		# SET CURRENT STATS (in Round 1 only), ROLL INITIATIVE, AND SORT
-		if round == 1:
+		if rd == 1:
 			for count in range(len(combatants)):
 				if combatants[count].current_HP == 'nan':
 					combatants[count].current_HP = combatants[count].HP
@@ -179,6 +179,10 @@ while run_sim != "n":
 				party_order.append(tuple((combatants[count].name, combatants[count].position, count)))
 		party_order = sorted(party_order, key = operator.itemgetter(1), reverse=True)
 
+		# Create barrier lists anew each round
+		enemy_barriers = []
+		player_barriers = []
+
 		# COMMAND SELECTION
 		for count in range(len(combatants)):
 			attacker = combatants[count]
@@ -189,11 +193,12 @@ while run_sim != "n":
 
 			# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
 			# Could also be used for random ability selection for players if an appropriate MS were assigned
+			# May want to add one for when MS exists, another for completely random if it doesn't (or always pick top command)
 			if attacker.command == 'nan':
 				row = attacker.MS
 				roll = random.randint(0,255)
 				for choice in range(7):
-					if roll < ms_prob.iloc[int(row), choice+1]:
+					if roll <= ms_prob.iloc[int(row), choice+1]:
 						attacker.command = attacker.skills[choice]
 						break
 					else:
@@ -201,10 +206,12 @@ while run_sim != "n":
 
 			##########################
 			# May need logic here for commands that trigger immediately at the start of a round (e.g. shield barriers)
-			# NEW CLASS ATTRIBUTE OR APPEND EFFECT TO SKILL LIST?
 			##########################
-#			if commands.loc[attacker.command,"Target Type"] == "Block":
-				
+			if (commands.loc[attacker.command, "Target Type"] == "Block" and commands.loc[attacker.command, "Effect"] != "None"):
+				if attacker.role == "Enemy":
+					enemy_barriers.append(commands.loc[attacker.command, "Effect"])
+				else:
+					player_barriers.append(commands.loc[attacker.command, "Effect"])
 
 		# TARGETING AND COMMAND EXECUTION
 		for count in range(len(combatants)):
@@ -238,10 +245,16 @@ while run_sim != "n":
 
 					attacker.add_target(sel_target)
 
+				# Blocking effects happen at start of turn. This is an announcement of the ability's usage on the character's turn
 				elif attacker.target_type == "Block":
-					print("%s is defending with %s." % (attacker.name, attacker.command))
+					print("%s is defending with %s." % (attacker.name, attacker.command), end = " ")
+					if commands.loc[attacker.command, "Effect"] != "None":
+						print("A barrier covered the enemies.")
+					else:
+						print("")
 					combatants[count] = afterTurn(attacker)
 					continue
+				# Counter and reflect effects happen at start of turn. This is an announcement of the ability's usage on the character's turn
 				elif attacker.target_type in ("Counter", "Reflect"):
 					print("%s is waiting for the attack." % attacker.name)
 					combatants[count] = afterTurn(attacker)
@@ -249,6 +262,17 @@ while run_sim != "n":
 				elif attacker.target_type == "All Enemies":
 					for each in range(len(party_order)):
 						attacker.add_target(party_order[each][0])
+				# Enemy healers will always target the ally that has taken the most damage
+				elif attacker.target_type == "Ally":
+					target_name = ""
+					damage_lead = 0
+					for each in range(len(combatants)):
+						if combatants[each].role == "Enemy":
+							damage_taken = combatants[each].HP - combatants[each].current_HP
+							if damage_taken > damage_lead:
+								damage_lead = damage_taken
+								target_name = combatants[each].name
+					attacker.targets.append(target_name)
 				elif attacker.target_type == "Allies":
 					for each in range(len(enemy_groups)):
 						attacker.targets.append(enemy_groups[each][0])
@@ -259,6 +283,9 @@ while run_sim != "n":
 						attacker.targets.append(party_order[each][0])
 				elif attacker.target_type == "Self":
 					attacker.add_target(attacker.name)
+				else:
+					print("Invalid target!")
+					break
 
 			# PC TARGET SETTING
 			else:
@@ -268,7 +295,11 @@ while run_sim != "n":
 				elif temp_target == "Self":
 					attacker.add_target(attacker.name)
 				elif temp_target == "Block":
-					print("%s is defending with %s." % (attacker.name, attacker.command))
+					print("%s is defending with %s." % (attacker.name, attacker.command), end = " ")
+					if commands.loc[attacker.command, "Effect"] != "None":
+						print("A barrier covered the party.")
+					else:
+						print("")
 					combatants[count] = afterTurn(attacker)
 					continue
 				# May need logic to set a counter/reflect flag at beginning of a round so not every attack or spell is countered
@@ -312,6 +343,8 @@ while run_sim != "n":
 				# Defender == 100 means that group is gone. Go to the next foe
 				if defender == 100:
 					continue
+
+				barriers = []
 
 				if command.targeting == "Single":
 					# HIT LOGIC
@@ -358,7 +391,11 @@ while run_sim != "n":
 						if blocked == True:
 							damage = round(damage/2)
 						# Check resistances
-						if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands) == True:
+						if combatants[defender].role == "Enemy":
+							barriers = enemy_barriers.copy()
+						else:
+							barriers = player_barriers.copy()
+						if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands, barriers) == True:
 							# Weapon resistance was found
 							if (command.element == "None" and command.status == "None"):
 								damage = round(damage/2)
@@ -397,7 +434,11 @@ while run_sim != "n":
 					damage = offense - defense
 
 					# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. NEEDS FIXING FOR WEAPON-BASED.)
-					if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands) == True:
+					if combatants[defender].role == "Enemy":
+						barriers = enemy_barriers
+					else:
+						barriers = player_barriers
+					if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands, barriers) == True:
 						if (command.element == "None" and command.effect == "None"):
 							damage = round(damage/2)
 							groupAttack(combatants, attacker.targets[foe], damage)
@@ -425,7 +466,11 @@ while run_sim != "n":
 					damage = offense - defense
 
 					# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. NEEDS FIXING FOR WEAPON-BASED.)
-					if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands) == True:
+					if combatants[defender].role == "Enemy":
+						barriers = enemy_barriers
+					else:
+						barriers = player_barriers
+					if checkResistance(combatants[defender].skills, command.element, command.status, command.att_type, commands, barriers) == True:
 						if (command.element == "None" and command.effect == "None"):
 							damage = round(damage/2)
 							groupAttack(combatants, attacker.targets[foe], damage)
