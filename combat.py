@@ -1,8 +1,19 @@
 import random
 
-def randomTarget(party_size):
-	roll = random.randint(1,party_size)
-	return roll-1
+# def randomTarget(party_size):
+# 	roll = random.randint(1,party_size)
+# 	return roll-1
+
+def randomTarget(target_list, combatants):
+	target = ""
+	while target == "":
+		roll = random.randint(1,len(target_list))-1
+		random_who = target_list[roll][2]
+		if combatants[random_who].isTargetable():
+			target = target_list[roll][0]
+			return target
+		else:
+			continue
 
 def calculateDamage(stat, multiplier):
 	atk_power = stat * multiplier + random.randint(1, stat)

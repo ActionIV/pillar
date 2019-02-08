@@ -144,6 +144,7 @@ while run_sim != "n":
 		else:
 			break
 
+		# Determine resists based on active inventory
 		buildResistances(current_com.skills, current_com.resists, commands)
 
 	rd = 0
@@ -230,24 +231,21 @@ while run_sim != "n":
 				# Based on the Command, assign the Target Type to the Target line
 				attacker.target_type = commands.loc[attacker.command, "Target Type"]
 
-				if attacker.target_type in ("Single", "Group"):
+				if attacker.target_type == "Single":
 					for choice in range(len(party_order)):
 						roll = random.randint(1,100)
-						if roll < 51 and combatants[party_order[choice][2]].isDead() == False:
+						if roll < 51 and combatants[party_order[choice][2]].isTargetable():
 							sel_target = party_order[choice][0]
-
-					while sel_target == "":
-						random_roll = randomTarget(len(party_order))
-						random_who = party_order[random_roll][2]
-						if combatants[random_who].isDead() == False:
-							sel_target = party_order[random_roll][0]
-							break
-						else:
-							continue
-
+					# If a target isn't selected via the weighted method...
+					if sel_target == "":
+						sel_target = randomTarget(party_order, combatants)
 					attacker.add_target(sel_target)
 
 				# Blocking effects happen at start of turn. This is an announcement of the ability's usage on the character's turn
+				elif attacker.target_type == "Group":
+					sel_target = randomTarget(party_order, combatants)
+					attacker.add_target(sel_target)
+
 				elif attacker.target_type == "Block":
 					print("%s is defending with %s." % (attacker.name, attacker.command), end = " ")
 					if commands.loc[attacker.command, "Effect"] != "None":
@@ -415,7 +413,7 @@ while run_sim != "n":
 						if command.stat == "Status":
 							continue
 						# No damage to dead or stone enemies
-						elif (combatants[defender].isDead() == True or combatants[defender].isStoned() == True):
+						elif combatants[defender].isTargetable() == False:
 							continue
 						elif damage < 0:
 							damage = 0

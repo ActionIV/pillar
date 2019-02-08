@@ -19,12 +19,6 @@ class Actor(object):
 	def add_target(self, target):
 		self.targets.append(target)
 
-	def add_resist(self, resist):
-		if isinstance(result, list) == True:
-			resist_list.extend(result)
-		else:
-			resist_list.append(result)
-
 	def isStoned(self):
 		return True if self.stoned == "y" else False
 		# 	return True
@@ -79,6 +73,12 @@ class Actor(object):
 			return True
 		else:
 			return False
+
+	def isTargetable(self):
+		if self.isDead() or self.isStoned():
+			return False
+		else:
+			return True
 
 	def isActive(self):
 		if (self.isDead() or self.isStoned() or self.isParalyzed() or self.isAsleep()):
