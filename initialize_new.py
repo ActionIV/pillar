@@ -3,7 +3,8 @@ import random
 import operator
 from collections import Counter 
 from classes import Player, Enemy, NPC, Actor, Command
-from combat import randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal, inflictCondition, checkResistance, endOfTurn, buildResistances
+from combat import (randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal,
+inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness)
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -109,6 +110,7 @@ while run_sim != "n":
 			current_com.Agl = monsters.loc[current_com.name,"Agl"]
 			current_com.Mana = monsters.loc[current_com.name,"Mana"]
 			current_com.Def = monsters.loc[current_com.name,"Def"]
+			current_com.family = monsters.loc[current_com.name,"Family"]
 	
 			#There should be a better way to do this...but here's the lazy way
 			current_com.skills.append(monsters.loc[current_com.name,"S0"])
@@ -408,6 +410,9 @@ while run_sim != "n":
 						else:	
 							if command.status != "None":
 								inflictCondition(command, attacker, combatants[defender])
+							# Check for elemental / species weakness
+							if command.element != "None":
+								checkWeakness(command.element, combatants[defender])
 
 						# No damage on pure Status attacks
 						if command.stat == "Status":
@@ -433,7 +438,7 @@ while run_sim != "n":
 					defense = determineDefense(combatants[defender], command.att_type, offense)
 					damage = offense - defense
 
-					# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. NEEDS FIXING FOR WEAPON-BASED.)
+					# Check resistances
 					if combatants[defender].role == "Enemy":
 						buildResistances(enemy_barriers, barriers, commands)
 					else:
@@ -441,21 +446,26 @@ while run_sim != "n":
 					if checkResistance(combatants[defender].resists, command.element, command.status, command.att_type, barriers) == True:
 						if (command.element == "None" and command.effect == "None"):
 							damage = round(damage/2)
-							groupAttack(combatants, attacker.targets[foe], damage)
+	#						groupAttack(combatants, attacker.targets[foe], damage)
 						else:
 							print("%s is strong against %s." % (attacker.targets[foe], command.name))
-					elif command.status != "None":
-						inflictCondition(command, attacker, combatants[defender])
-					else:
-						# No damage on pure Status attacks
-						if command.stat == "Status":
 							continue
-						elif damage < 0:
-							damage = 0
-							print("No damage.")
-						else:
-							# Loop through combatants to deal damage to all members of a group
-							groupAttack(combatants, attacker.targets[foe], damage)
+					else:
+						if command.status != "None":
+							inflictCondition(command, attacker, combatants[defender])
+					# Check for elemental / species weakness
+						if command.element != "None":
+							checkWeakness(command.element, combatants[defender])
+
+						# No damage on pure Status attacks
+					if command.stat == "Status":
+						continue
+					elif damage < 0:
+						damage = 0
+						print("No damage.")
+					else:
+						# Loop through combatants to deal damage to all members of a group
+						groupAttack(combatants, attacker.targets[foe], damage)
 
 				elif command.targeting == "All Enemies":
 					# Only print the command text the first time through

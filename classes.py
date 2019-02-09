@@ -148,6 +148,7 @@ class Enemy(Actor):
 	Agl = 0
 	Mana = 0
 	Def = 0
+	family = ""
 		
 class Player(Actor):
 	role = "Player"

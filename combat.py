@@ -160,7 +160,6 @@ def determineDefense(defender, attack_type, damage):
 		defense = defender.current_Def * 5
 		return defense
 	elif attack_type == "Magic":
-		# Still need to add resistance checks (traits, equipment, MAGI)
 		return damage * defender.current_Mana / 200
 
 def affectStat(target, stat, amount):
@@ -284,3 +283,14 @@ def separateResists(check, resist_table):
 		return elements
 	else:
 		return "None"
+
+def checkWeakness(element, target):
+	# Check against trait-based weaknesses first
+	for each in range(len(target.skills)):
+		trait = target.skills[each]
+		if trait.startswith("X-"):
+			weakness = trait[2:]
+			if weakness == element:
+				return True
+	# Now check species-based weaknesses
+	
