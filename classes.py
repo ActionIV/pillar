@@ -1,11 +1,9 @@
 class Actor(object):
-	names = []
 	def __init__(self, name):
 		self.name = name
 		self.actions_taken = []
 		self.targets = []
 		self.resists = []
-		Actor.names.append(name)
 		
 	def getName(self):
 		return self.name
@@ -160,6 +158,7 @@ class Player(Actor):
 	Agl = 0
 	Mana = 0
 	Def = 0
+	magi = ""
 
 	def __init__(self, name):
 		Actor.__init__(self, name)

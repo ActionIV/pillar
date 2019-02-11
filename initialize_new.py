@@ -373,6 +373,36 @@ while run_sim != "n":
 						if block_roll <= (commands.loc[combatants[defender].command, "Percent"] + defender_score):
 							blocked = True
 
+					# Check resistances
+					dmg_reduction = False
+					critical_hit = False
+					if combatants[defender].role == "Enemy":
+						buildResistances(enemy_barriers, barriers, commands)
+					else:
+						buildResistances(player_barriers, barriers, commands)
+					
+					if checkResistance(combatants[defender].resists, command.element, command.status, barriers):
+						# Elemental resistance was found, but it's a melee attack so it can't be resisted
+						if command.element != "None" and command.att_type in ("Melee", "Ranged"):
+							dmg_reduction = True
+						else:
+							print("%s is strong against %s." % (attacker.targets[foe], command.name))
+							continue
+					else:
+						if command.status != "None":
+							inflictCondition(command, attacker, combatants[defender])
+						# Check for elemental / species weakness
+						if command.element != "None":
+							if checkWeakness(command.element, combatants[defender]):
+								crit_roll = random.randint(1,100)
+								if crit_roll <= 30:
+									combatants[defender].current_HP = 0
+									combatants[defender].lives -= 1
+									print("Mighty blow! %s fell." % combatants[defender].name)
+									continue
+								else:
+									critical_hit = True
+
 					difference = defender_score - attacker_hit*2
 					hit_chance = 97 - difference
 
@@ -392,27 +422,11 @@ while run_sim != "n":
 						# Ranged attacks get blocked for 50% damage
 						if blocked == True:
 							damage = round(damage/2)
-						# Check resistances
-						if combatants[defender].role == "Enemy":
-							buildResistances(enemy_barriers, barriers, commands)
-						else:
-							buildResistances(player_barriers, barriers, commands)
-						if checkResistance(combatants[defender].resists, command.element, command.status, command.att_type, barriers) == True:
-							# Weapon resistance was found
-							if (command.element == "None" and command.status == "None"):
-								damage = round(damage/2)
-							# Elemental resistance was found, but it's a melee attack so it can't be resisted
-							elif (command.element != "None" and command.att_type == "Melee"):
-								pass
-							else:
-								print("%s is strong against %s." % (attacker.targets[foe], command.name))
-								continue
-						else:	
-							if command.status != "None":
-								inflictCondition(command, attacker, combatants[defender])
-							# Check for elemental / species weakness
-							if command.element != "None":
-								checkWeakness(command.element, combatants[defender])
+						# If weapon resistance is found against a non-magical attack, damage is halved
+						if command.att_type in ("Melee", "Ranged") and checkResistance(combatants[defender].resists, "Weapon", command.status, barriers):
+							damage = round(damage/2)
+						if critical_hit == True:
+							damage = round(damage*1.25)
 
 						# No damage on pure Status attacks
 						if command.stat == "Status":
@@ -443,21 +457,23 @@ while run_sim != "n":
 						buildResistances(enemy_barriers, barriers, commands)
 					else:
 						buildResistances(player_barriers, barriers, commands)
-					if checkResistance(combatants[defender].resists, command.element, command.status, command.att_type, barriers) == True:
-						if (command.element == "None" and command.effect == "None"):
-							damage = round(damage/2)
-	#						groupAttack(combatants, attacker.targets[foe], damage)
-						else:
-							print("%s is strong against %s." % (attacker.targets[foe], command.name))
-							continue
+					if checkResistance(combatants[defender].resists, command.element, command.status, barriers):
+					#	if (command.element == "None" and command.effect == "None"):
+					#		damage = round(damage/2)
+					#		groupAttack(combatants, attacker.targets[foe], damage)
+					#	else:
+						print("%s is strong against %s." % (attacker.targets[foe], command.name))
+						continue
 					else:
 						if command.status != "None":
 							inflictCondition(command, attacker, combatants[defender])
-					# Check for elemental / species weakness
+						# Check for elemental / species weakness
 						if command.element != "None":
 							checkWeakness(command.element, combatants[defender])
+						if command.att_type in ("Melee", "Ranged") and checkResistance(combatants[defender].resists, "Weapon", command.status, barriers):
+							damage = round(damage/2)
 
-						# No damage on pure Status attacks
+					# No damage on pure Status attacks
 					if command.stat == "Status":
 						continue
 					elif damage < 0:
@@ -480,7 +496,7 @@ while run_sim != "n":
 						buildResistances(enemy_barriers, barriers, commands)
 					else:
 						buildResistances(player_barriers, barriers, commands)
-					if checkResistance(combatants[defender].resists, command.element, command.status, command.att_type, barriers) == True:
+					if checkResistance(combatants[defender].resists, command.element, command.status, barriers):
 						if (command.element == "None" and command.effect == "None"):
 							damage = round(damage/2)
 							groupAttack(combatants, attacker.targets[foe], damage)
@@ -561,19 +577,12 @@ char_sheets = input("Print character sheets (y/n)?: ")
 if char_sheets == "y":
 	for count in range(len(players.index)):
 		print("CHARACTER: %s  PLAYER: %s" % (players.iloc[count, 0], players.iloc[count, 1]))
-		print("CLASS:  %s" % players.iloc[count, 2])
-		#current_com.Type = players.loc[players[count].name,"TYPE"]
-		#current_com.HP = players.loc[current_com.name,"HP"]
-		#current_com.Str = players.loc[current_com.name,"STR"]
-		#current_com.Agl = players.loc[current_com.name,"AGL"]
-		#current_com.Mana = players.loc[current_com.name,"MANA"]
-		#current_com.Def = players.loc[current_com.name,"DEF"]
-		
-		#current_com.skills.append(players.loc[current_com.name,"S0"])
-		#current_com.skills.append(players.loc[current_com.name,"S1"])
-		#current_com.skills.append(players.loc[current_com.name,"S2"])
-		#current_com.skills.append(players.loc[current_com.name,"S3"])
-		#current_com.skills.append(players.loc[current_com.name,"S4"])
-		#current_com.skills.append(players.loc[current_com.name,"S5"])
-		#current_com.skills.append(players.loc[current_com.name,"S6"])
-		#current_com.skills.append(players.loc[current_com.name,"S7"])
+		print("CLASS: %s" % players.iloc[count, 2])
+		print("HP: %d / STR: %d / AGL: %d / MANA: %d / DEF: %d" % (players.iloc[count, 4],players.iloc[count, 5],players.iloc[count, 6],players.iloc[count, 7],players.iloc[count, 8]))
+		print("[", end = "")
+		for skill in range(8):
+			if skill < 7:
+				print(players.iloc[count,skill+9], end = ", ")
+			else:
+				print(players.iloc[count,skill+9], end = "]\n")
+		# Still need MAGI and Inventory

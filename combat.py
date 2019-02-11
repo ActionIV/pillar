@@ -1,9 +1,5 @@
 import random
 
-# def randomTarget(party_size):
-# 	roll = random.randint(1,party_size)
-# 	return roll-1
-
 def randomTarget(target_list, combatants):
 	target = ""
 	while target == "":
@@ -93,7 +89,7 @@ def frontOfGroup(combatants, att, foe):
 	defender = 100
 
 	for tar in range(len(combatants)):
-		if (combatants[tar].name == attacker.targets[foe]) and (int(combatants[tar].position) < priority) and (combatants[tar].isDead() == False):
+		if (combatants[tar].name == attacker.targets[foe]) and (int(combatants[tar].position) < priority) and combatants[tar].isTargetable():
 			priority = combatants[tar].position
 			defender = tar
 	return defender
@@ -105,7 +101,7 @@ def groupAttack(combatants, name, damage):
 	else:
 		body_count = 0
 		for who in range(len(combatants)):
-			if combatants[who].name == name and combatants[who].isDead() == False and combatants[who].isStoned() == False:
+			if combatants[who].name == name and combatants[who].isTargetable():
 				combatants[who].current_HP -= damage
 				if combatants[who].current_HP <= 0:
 					combatants[who].current_HP = 0
@@ -223,7 +219,8 @@ def applyCondition(status, defender):
 
 def buildResistances(skills, resist_list, resist_table):
 	for count in range(len(skills)):
-		if skills[count] == "blank":
+		# Skip the breakdown if it's a blank slot or if it's a weakness
+		if skills[count] == "blank" or skills[count].startswith("X-"):
 			continue
 		else:
 			result = separateResists(skills[count], resist_table)
@@ -232,30 +229,9 @@ def buildResistances(skills, resist_list, resist_table):
 			else:
 				resist_list.append(result)
 
-	## Dynamic loop to remove all O- skills and replace them with base resistances
-	#if not resist_list:
-	#	return
-	#else:
-	#	list(filter("None".__ne__, resist_list))
-	#	count = 0
-	#	while count < len(resist_list):
-	#		if resist_list[count].startswith("O-"):
-	#			result = separateResists(skills[count], resist_table)
-	#			if isinstance(result, list) == True:
-	#				resist_list.extend(result)
-	#			else:
-	#				resist_list.append(result)
-	#		count += 1
-
-# SHOULD THIS EXECUTE IMMEDIATELY AFTER SKILLS ARE ADDED TO THE LIST, OR LEAVE IT AS IS?
-def checkResistance(resist_list, element, status, type, barriers):
+def checkResistance(resist_list, element, status, barriers):
 	total_resists = barriers.copy()
 	total_resists.extend(resist_list)
-	#total_resists.extend(barriers)
-
-	# If Melee or Ranged attack with no element, the element is Weapon
-	if type in ("Melee", "Ranged") and element == "None":
-		element = "Weapon"
 
 	# Check the total list for the resistance in question
 	for count in range(len(resist_list)):
@@ -284,6 +260,7 @@ def separateResists(check, resist_table):
 	else:
 		return "None"
 
+# REWRITE TO PASS RESIST_TABLE SO ELEMENT FIELD IS USED FOR WEAKNESS...MAYBE
 def checkWeakness(element, target):
 	# Check against trait-based weaknesses first
 	for each in range(len(target.skills)):
@@ -293,4 +270,5 @@ def checkWeakness(element, target):
 			if weakness == element:
 				return True
 	# Now check species-based weaknesses
-	
+	if target.family == element:
+		return True
