@@ -125,7 +125,7 @@ while run_sim != "n":
 		# Lookup the static player data
 		elif current_com.role == "Player":
 			current_com.Class = players.loc[current_com.name,"CLASS"]
-			current_com.Type = players.loc[current_com.name,"TYPE"]
+			current_com.family = monsters.loc[current_com.Class,"Family"]
 			current_com.HP = players.loc[current_com.name,"HP"]
 			current_com.Str = players.loc[current_com.name,"STR"]
 			current_com.Agl = players.loc[current_com.name,"AGL"]
@@ -182,7 +182,7 @@ while run_sim != "n":
 		for count in range(len(combatants)):
 			if combatants[count].role == ("Player" or "NPC"):
 				party_order.append(tuple((combatants[count].name, combatants[count].position, count)))
-		party_order = sorted(party_order, key = operator.itemgetter(1), reverse=True)
+		party_order = sorted(party_order, key = operator.itemgetter(1), reverse=False)
 
 		# Create barrier lists anew each round
 		enemy_barriers = []
@@ -357,7 +357,7 @@ while run_sim != "n":
 					attacker_hit = attacker.current_Agl				
 					defender_score = combatants[defender].current_Agl
 
-					if combatants[defender].isBlinded == True:
+					if combatants[defender].isBlinded:
 						defender_score = round(defender_score / 2)
 					# Need MAGI logic here
 					def_command_type = commands.loc[combatants[defender].command, "Type"]
@@ -389,7 +389,7 @@ while run_sim != "n":
 							print("%s is strong against %s." % (attacker.targets[foe], command.name))
 							continue
 					else:
-						if command.status != "None":
+						if command.status != "None" and command.att_type not in ("Melee", "Ranged"):
 							inflictCondition(command, attacker, combatants[defender])
 						# Check for elemental / species weakness
 						if command.element != "None":
@@ -426,14 +426,11 @@ while run_sim != "n":
 						if command.att_type in ("Melee", "Ranged") and checkResistance(combatants[defender].resists, "Weapon", command.status, barriers):
 							damage = round(damage/2)
 						if critical_hit == True:
-							damage = round(damage*1.25)
+							damage = round(damage*1.5)
 
 						# No damage on pure Status attacks
 						if command.stat == "Status":
-							continue
-						# No damage to dead or stone enemies
-						elif combatants[defender].isTargetable() == False:
-							continue
+							inflictCondition(command, attacker, combatants[defender])
 						elif damage < 0:
 							damage = 0
 							print("No damage.")
@@ -458,10 +455,6 @@ while run_sim != "n":
 					else:
 						buildResistances(player_barriers, barriers, commands)
 					if checkResistance(combatants[defender].resists, command.element, command.status, barriers):
-					#	if (command.element == "None" and command.effect == "None"):
-					#		damage = round(damage/2)
-					#		groupAttack(combatants, attacker.targets[foe], damage)
-					#	else:
 						print("%s is strong against %s." % (attacker.targets[foe], command.name))
 						continue
 					else:
@@ -491,27 +484,32 @@ while run_sim != "n":
 					defense = determineDefense(combatants[defender], command.att_type, offense)
 					damage = offense - defense
 
-					# Check resistances (ONLY GOOD FOR ELEMENTAL ATTACKS. NEEDS FIXING FOR WEAPON-BASED.)
+					# Check resistances
 					if combatants[defender].role == "Enemy":
 						buildResistances(enemy_barriers, barriers, commands)
 					else:
 						buildResistances(player_barriers, barriers, commands)
 					if checkResistance(combatants[defender].resists, command.element, command.status, barriers):
-						if (command.element == "None" and command.effect == "None"):
-							damage = round(damage/2)
-							groupAttack(combatants, attacker.targets[foe], damage)
-						else:
-							print("%s is strong against %s." % (attacker.targets[foe], command.name))
+						print("%s is strong against %s." % (attacker.targets[foe], command.name))
+						continue
 					else:
-						# No damage on pure Status attacks
-						if command.stat == "Status":
-							continue
-						elif damage < 0:
-							damage = 0
-							print("No damage.")
-						else:
-							# Loop through combatants to deal damage to all members of a group
-							groupAttack(combatants, attacker.targets[foe], damage)
+						if command.status != "None":
+							inflictCondition(command, attacker, combatants[defender])
+						# Check for elemental / species weakness
+						if command.element != "None":
+							checkWeakness(command.element, combatants[defender])
+						if command.att_type in ("Melee", "Ranged") and checkResistance(combatants[defender].resists, "Weapon", command.status, barriers):
+							damage = round(damage/2)
+
+					# No damage on pure Status attacks
+					if command.stat == "Status":
+						continue
+					elif damage < 0:
+						damage = 0
+						print("No damage.")
+					else:
+						# Loop through combatants to deal damage to all members of a group
+						groupAttack(combatants, attacker.targets[foe], damage)
 
 				elif command.targeting == "Ally":
 					print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
@@ -542,16 +540,16 @@ while run_sim != "n":
 			if not battleStatus(combatants):
 				another_round = "n"
 				break
-
 		for each in range(len(combatants)):
 			combatants[each] = endOfTurn(combatants[each])
 		if another_round != "n":
 			another_round = input("Run another round (y/n)?: ")
 
 	# Print party status line at the end of a simulation
-	for count in range(len(combatants)):
-		if combatants[count].role == ("Player" or "NPC"):
-			print("| %s: %d/%d %s" % (combatants[count].name, combatants[count].current_HP, combatants[count].HP, combatants[count].characterStatus()), end = " |")
+	for each in range(len(party_order)):
+		for count in range(len(combatants)):
+			if combatants[count].name == party_order[each][0]:
+				print("| %s: %d/%d %s" % (combatants[count].name, combatants[count].current_HP, combatants[count].HP, combatants[count].characterStatus()), end = " |")
 
 	# Need only for endline during testing phase
 	print("")
@@ -578,11 +576,11 @@ if char_sheets == "y":
 	for count in range(len(players.index)):
 		print("CHARACTER: %s  PLAYER: %s" % (players.iloc[count, 0], players.iloc[count, 1]))
 		print("CLASS: %s" % players.iloc[count, 2])
-		print("HP: %d / STR: %d / AGL: %d / MANA: %d / DEF: %d" % (players.iloc[count, 4],players.iloc[count, 5],players.iloc[count, 6],players.iloc[count, 7],players.iloc[count, 8]))
+		print("HP: %d / STR: %d / DEF: %d / AGL: %d / MANA: %d" % (players.iloc[count, 3],players.iloc[count, 4],players.iloc[count, 5],players.iloc[count, 6],players.iloc[count, 7]))
 		print("[", end = "")
 		for skill in range(8):
 			if skill < 7:
-				print(players.iloc[count,skill+9], end = ", ")
+				print(players.iloc[count,skill+8], end = ", ")
 			else:
-				print(players.iloc[count,skill+9], end = "]\n")
+				print(players.iloc[count,skill+8], end = "]\n")
 		# Still need MAGI and Inventory

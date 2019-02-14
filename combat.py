@@ -19,9 +19,9 @@ def battleStatus(survivors):
 	players = 0
 	enemies = 0
 	for count in range(len(survivors)):
-		if (survivors[count].role == "Enemy") and (survivors[count].isDead() == False):
+		if (survivors[count].role == "Enemy") and survivors[count].isTargetable():
 			enemies += 1
-		elif (survivors[count].role == "Player" or "NPC") and (survivors[count].isDead() == False):
+		elif (survivors[count].role == "Player" or "NPC") and survivors[count].isTargetable():
 			players += 1
 
 	if enemies == 0:
@@ -39,21 +39,21 @@ def afterTurn(attacker):
 	return attacker
 
 def endOfTurn(attacker):
-	if attacker.isParalyzed() == True:
+	if attacker.isParalyzed():
 		roll = random.randint(1,100)
 		if roll <= 15:
 			print("%s was released from paralysis." % attacker.name)
 			attacker.paralyzed = "n"
 		else:
 			print("%s is paralyzed." % attacker.name)
-	if attacker.isAsleep() == True:
+	if attacker.isAsleep():
 		roll = random.randint(1,100)
 		if roll <= 30:
 			print("%s woke up." % attacker.name)
 			attacker.asleep = "n"
 		else:
 			print("%s is asleep." % attacker.name)
-	if attacker.isPoisoned() == True:
+	if attacker.isPoisoned():
 		roll = random.randint(1,100)
 		if roll <= 20:
 			print("%s's poison was neutralized." % attacker.name)
@@ -62,7 +62,7 @@ def endOfTurn(attacker):
 			print("%s is poisoned." % attacker.name, end = " ")
 			poison_dmg = attacker.HP * 0.1
 			attacker.current_HP -= poison_dmg
-			print("%d damage." % poison_dmg, end = " ")
+			print("%d damage." % poison_dmg)
 			if attacker.current_HP <= 0:
 				attacker.current_HP = 0
 				attacker.lives -= 1
@@ -70,7 +70,7 @@ def endOfTurn(attacker):
 					print("%s succumbed to the poison." % attacker.name)
 				else:
 					print("")
-	if attacker.isConfused() == True:
+	if attacker.isConfused():
 		roll = random.randint(1,100)
 		if roll <= 10:
 			print("%s regained sanity." % attacker.name)
@@ -101,6 +101,7 @@ def groupAttack(combatants, name, damage):
 	else:
 		body_count = 0
 		for who in range(len(combatants)):
+			# Only damage those matching the target name and that are not already dead or stoned
 			if combatants[who].name == name and combatants[who].isTargetable():
 				combatants[who].current_HP -= damage
 				if combatants[who].current_HP <= 0:
@@ -127,6 +128,10 @@ def rollHeal(command, healer, ally):
 	else:
 		ally.current_HP += heal
 	print("%s recovers %d HP." % (ally.name, heal))
+
+def rollHit(attacker_stat, defender_stat):
+	difference = defender_stat - (attacker_stat * 2)
+	return 97 - difference
 
 def rollDamage(command, attacker):
 	stat = command.stat
@@ -171,12 +176,13 @@ def affectStat(target, stat, amount):
 	return target
 
 def inflictCondition(command, attacker, defender):
-	hit_chance = attacker.current_Mana - (defender.current_Mana * 2) + 50
+	# Originally (defender - attacker) * 2 + 50
+	hit_chance = defender.current_Mana - attacker.current_Mana + 50
 	roll = random.randint(1,100)
 	if hit_chance < roll:
 		applyCondition(command.status, defender)
 	else:
-		print("Resisted.")
+		print("%s resisted." % defender.name)
 
 def applyCondition(status, defender):
 	if status == "Stone":
@@ -187,27 +193,27 @@ def applyCondition(status, defender):
 		defender.paralyzed = "n"
 		defender.asleep = "n"
 		defender.cursed = "n"
-		print("Turned to stone.")
+		print("Turned %s to stone." % defender.name)
 	elif status == "Curse":
 		defender.cursed = "y"
-		print("Cursed.")
+		print("Cursed %s." % defender.name)
 	elif status == "Blind":
 		defender.blinded = "y"
-		print("Blinded.")
+		print("Blinded %s." % defender.name)
 	elif status == "Sleep":
 		defender.asleep = "y"
-		print("Put to sleep.")
+		print("Put %s to sleep." % defender.name)
 	elif status == "Paralyze":
 		defender.paralyzed = "y"
-		print("Paralyzed.")
+		print("Paralyzed %s." % defender.name)
 	elif status == "Poison":
 		defender.poisoned = "y"
-		print("Poisoned.")
+		print("Poisoned %s." % defender.name)
 	elif status == "Confuse":
 		defender.confused = "y"
-		print("Confused.")
+		print("Confused %s." % defender.name)
 	elif status == "Stun":
-		print("Slain.")
+		print("%s fell." % defender.name)
 		defender.current_HP = 0
 		defender.lives -= 1
 		defender.blinded = "n"

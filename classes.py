@@ -152,7 +152,7 @@ class Player(Actor):
 	role = "Player"
 	Class = ""
 	DS = 0
-	Type = 0
+	family = ""
 	HP = 0
 	Str = 0
 	Agl = 0
@@ -171,7 +171,7 @@ class NPC:
 	role = "NPC"
 	MS = 0
 	DS = 0
-	Type = 0
+	family = ""
 	HP = 0
 	Str = 0
 	Agl = 0
