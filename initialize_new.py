@@ -4,7 +4,7 @@ import operator
 from collections import Counter 
 from classes import Player, Enemy, NPC, Actor, Command
 from combat import (randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal,
-inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness)
+inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage)
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -196,6 +196,23 @@ while run_sim != "n":
 			if not attacker.isActive():
 				continue
 
+			# CONFUSION CHECK
+			if attacker.isConfused():
+				confuse_roll = random.randint(1,90)
+				if confuse_roll > 10:
+					print("%s is confused." % attacker.name)
+					options = []
+					for skill in range(len(attacker.skills)):
+						if commands.loc[attacker.skills[skill],"Target Type"] != 'nan':
+							options.append(attacler.skills[skill])
+					confuse_command_roll = random.randint(1, len(options))-1
+					attacker.command = options[confuse_command_roll]
+
+				else:
+					print("%s regained sanity." % attacker.name)
+					attacker.confused = "n"
+					continue
+
 			# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
 			# Could also be used for random ability selection for players if an appropriate MS were assigned
 			# May want to add one for when MS exists, another for completely random if it doesn't (or always pick top command)
@@ -357,8 +374,12 @@ while run_sim != "n":
 					attacker_hit = attacker.current_Agl				
 					defender_score = combatants[defender].current_Agl
 
-					if combatants[defender].isBlinded:
+					# Account for blindness
+					if attacker.isBlinded():
+						attacker_hit = round(attacker_hit / 2)
+					if combatants[defender].isBlinded():
 						defender_score = round(defender_score / 2)
+
 					# Need MAGI logic here
 					def_command_type = commands.loc[combatants[defender].command, "Type"]
 					def_command_effect = commands.loc[combatants[defender].command, "Effect"]
@@ -436,12 +457,8 @@ while run_sim != "n":
 							print("No damage.")
 						else:
 							print("%d damage to %s." % (damage, attacker.targets[foe]))
-							combatants[defender].current_HP -= damage
-							if combatants[defender].current_HP <= 0:
-								combatants[defender].current_HP = 0
-								combatants[defender].lives -= 1
-								if combatants[defender].isDead():
-									print("%s fell." % combatants[defender].name)
+							if applyDamage(damage, combatants[defender]) == 1:
+								print("%s fell." % combatants[defender].name)
 
 				elif command.targeting == "Group":
 					print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
@@ -478,6 +495,7 @@ while run_sim != "n":
 
 				elif command.targeting == "All Enemies":
 					# Only print the command text the first time through
+					# FOR SOME REASON STOPS WORKING ON ALL ENEMY ATTACKS WHEN FIRST TARGET IS STONE
 					if foe == 0:
 						print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
 					offense = rollDamage(command, attacker)
@@ -494,6 +512,7 @@ while run_sim != "n":
 						continue
 					else:
 						if command.status != "None":
+							# HOW TO CYCLE THROUGH EACH DEFENDER? COPY GROUP ATTACK APPROACH?
 							inflictCondition(command, attacker, combatants[defender])
 						# Check for elemental / species weakness
 						if command.element != "None":

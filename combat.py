@@ -103,16 +103,22 @@ def groupAttack(combatants, name, damage):
 		for who in range(len(combatants)):
 			# Only damage those matching the target name and that are not already dead or stoned
 			if combatants[who].name == name and combatants[who].isTargetable():
-				combatants[who].current_HP -= damage
-				if combatants[who].current_HP <= 0:
-					combatants[who].current_HP = 0
-					combatants[who].lives -= 1
-					body_count += 1
+				body_count += applyDamage(damage, combatants[who])
+		# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
 		print("%d damage to %s group." % (damage, name), end = " ")
 		if body_count > 0:
 			print("Defeated %d." % body_count)
 		else:
 			print("")
+
+def applyDamage(damage, target):
+	target.current_HP -= damage
+	if target.current_HP <= 0:
+		target.current_HP = 0
+		target.lives -= 1
+		return 1
+	else:
+		return 0
 
 def rollHeal(command, healer, ally):
 	if command.att_type == "Magic":
@@ -137,9 +143,15 @@ def rollDamage(command, attacker):
 	stat = command.stat
 	multiplier = command.multiplier
 	if stat == "Str":
-		damage = calculateDamage(attacker.current_Str, multiplier)
+		if attacker.isCursed():
+			damage = calculateDamage(round(attacker.current_Str / 2), multiplier)
+		else:
+			damage = calculateDamage(attacker.current_Str, multiplier)
 	elif stat == "Agl":
-		damage = calculateDamage(attacker.current_Agl, multiplier)
+		if attacker.isBlinded():
+			damage = calculateDamage(round(attacker.current_Agl / 2), multiplier)
+		else:
+			damage = calculateDamage(attacker.current_Agl, multiplier)
 	elif stat == "Mana":
 		# Need to check resistances
 		damage = calculateDamage(attacker.current_Mana, multiplier)
@@ -156,7 +168,7 @@ def rollDamage(command, attacker):
 def determineDefense(defender, attack_type, damage):
 	if attack_type in ("Melee", "Ranged"):
 		defense = defender.current_Def
-		if defender.isCursed() == True:
+		if defender.isCursed():
 			defense = round(defense / 2)
 		defense = defender.current_Def * 5
 		return defense
