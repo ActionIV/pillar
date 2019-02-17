@@ -3,7 +3,7 @@ import random
 def randomTarget(target_list, combatants):
 	target = ""
 	while target == "":
-		roll = random.randint(1,len(target_list))-1
+		roll = random.randint(0,len(target_list)-1)
 		random_who = target_list[roll][2]
 		if combatants[random_who].isTargetable():
 			target = target_list[roll][0]
@@ -70,13 +70,13 @@ def endOfTurn(attacker):
 					print("%s succumbed to the poison." % attacker.name)
 				else:
 					print("")
-	if attacker.isConfused():
-		roll = random.randint(1,100)
-		if roll <= 10:
-			print("%s regained sanity." % attacker.name)
-			attacker.confused = "n"
-		else:
-			print("%s is confused." % attacker.name)
+	# if attacker.isConfused():
+	# 	roll = random.randint(1,100)
+	# 	if roll <= 10:
+	# 		print("%s regained sanity." % attacker.name)
+	# 		attacker.confused = "n"
+	# 	else:
+	# 		print("%s is confused." % attacker.name)
 
 	if attacker.role == "Enemy":
 		attacker.command = 'nan'
@@ -114,8 +114,7 @@ def groupAttack(combatants, name, damage):
 def applyDamage(damage, target):
 	target.current_HP -= damage
 	if target.current_HP <= 0:
-		target.current_HP = 0
-		target.lives -= 1
+		applyCondition("Stun", target)
 		return 1
 	else:
 		return 0
@@ -225,7 +224,6 @@ def applyCondition(status, defender):
 		defender.confused = "y"
 		print("Confused %s." % defender.name)
 	elif status == "Stun":
-		print("%s fell." % defender.name)
 		defender.current_HP = 0
 		defender.lives -= 1
 		defender.blinded = "n"

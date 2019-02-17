@@ -22,48 +22,20 @@ class Actor(object):
 		# 	return True
 		# else:
 		# 	return False
-		
 	def isCursed(self):
-		if self.cursed == "y":
-			return True
-		else:
-			return False
-		
+		return True if self.cursed == "y" else False
 	def isBlinded(self):
-		if self.blinded == "y":
-			return True
-		else:
-			return False
-
+		return True if self.blinded == "y" else False
 	def isStunned(self):
-		if self.stunned == "y":
-			return True
-		else:
-			return False
-
+		return True if self.stunned == "y" else False
 	def isAsleep(self):
-		if self.asleep == "y":
-			return True
-		else:
-			return False
-
+		return True if self.asleep == "y" else False
 	def isParalyzed(self):
-		if self.paralyzed == "y":
-			return True
-		else:
-			return False
-
+		return True if self.paralyzed == "y" else False
 	def isPoisoned(self):
-		if self.poisoned == "y":
-			return True
-		else:
-			return False
-
+		return True if self.poisoned == "y" else False
 	def isConfused(self):
-		if self.confused == "y":
-			return True
-		else:
-			return False
+		return True if self.confused == "y" else False
 
 	# Decrement lives upon death. Shouldn't need a dead flag that way
 	def isDead(self):
