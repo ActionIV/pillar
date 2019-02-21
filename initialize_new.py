@@ -163,10 +163,10 @@ while run_sim != "n":
 					combatants[count].current_HP = combatants[count].HP
 				else:
 					combatants[count].current_HP = int(combatants[count].current_HP)
-				combatants[count].current_Str = combatants[count].Str
-				combatants[count].current_Agl = combatants[count].Agl
-				combatants[count].current_Mana = combatants[count].Mana
-				combatants[count].current_Def = combatants[count].Def
+				combatants[count].current_Str = combatants[count].Str if combatants[count].current_Str == 'nan' else combatants[count].current_Str
+				combatants[count].current_Agl = combatants[count].Agl if combatants[count].current_Agl == 'nan' else combatants[count].current_Agl
+				combatants[count].current_Mana = combatants[count].Mana if combatants[count].current_Mana == 'nan' else combatants[count].current_Mana
+				combatants[count].current_Def = combatants[count].Def if combatants[count].current_Def == 'nan' else combatants[count].current_Def
 
 			# SURPRISE CHECK FOR ROUND 1
 
@@ -248,14 +248,8 @@ while run_sim != "n":
 			# CONFUSED TARGETING
 			if attacker.isConfused():
 				confuse_roll = random.randint(1,90)
-				print("%s is confused." % attacker.name, end = " ")
 				if confuse_roll > 10:
-					options = []
-					for skill in range(len(attacker.skills)):
-						if attacker.skills[skill] != "blank" and commands.loc[attacker.skills[skill],"Target Type"] != "None":
-							options.append(attacker.skills[skill])
-					confuse_command_roll = random.randint(0, len(options)-1)
-					attacker.command = options[confuse_command_roll]
+					print("%s is confused." % attacker.name, end = " ")
 					attacker.target_type = commands.loc[attacker.command, "Target Type"]
 					confuse_targets = party_order + enemy_groups
 					if attacker.target_type in ("Single", "Group", "Ally"):
@@ -426,46 +420,58 @@ while run_sim != "n":
 					continue
 
 				barriers = []
+				target = combatants[defender]
+				def_target_type = commands.loc[target.command, "Target Type"]
+				def_command_effect = commands.loc[target.command, "Effect"]
 
 				if command.targeting == "Single":
 					# HIT LOGIC
 					# Need:  Target Agility, Target Blind status, Speed Magi, Target command (does item provide a block)
 					# Need:  Attacker Agility
 					# Calc:  Defender score - 2x Attacker.AGL, then 97 - the result
-					print("%s attacks %s with %s." % (attacker.name, combatants[defender].name, attacker.command), end = " ")
+					print("%s attacks %s with %s." % (attacker.name, target.name, attacker.command), end = " ")
 					defender = frontOfGroup(combatants, count, foe)
 					attacker_hit = attacker.current_Agl				
-					defender_score = combatants[defender].current_Agl
+					defender_score = target.current_Agl
 
 					# Account for blindness
 					if attacker.isBlinded():
 						attacker_hit = round(attacker_hit / 2)
-					if combatants[defender].isBlinded():
+					if target.isBlinded():
 						defender_score = round(defender_score / 2)
 
 					# Need MAGI logic here
-					def_command_type = commands.loc[combatants[defender].command, "Type"]
-					def_command_effect = commands.loc[combatants[defender].command, "Effect"]
 
 					# Blockable logic
 					blocked = False
 					blockable = False
 					if command.att_type in ("Melee", "Ranged"):
 						blockable = True
-					if (def_command_type == "Shield" or def_command_effect == "Block") and blockable:
+					if (def_target_type == "Block" or def_command_effect == "Block") and blockable:
 						block_roll = random.randint(1,100)
-						if block_roll <= (commands.loc[combatants[defender].command, "Percent"] + defender_score):
+						if block_roll <= (commands.loc[target.command, "Percent"] + defender_score):
 							blocked = True
+
+					# Reflect
+					if (def_command_effect == "Reflect" or def_target_type == "Reflect") and command.att_type == "Magic":
+						print("%s reflected the attack." % target.command)
+						# Makes the attacker into the target of its own spell
+						target = attacker
+
+					# Nullify
+					if (def_command_effect == "Nullify" or def_target_type == "Nullify") and command.att_type == "Magic":
+						print("%s repulsed the attack." % target.command)
+						continue
 
 					# Check resistances
 					dmg_reduction = False
 					critical_hit = False
-					if combatants[defender].role == "Enemy":
+					if target.role == "Enemy":
 						buildResistances(enemy_barriers, barriers, commands)
 					else:
 						buildResistances(player_barriers, barriers, commands)
 					
-					if checkResistance(combatants[defender].resists, command.element, command.status, barriers):
+					if checkResistance(target.resists, command.element, command.status, barriers):
 						# Elemental resistance was found, but it's a melee attack so it can't be resisted
 						if command.element != "None" and command.att_type in ("Melee", "Ranged"):
 							dmg_reduction = True
@@ -473,17 +479,19 @@ while run_sim != "n":
 							print("%s is strong against %s." % (attacker.targets[foe], command.name))
 							continue
 					else:
+						# Single target, magic, status attack (so no hit, no damage)
 						if command.status != "None" and command.att_type not in ("Melee", "Ranged"):
-							inflictCondition(command, attacker, combatants[defender])
+							inflictCondition(command, attacker, target)
+							continue
 						# Check for elemental / species weakness
 						if command.element != "None":
-							if checkWeakness(command.element, combatants[defender]):
+							if checkWeakness(command.element, target):
 								print("Hits weakness.", end = " ")
 								crit_roll = random.randint(1,100)
 								if crit_roll <= 30:
-									combatants[defender].current_HP = 0
-									combatants[defender].lives -= 1
-									print("Mighty blow! %s fell." % combatants[defender].name)
+									target.current_HP = 0
+									target.lives -= 1
+									print("Mighty blow! %s fell." % target.name)
 									continue
 								else:
 									critical_hit = True
@@ -496,55 +504,61 @@ while run_sim != "n":
 						print("Missed!")
 					# Melee attacks get blocked fully (even status-based ones)
 					elif (blocked == True and command.att_type == "Melee"):
-						print("%s defended against %s with %s." % (combatants[defender].name, attacker.command, combatants[defender].command))
+						print("%s defended against %s with %s." % (target.name, attacker.command, target.command))
 					# Should ALL Stone effects be blocked by a shield? Doesn't make sense with things like StoneGas...
 
 					# DAMAGE ASSIGNMENT
 					else:
 						offense = rollDamage(command, attacker)
-						defense = determineDefense(combatants[defender], command.att_type, offense)
+						defense = determineDefense(target, command.att_type, offense)
 						damage = offense - defense
 						# Ranged attacks get blocked for 50% damage
 						if blocked == True:
 							damage = round(damage/2)
 						# If weapon resistance is found against a non-magical attack, damage is halved
-						if command.att_type in ("Melee", "Ranged") and checkResistance(combatants[defender].resists, "Weapon", command.status, barriers):
+						if command.att_type in ("Melee", "Ranged") and checkResistance(target.resists, "Weapon", command.status, barriers):
 							damage = round(damage/2)
 						if critical_hit == True:
 							damage = round(damage*1.5)
 
 						# No damage on pure Status attacks
 						if command.stat == "Status":
-							inflictCondition(command, attacker, combatants[defender])
+							inflictCondition(command, attacker, target)
 						elif damage < 0:
 							damage = 0
 							print("No damage.")
 						else:
 							print("%d damage to %s." % (damage, attacker.targets[foe]))
-							if applyDamage(damage, combatants[defender]) == 1:
-								print("%s fell." % combatants[defender].name)
+							if applyDamage(damage, target) == 1:
+								print("%s fell." % target.name)
 
 				elif command.targeting == "Group":
 					print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
 
+					# Reflect
+					if (def_command_effect == "Reflect" or def_target_type == "Reflect") and command.att_type == "Magic":
+						print("%s repulsed the attack." % target.command)
+						# Makes the attacker into the target of its own spell
+						target = attacker
+
 					critical_hit = False
 					# Check resistances
-					if combatants[defender].role == "Enemy":
+					if target.role == "Enemy":
 						buildResistances(enemy_barriers, barriers, commands)
 					else:
 						buildResistances(player_barriers, barriers, commands)
-					if checkResistance(combatants[defender].resists, command.element, command.status, barriers):
-						print("%s is strong against %s." % (attacker.targets[foe], command.name))
+					if checkResistance(target.resists, command.element, command.status, barriers):
+						print("%s is strong against %s." % (target.name, command.name))
 						continue
 					else:
 						offense = rollDamage(command, attacker)
-						defense = determineDefense(combatants[defender], command.att_type, offense)
+						defense = determineDefense(target, command.att_type, offense)
 						
 						if command.status != "None":
-							inflictCondition(command, attacker, combatants[defender])
+							inflictCondition(command, attacker, target)
 						# Check for elemental / species weakness
 						if command.element != "None":
-							if checkWeakness(command.element, combatants[defender]):
+							if checkWeakness(command.element, target):
 								print("Hits weakness.", end = " ")
 								if command.att_type == "Magic":
 									defense = 0
@@ -553,7 +567,7 @@ while run_sim != "n":
 						
 						damage = offense - defense
 
-						if command.att_type in ("Melee", "Ranged") and checkResistance(combatants[defender].resists, "Weapon", command.status, barriers):
+						if command.att_type in ("Melee", "Ranged") and checkResistance(target.resists, "Weapon", command.status, barriers):
 							damage = round(damage/2)
 						if critical_hit:
 							damage = damage * 1.5
@@ -566,7 +580,7 @@ while run_sim != "n":
 						print("No damage.")
 					else:
 						# Loop through combatants to deal damage to all members of a group
-						groupAttack(combatants, attacker.targets[foe], damage)
+						groupAttack(combatants, target.name, damage)
 
 				elif command.targeting == "All Enemies":
 					# Only print the command text the first time through
@@ -574,26 +588,28 @@ while run_sim != "n":
 					if foe == 0:
 						print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
 					offense = rollDamage(command, attacker)
-					defense = determineDefense(combatants[defender], command.att_type, offense)
+					defense = determineDefense(target, command.att_type, offense)
 					damage = offense - defense
 
 					# Check resistances
-					if combatants[defender].role == "Enemy":
+					if target.role == "Enemy":
 						buildResistances(enemy_barriers, barriers, commands)
 					else:
 						buildResistances(player_barriers, barriers, commands)
-					if checkResistance(combatants[defender].resists, command.element, command.status, barriers):
+					if checkResistance(target.resists, command.element, command.status, barriers):
 						print("%s is strong against %s." % (attacker.targets[foe], command.name))
 						continue
 					else:
 						if command.status != "None":
 							# HOW TO CYCLE THROUGH EACH DEFENDER? COPY GROUP ATTACK APPROACH?
-							inflictCondition(command, attacker, combatants[defender])
+							inflictCondition(command, attacker, target)
 						# Check for elemental / species weakness
 						if command.element != "None":
-							if checkWeakness(command.element, combatants[defender]):
-								defense = 0
-						if command.att_type in ("Melee", "Ranged") and checkResistance(combatants[defender].resists, "Weapon", command.status, barriers):
+							if checkWeakness(command.element, target):
+								print("Hits weakness.", end = " ")
+								if command.att_type == "Magic":
+									defense = 0
+						if command.att_type in ("Melee", "Ranged") and checkResistance(target.resists, "Weapon", command.status, barriers):
 							damage = round(damage/2)
 
 					# No damage on pure Status attacks
@@ -609,9 +625,9 @@ while run_sim != "n":
 				elif command.targeting == "Ally":
 					print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
 					if command.effect == "Heal":
-						rollHeal(command, attacker, combatants[defender])
+						rollHeal(command, attacker, target)
 					elif command.effect == "Buff":
-						combatants[defender] = affectStat(combatants[defender], command.effect, command.min_dmg)
+						target = affectStat(target, command.effect, command.min_dmg)
 						print("%s increases by %d." % (command.effect, command.min_dmg))
 			
 				elif command.targeting == "Self":
@@ -661,8 +677,8 @@ while run_sim != "n":
 		print("{ %s - %d" % (key, number), end = " }")
 	print("")
 	
-#	for count in range(len(combatants)):
-#		print(combatants[count])
+	for count in range(len(combatants)):
+		print(combatants[count])
 
 	run_sim = input("Run another battle (y/n)?: ")
 
