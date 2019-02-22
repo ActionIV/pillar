@@ -111,18 +111,18 @@ def groupAttack(combatants, name, damage):
 		else:
 			print("")
 
-# def groupCondition(combatants, name, status):
-# 	body_count = 0
-# 	for who in range(len(combatants)):
-# 		# Only damage those matching the target name and that are not already dead or stoned
-# 		if combatants[who].name == name and combatants[who].isTargetable():
-# 			body_count += inflictCondition(damage, combatants[who])
-# 		# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
-# 		print("%d damage to %s group." % (damage, name), end = " ")
-# 		if body_count > 0:
-# 			print("Defeated %d." % body_count)
-# 		else:
-# 			print("")
+#def groupCondition(combatants, name, status):
+#	body_count = 0
+#	for who in range(len(combatants)):
+#		# Only damage those matching the target name and that are not already dead or stoned
+#		if combatants[who].name == name and combatants[who].isTargetable():
+#			body_count += inflictCondition(status, combatants[who])
+#		# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
+#		print("%d damage to %s group." % (damage, name), end = " ")
+#		if body_count > 0:
+#			print("Defeated %d." % body_count)
+#		else:
+#			print("")
 
 def applyDamage(damage, target):
 	target.current_HP -= damage

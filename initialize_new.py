@@ -480,9 +480,9 @@ while run_sim != "n":
 							continue
 					else:
 						# Single target, magic, status attack (so no hit, no damage)
-						if command.status != "None" and command.att_type not in ("Melee", "Ranged"):
-							inflictCondition(command, attacker, target)
-							continue
+#						if command.status != "None" and command.stat != "Status":
+#							inflictCondition(command, attacker, target)
+							
 						# Check for elemental / species weakness
 						if command.element != "None":
 							if checkWeakness(command.element, target):
@@ -509,6 +509,8 @@ while run_sim != "n":
 
 					# DAMAGE ASSIGNMENT
 					else:
+						if command.status != "None":
+							inflictCondition(command, attacker, target)
 						offense = rollDamage(command, attacker)
 						defense = determineDefense(target, command.att_type, offense)
 						damage = offense - defense
@@ -523,7 +525,7 @@ while run_sim != "n":
 
 						# No damage on pure Status attacks
 						if command.stat == "Status":
-							inflictCondition(command, attacker, target)
+							pass
 						elif damage < 0:
 							damage = 0
 							print("No damage.")
@@ -551,11 +553,18 @@ while run_sim != "n":
 						print("%s is strong against %s." % (target.name, command.name))
 						continue
 					else:
+						if command.status != "None":
+							for who in range(len(combatants)):
+								if combatants[who].name == target.name and combatants[who].isTargetable():
+									inflictCondition(command, attacker, combatants[who])
 						offense = rollDamage(command, attacker)
 						defense = determineDefense(target, command.att_type, offense)
 						
-						if command.status != "None":
-							inflictCondition(command, attacker, target)
+						if command.status != "None" and command.stat != "Status":
+							for who in range(len(combatants)):
+								if combatants[who].name == target.name and combatants[who].isTargetable():
+									inflictCondition(command, attacker, combatants[who])
+
 						# Check for elemental / species weakness
 						if command.element != "None":
 							if checkWeakness(command.element, target):
@@ -574,7 +583,7 @@ while run_sim != "n":
 
 					# No damage on pure Status attacks
 					if command.stat == "Status":
-						continue
+						pass
 					elif damage < 0:
 						damage = 0
 						print("No damage.")
@@ -601,8 +610,9 @@ while run_sim != "n":
 						continue
 					else:
 						if command.status != "None":
-							# HOW TO CYCLE THROUGH EACH DEFENDER? COPY GROUP ATTACK APPROACH?
-							inflictCondition(command, attacker, target)
+							for who in range(len(combatants)):
+								if combatants[who].name == target.name and combatants[who].isTargetable():
+									inflictCondition(command, attacker, combatants[who])
 						# Check for elemental / species weakness
 						if command.element != "None":
 							if checkWeakness(command.element, target):
@@ -614,7 +624,7 @@ while run_sim != "n":
 
 					# No damage on pure Status attacks
 					if command.stat == "Status":
-						continue
+						pass
 					elif damage < 0:
 						damage = 0
 						print("No damage.")
@@ -677,8 +687,8 @@ while run_sim != "n":
 		print("{ %s - %d" % (key, number), end = " }")
 	print("")
 	
-	for count in range(len(combatants)):
-		print(combatants[count])
+#	for count in range(len(combatants)):
+#		print(combatants[count])
 
 	run_sim = input("Run another battle (y/n)?: ")
 
