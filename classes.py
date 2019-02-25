@@ -19,9 +19,6 @@ class Actor(object):
 
 	def isStoned(self):
 		return True if self.stoned == "y" else False
-		# 	return True
-		# else:
-		# 	return False
 	def isCursed(self):
 		return True if self.cursed == "y" else False
 	def isBlinded(self):
@@ -100,6 +97,7 @@ class Actor(object):
 	paralyzed = "n"
 	poisoned = "n"
 	confused = "n"
+	block_percent = 0
 		
 class Enemy(Actor):
 	def __init__(self, name):
@@ -169,5 +167,15 @@ class Command:
 	effect = ""
 	percent = 0
 
-	def __init__(self, name):
+	def __init__(self, name, commands):
 		self.name = name
+		self.stat = commands.loc[name,"Damage Stat"]
+		self.multiplier = commands.loc[name,"Multiplier"]
+		self.att_type = commands.loc[name,"Type"]
+		self.targeting = commands.loc[name,"Target Type"]
+		self.element = commands.loc[name,"Element"]
+		self.min_dmg = commands.loc[name,"Min DMG"]
+		self.rand_dmg = commands.loc[name,"Rand DMG"]
+		self.status = commands.loc[name, "Status"]
+		self.effect = commands.loc[name,"Effect"]
+		self.percent = commands.loc[name,"Percent"]

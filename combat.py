@@ -23,7 +23,7 @@ def battleStatus(survivors):
 			enemies += 1
 		elif (survivors[count].role == "Player" or "NPC") and survivors[count].isTargetable():
 			players += 1
-
+	# Print if one side has no survivors, otherwise continue on
 	if enemies == 0:
 		print("Right on!")
 		return False
@@ -61,26 +61,12 @@ def endOfTurn(attacker):
 		else:
 			print("%s is poisoned." % attacker.name, end = " ")
 			poison_dmg = attacker.HP * 0.1
-			attacker.current_HP -= poison_dmg
 			print("%d damage." % poison_dmg)
-			if attacker.current_HP <= 0:
-				attacker.current_HP = 0
-				attacker.lives -= 1
-				if attacker.isDead():
-					print("%s succumbed to the poison." % attacker.name)
-				else:
-					print("")
-	# if attacker.isConfused():
-	# 	roll = random.randint(1,100)
-	# 	if roll <= 10:
-	# 		print("%s regained sanity." % attacker.name)
-	# 		attacker.confused = "n"
-	# 	else:
-	# 		print("%s is confused." % attacker.name)
+			if applyDamage(poison_dmg, attacker) == 1:
+				print("%s succumbed to the poison." % attacker.name)
 
 	if attacker.role == "Enemy":
 		attacker.command = 'nan'
-
 	return attacker
 
 def frontOfGroup(combatants, att, foe):
@@ -95,34 +81,52 @@ def frontOfGroup(combatants, att, foe):
 	return defender
 
 def groupAttack(combatants, name, damage):
-	if damage < 0:
+	body_count = 0
+	for who in range(len(combatants)):
+		# Only damage those matching the target name and that are not already dead or stoned
+		if combatants[who].name == name and combatants[who].isTargetable():
+			body_count += applyDamage(damage, combatants[who])
+	# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
+	print("%d damage to %s group." % (damage, name), end = " ")
+	if body_count > 0:
+		print("Defeated %d." % body_count)
+	else:
+		print("")
+
+def counterAttack(avenger, attacker, command, damage_received, barriers):
+	print("%s counter-attacks with %s." % (avenger.name, command.name), end = " ")
+	if command.stat == "Str":
+		if damage_received < avenger.current_Str * 2:
+			counter_dmg = avenger.current_Str * 2
+		else:
+			counter_dmg = damage_received
+		damage = round(counter_dmg * command.multiplier / 10 + avenger.current_Str)
+
+	# For MANA or Status-based counters
+	else:
+		if checkResistance(attacker.resists, command.element, command.status, barriers):
+			print("%s is strong against %s." % (attacker.name, command.name))
+		else:
+			if command.stat == "Status":
+				inflictCondition(command, avenger, attacker)
+			elif command.stat == "Mana":
+				counter_dmg = rollDamage(command, avenger)
+				defense = determineDefense(attacker, command.att_type, counter_dmg)
+				if checkWeakness(command.element, attacker):
+					print("Hits weakness.", end = " ")
+					defense = 0
+				damage = counter_dmg - defense
+
+	# No damage on pure Status attacks
+	if command.stat == "Status":
+		pass
+	elif damage <= 0:
 		damage = 0
 		print("No damage.")
 	else:
-		body_count = 0
-		for who in range(len(combatants)):
-			# Only damage those matching the target name and that are not already dead or stoned
-			if combatants[who].name == name and combatants[who].isTargetable():
-				body_count += applyDamage(damage, combatants[who])
-		# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
-		print("%d damage to %s group." % (damage, name), end = " ")
-		if body_count > 0:
-			print("Defeated %d." % body_count)
-		else:
-			print("")
-
-#def groupCondition(combatants, name, status):
-#	body_count = 0
-#	for who in range(len(combatants)):
-#		# Only damage those matching the target name and that are not already dead or stoned
-#		if combatants[who].name == name and combatants[who].isTargetable():
-#			body_count += inflictCondition(status, combatants[who])
-#		# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
-#		print("%d damage to %s group." % (damage, name), end = " ")
-#		if body_count > 0:
-#			print("Defeated %d." % body_count)
-#		else:
-#			print("")
+		print("%d damage to %s." % (counter_dmg, attacker.name))
+		if applyDamage(counter_dmg, attacker) == 1:
+			print("%s fell." % attacker.name)
 
 def applyDamage(damage, target):
 	target.current_HP -= damage

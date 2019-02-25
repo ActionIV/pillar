@@ -4,7 +4,7 @@ import operator
 from collections import Counter 
 from classes import Player, Enemy, NPC, Actor, Command
 from combat import (randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal,
-inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage)
+inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack)
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -67,7 +67,7 @@ while run_sim != "n":
 
 		elif battles[i].iloc[count,1] == "Player":
 			combatants.append(Player(battles[i].iloc[count,0]))
-			combatants[count].position = battles[i].iloc[count,3]
+			combatants[count].position = int(battles[i].iloc[count,3])
 			combatants[place].group = count
 			place += 1
 
@@ -181,7 +181,7 @@ while run_sim != "n":
 		# Create party formation
 		party_order = []
 		for count in range(len(combatants)):
-			if combatants[count].role == ("Player" or "NPC"):
+			if combatants[count].role in ("Player", "NPC"):
 				party_order.append(tuple((combatants[count].name, combatants[count].position, count)))
 		party_order = sorted(party_order, key = operator.itemgetter(1), reverse=False)
 
@@ -199,19 +199,12 @@ while run_sim != "n":
 
 			# CONFUSION CHECK
 			if attacker.isConfused():
-				# confuse_roll = random.randint(1,90)
-				# if confuse_roll > 10:
 				options = []
 				for skill in range(len(attacker.skills)):
 					if attacker.skills[skill] != "blank" and commands.loc[attacker.skills[skill],"Target Type"] != "None":
 						options.append(attacker.skills[skill])
 				confuse_command_roll = random.randint(0, len(options)-1)
 				attacker.command = options[confuse_command_roll]
-				# else:
-				# 	print("%s regained sanity." % attacker.name)
-				# 	attacker.command = battles[i].loc[attacker.name, "COMMAND"]
-				# 	attacker.target_type = battles[i].loc[attacker.name, "TARGET"]
-				# 	attacker.confused = "n"
 
 			# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
 			# Could also be used for random ability selection for players if an appropriate MS were assigned
@@ -290,12 +283,10 @@ while run_sim != "n":
 								attacker.targets.append(enemy_groups[each][0])
 				else:
 					print("%s regained sanity." % attacker.name)
-					attacker.command = battles[i].loc[attacker.name, "COMMAND"]
-					attacker.target_type = battles[i].loc[attacker.name, "TARGET"]
+					attacker.command = "blank"
 					attacker.confused = "n"
 					continue
 				
-
 			# Find an actual target based on Target Type, where applicable (i.e. not the "All" abilities)
 			elif attacker.role != "Player":
 
@@ -336,12 +327,12 @@ while run_sim != "n":
 				# Enemy healers will always target the ally that has taken the most damage
 				elif attacker.target_type == "Ally":
 					target_name = ""
-					damage_lead = 0
+					damage_to_lead = 0
 					for each in range(len(combatants)):
 						if combatants[each].role == attacker.role:
 							damage_taken = combatants[each].HP - combatants[each].current_HP
-							if damage_taken > damage_lead:
-								damage_lead = damage_taken
+							if damage_taken > damage_to_lead:
+								damage_to_lead = damage_taken
 								target_name = combatants[each].name
 					attacker.targets.append(target_name)
 				elif attacker.target_type == "Allies":
@@ -394,17 +385,7 @@ while run_sim != "n":
 					break
 
 			# Construct the command class for this instance
-			command = Command(attacker.command)
-			command.stat = commands.loc[command.name,"Damage Stat"]
-			command.multiplier = commands.loc[command.name,"Multiplier"]
-			command.att_type = commands.loc[command.name,"Type"]
-			command.targeting = commands.loc[command.name,"Target Type"]
-			command.element = commands.loc[command.name,"Element"]
-			command.min_dmg = commands.loc[command.name,"Min DMG"]
-			command.rand_dmg = commands.loc[command.name,"Rand DMG"]
-			command.status = commands.loc[command.name, "Status"]
-			command.effect = commands.loc[command.name,"Effect"]
-			command.percent = commands.loc[command.name,"Percent"]
+			command = Command(attacker.command, commands)
 
 			# Cycle through targets for attacks
 			for foe in range(len(attacker.targets)):
@@ -463,7 +444,7 @@ while run_sim != "n":
 						print("%s repulsed the attack." % target.command)
 						continue
 
-					# Check resistances
+					# Check for barriers and their effects
 					dmg_reduction = False
 					critical_hit = False
 					if target.role == "Enemy":
@@ -471,6 +452,7 @@ while run_sim != "n":
 					else:
 						buildResistances(player_barriers, barriers, commands)
 					
+					# Check total resists
 					if checkResistance(target.resists, command.element, command.status, barriers):
 						# Elemental resistance was found, but it's a melee attack so it can't be resisted
 						if command.element != "None" and command.att_type in ("Melee", "Ranged"):
@@ -479,10 +461,6 @@ while run_sim != "n":
 							print("%s is strong against %s." % (attacker.targets[foe], command.name))
 							continue
 					else:
-						# Single target, magic, status attack (so no hit, no damage)
-#						if command.status != "None" and command.stat != "Status":
-#							inflictCondition(command, attacker, target)
-							
 						# Check for elemental / species weakness
 						if command.element != "None":
 							if checkWeakness(command.element, target):
@@ -526,13 +504,22 @@ while run_sim != "n":
 						# No damage on pure Status attacks
 						if command.stat == "Status":
 							pass
-						elif damage < 0:
+						elif damage <= 0:
 							damage = 0
 							print("No damage.")
 						else:
 							print("%d damage to %s." % (damage, attacker.targets[foe]))
 							if applyDamage(damage, target) == 1:
 								print("%s fell." % target.name)
+
+						# Counter-attacks if any exist and the target survived
+						if target.isActive() and (def_target_type == "Counter" or def_command_effect == "Counter"):
+							counter_command = Command(target.command, commands)
+							if target.role == "Enemy":
+								buildResistances(player_barriers, barriers, commands)
+							else:
+								buildResistances(enemy_barriers, barriers, commands)
+							counterAttack(target, attacker, counter_command, damage, barriers)
 
 				elif command.targeting == "Group":
 					print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
@@ -559,11 +546,6 @@ while run_sim != "n":
 									inflictCondition(command, attacker, combatants[who])
 						offense = rollDamage(command, attacker)
 						defense = determineDefense(target, command.att_type, offense)
-						
-						if command.status != "None" and command.stat != "Status":
-							for who in range(len(combatants)):
-								if combatants[who].name == target.name and combatants[who].isTargetable():
-									inflictCondition(command, attacker, combatants[who])
 
 						# Check for elemental / species weakness
 						if command.element != "None":
@@ -584,7 +566,7 @@ while run_sim != "n":
 					# No damage on pure Status attacks
 					if command.stat == "Status":
 						pass
-					elif damage < 0:
+					elif damage <= 0:
 						damage = 0
 						print("No damage.")
 					else:
@@ -625,7 +607,7 @@ while run_sim != "n":
 					# No damage on pure Status attacks
 					if command.stat == "Status":
 						pass
-					elif damage < 0:
+					elif damage <= 0:
 						damage = 0
 						print("No damage.")
 					else:
@@ -663,6 +645,10 @@ while run_sim != "n":
 				break
 		for each in range(len(combatants)):
 			combatants[each] = endOfTurn(combatants[each])
+			# Should only be needed for "Regained sanity" purposes...
+			if combatants[each].role == "Player" and combatants[each].command == "blank":
+				combatants[each].command = battles[i].loc[attacker.name, "COMMAND"]
+				combatants[each].target_type = battles[i].loc[attacker.name, "TARGET"]
 		if another_round != "n":
 			another_round = input("Run another round (y/n)?: ")
 
