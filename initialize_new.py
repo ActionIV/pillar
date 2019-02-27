@@ -390,6 +390,7 @@ while run_sim != "n":
 			# Cycle through targets for attacks
 			for foe in range(len(attacker.targets)):
 				# Select the front-most member of a group with the same name (i.e. attack the front-most enemy of a group)
+				# FUNCTION ONLY CALLED ONCE. MOVE IT BACK?
 				defender = frontOfGroup(combatants, count, foe)
 
 				# Defender == 100 means that group is gone. Go to the next foe
@@ -400,10 +401,15 @@ while run_sim != "n":
 						print("%s attacks with %s. Ineffective." % (attacker.name, command.name))
 					continue
 
+				# Combat parameters
 				barriers = []
 				target = combatants[defender]
 				def_target_type = commands.loc[target.command, "Target Type"]
 				def_command_effect = commands.loc[target.command, "Effect"]
+				blocked = False
+				blockable = False
+				dmg_reduction = False
+				critical_hit = False
 
 				if command.targeting == "Single":
 					# HIT LOGIC
@@ -411,8 +417,7 @@ while run_sim != "n":
 					# Need:  Attacker Agility
 					# Calc:  Defender score - 2x Attacker.AGL, then 97 - the result
 					print("%s attacks %s with %s." % (attacker.name, target.name, attacker.command), end = " ")
-					defender = frontOfGroup(combatants, count, foe)
-					attacker_hit = attacker.current_Agl				
+					attacker_hit = attacker.current_Agl
 					defender_score = target.current_Agl
 
 					# Account for blindness
@@ -424,8 +429,6 @@ while run_sim != "n":
 					# Need MAGI logic here
 
 					# Blockable logic
-					blocked = False
-					blockable = False
 					if command.att_type in ("Melee", "Ranged"):
 						blockable = True
 					if (def_target_type == "Block" or def_command_effect == "Block") and blockable:
@@ -433,20 +436,18 @@ while run_sim != "n":
 						if block_roll <= (commands.loc[target.command, "Percent"] + defender_score):
 							blocked = True
 
-					# Reflect
+					# Reflect - change target into the attacker
 					if (def_command_effect == "Reflect" or def_target_type == "Reflect") and command.att_type == "Magic":
 						print("%s reflected the attack." % target.command)
 						# Makes the attacker into the target of its own spell
 						target = attacker
 
-					# Nullify
+					# Nullify - end the attack since it was nullified on target
 					if (def_command_effect == "Nullify" or def_target_type == "Nullify") and command.att_type == "Magic":
 						print("%s repulsed the attack." % target.command)
 						continue
 
 					# Check for barriers and their effects
-					dmg_reduction = False
-					critical_hit = False
 					if target.role == "Enemy":
 						buildResistances(enemy_barriers, barriers, commands)
 					else:
@@ -521,16 +522,25 @@ while run_sim != "n":
 								buildResistances(enemy_barriers, barriers, commands)
 							counterAttack(target, attacker, counter_command, damage, barriers)
 
-				elif command.targeting == "Group":
-					print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
+				elif command.targeting in ("Group", "All Enemies"):
+					if command.targeting == "Group":
+						print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
+					else:
+						# Only print the command text the first time through
+						# FOR SOME REASON STOPS WORKING ON ALL ENEMY ATTACKS WHEN FIRST TARGET IS STONE
+						if foe == 0:
+							print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
 
-					# Reflect
+					# Reflect - change target into the attacker
 					if (def_command_effect == "Reflect" or def_target_type == "Reflect") and command.att_type == "Magic":
-						print("%s repulsed the attack." % target.command)
-						# Makes the attacker into the target of its own spell
+						print("%s reflected the attack." % target.command)
 						target = attacker
 
-					critical_hit = False
+					# Nullify - end the attack since it was nullified on target
+					if (def_command_effect == "Nullify" or def_target_type == "Nullify") and command.att_type == "Magic":
+						print("%s repulsed the attack." % target.command)
+						continue
+
 					# Check resistances
 					if target.role == "Enemy":
 						buildResistances(enemy_barriers, barriers, commands)
@@ -571,48 +581,8 @@ while run_sim != "n":
 						print("No damage.")
 					else:
 						# Loop through combatants to deal damage to all members of a group
+						# ONLY GETS USED ONCE. MOVE BACK?
 						groupAttack(combatants, target.name, damage)
-
-				elif command.targeting == "All Enemies":
-					# Only print the command text the first time through
-					# FOR SOME REASON STOPS WORKING ON ALL ENEMY ATTACKS WHEN FIRST TARGET IS STONE
-					if foe == 0:
-						print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
-					offense = rollDamage(command, attacker)
-					defense = determineDefense(target, command.att_type, offense)
-					damage = offense - defense
-
-					# Check resistances
-					if target.role == "Enemy":
-						buildResistances(enemy_barriers, barriers, commands)
-					else:
-						buildResistances(player_barriers, barriers, commands)
-					if checkResistance(target.resists, command.element, command.status, barriers):
-						print("%s is strong against %s." % (attacker.targets[foe], command.name))
-						continue
-					else:
-						if command.status != "None":
-							for who in range(len(combatants)):
-								if combatants[who].name == target.name and combatants[who].isTargetable():
-									inflictCondition(command, attacker, combatants[who])
-						# Check for elemental / species weakness
-						if command.element != "None":
-							if checkWeakness(command.element, target):
-								print("Hits weakness.", end = " ")
-								if command.att_type == "Magic":
-									defense = 0
-						if command.att_type in ("Melee", "Ranged") and checkResistance(target.resists, "Weapon", command.status, barriers):
-							damage = round(damage/2)
-
-					# No damage on pure Status attacks
-					if command.stat == "Status":
-						pass
-					elif damage <= 0:
-						damage = 0
-						print("No damage.")
-					else:
-						# Loop through combatants to deal damage to all members of a group
-						groupAttack(combatants, attacker.targets[foe], damage)
 
 				elif command.targeting == "Ally":
 					print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
@@ -621,6 +591,8 @@ while run_sim != "n":
 					elif command.effect == "Buff":
 						target = affectStat(target, command.effect, command.min_dmg)
 						print("%s increases by %d." % (command.effect, command.min_dmg))
+#					elif command.status != "None":
+#						removeCondition(command.status, target)
 			
 				elif command.targeting == "Self":
 					if command.att_type == "Buff":

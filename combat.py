@@ -203,52 +203,88 @@ def affectStat(target, stat, amount):
 	print("%s increases by %d." % (stat, amount))
 	return target
 
-def inflictCondition(command, attacker, defender):
-	# Originally (defender - attacker) * 2 + 50
-	hit_chance = defender.current_Mana - attacker.current_Mana + 50
+def inflictCondition(command, attacker, target):
+	# Originally (target - attacker) * 2 + 50
+	hit_chance = target.current_Mana - attacker.current_Mana + 50
 	roll = random.randint(1,100)
 	if hit_chance < roll:
-		applyCondition(command.status, defender)
+		applyCondition(command.status, target)
 	else:
-		print("%s resisted." % defender.name)
+		print("%s resisted." % target.name)
 
-def applyCondition(status, defender):
+def applyCondition(status, target):
 	if status == "Stone":
-		defender.stoned = "y"
-		defender.blinded = "n"
-		defender.poisoned = "n"
-		defender.confused = "n"
-		defender.paralyzed = "n"
-		defender.asleep = "n"
-		defender.cursed = "n"
-		print("Turned %s to stone." % defender.name)
+		target.stoned = "y"
+		target.blinded = "n"
+		target.poisoned = "n"
+		target.confused = "n"
+		target.paralyzed = "n"
+		target.asleep = "n"
+		target.cursed = "n"
+		print("Turned %s to stone." % target.name)
 	elif status == "Curse":
-		defender.cursed = "y"
-		print("Cursed %s." % defender.name)
+		target.cursed = "y"
+		print("Cursed %s." % target.name)
 	elif status == "Blind":
-		defender.blinded = "y"
-		print("Blinded %s." % defender.name)
+		target.blinded = "y"
+		print("Blinded %s." % target.name)
 	elif status == "Sleep":
-		defender.asleep = "y"
-		print("Put %s to sleep." % defender.name)
+		target.asleep = "y"
+		print("Put %s to sleep." % target.name)
 	elif status == "Paralyze":
-		defender.paralyzed = "y"
-		print("Paralyzed %s." % defender.name)
+		target.paralyzed = "y"
+		print("Paralyzed %s." % target.name)
 	elif status == "Poison":
-		defender.poisoned = "y"
-		print("Poisoned %s." % defender.name)
+		target.poisoned = "y"
+		print("Poisoned %s." % target.name)
 	elif status == "Confuse":
-		defender.confused = "y"
-		print("Confused %s." % defender.name)
+		target.confused = "y"
+		print("Confused %s." % target.name)
 	elif status == "Stun":
-		defender.current_HP = 0
-		defender.lives -= 1
-		defender.blinded = "n"
-		defender.poisoned = "n"
-		defender.confused = "n"
-		defender.paralyzed = "n"
-		defender.asleep = "n"
-		defender.cursed = "n"
+		target.current_HP = 0
+		target.lives -= 1
+		target.blinded = "n"
+		target.poisoned = "n"
+		target.confused = "n"
+		target.paralyzed = "n"
+		target.asleep = "n"
+		target.cursed = "n"
+
+def removeCondition(status, target):
+	if status == "Stone":
+		target.stoned = "n"
+		print("Softened %s." % target.name)
+	elif status == "Curse":
+		target.cursed = "n"
+		print("Released %s from curse." % target.name)
+	elif status == "Blind":
+		target.blinded = "n"
+		print("Restored sight to %s." % target.name)
+	elif status == "Sleep":
+		target.asleep = "n"
+		print("Woke %s." % target.name)
+	elif status == "Paralyze":
+		target.paralyzed = "n"
+		print("Released %s from paralysis." % target.name)
+	elif status == "Poison":
+		target.poisoned = "n"
+		print("Neutralized %s's poison." % target.name)
+	elif status == "Confuse":
+		target.confused = "n"
+		print("Returned %s to sanity." % target.name)
+	elif status == "Revive":
+		target.current_HP = 1
+		target.lives += 1
+		print("Revived %s." % target.name)
+	elif status == "Full Restore":
+		target.stoned = "n"
+		target.blinded = "n"
+		target.poisoned = "n"
+		target.confused = "n"
+		target.paralyzed = "n"
+		target.asleep = "n"
+		target.cursed = "n"
+		print("%s was fully restored." % target.name)
 
 def buildResistances(skills, resist_list, resist_table):
 	for count in range(len(skills)):
