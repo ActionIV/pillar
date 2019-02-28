@@ -4,7 +4,7 @@ import operator
 from collections import Counter 
 from classes import Player, Enemy, NPC, Actor, Command
 from combat import (randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal,
-inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack)
+inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition)
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -283,7 +283,7 @@ while run_sim != "n":
 								attacker.targets.append(enemy_groups[each][0])
 				else:
 					print("%s regained sanity." % attacker.name)
-					attacker.command = "blank"
+					attacker.command = "None"
 					attacker.confused = "n"
 					continue
 				
@@ -404,8 +404,9 @@ while run_sim != "n":
 				# Combat parameters
 				barriers = []
 				target = combatants[defender]
-				def_target_type = commands.loc[target.command, "Target Type"]
-				def_command_effect = commands.loc[target.command, "Effect"]
+				if target.command != "None":
+					def_target_type = commands.loc[target.command, "Target Type"]
+					def_command_effect = commands.loc[target.command, "Effect"]
 				blocked = False
 				blockable = False
 				dmg_reduction = False
@@ -591,8 +592,8 @@ while run_sim != "n":
 					elif command.effect == "Buff":
 						target = affectStat(target, command.effect, command.min_dmg)
 						print("%s increases by %d." % (command.effect, command.min_dmg))
-#					elif command.status != "None":
-#						removeCondition(command.status, target)
+					elif command.status != "None":
+						removeCondition(command.status, target)
 			
 				elif command.targeting == "Self":
 					if command.att_type == "Buff":
@@ -609,6 +610,8 @@ while run_sim != "n":
 							elif command.effect == "Buff":
 								print("%s's" % combatants[who], end = " ")
 								combatants[who] == affectStat(combatants[who], command.effect, command.min_dmg)
+							elif command.status != "None":
+								removeCondition(command.status, combatants[who])
 
 			# Post-action tracking
 			combatants[count] = afterTurn(attacker)
@@ -618,7 +621,7 @@ while run_sim != "n":
 		for each in range(len(combatants)):
 			combatants[each] = endOfTurn(combatants[each])
 			# Should only be needed for "Regained sanity" purposes...
-			if combatants[each].role == "Player" and combatants[each].command == "blank":
+			if combatants[each].role == "Player" and combatants[each].command == "None":
 				combatants[each].command = battles[i].loc[attacker.name, "COMMAND"]
 				combatants[each].target_type = battles[i].loc[attacker.name, "TARGET"]
 		if another_round != "n":
@@ -655,11 +658,11 @@ if char_sheets == "y":
 	for count in range(len(players.index)):
 		print("CHARACTER: %s  PLAYER: %s" % (players.iloc[count, 0], players.iloc[count, 1]))
 		print("CLASS: %s" % players.iloc[count, 2])
-		print("HP: %d / STR: %d / DEF: %d / AGL: %d / MANA: %d" % (players.iloc[count, 3],players.iloc[count, 4],players.iloc[count, 5],players.iloc[count, 6],players.iloc[count, 7]))
+		print("HP: %d / STR: %d / DEF: %d / AGL: %d / MANA: %d" % (players.iloc[count, 3],players.iloc[count, 5],players.iloc[count, 7],players.iloc[count, 9],players.iloc[count, 11]))
 		print("[", end = "")
 		for skill in range(8):
 			if skill < 7:
-				print(players.iloc[count,skill+8], end = ", ")
+				print(players.iloc[count,skill+12], end = ", ")
 			else:
-				print(players.iloc[count,skill+8], end = "]\n")
+				print(players.iloc[count,skill+12], end = "]\n")
 		# Still need MAGI and Inventory
