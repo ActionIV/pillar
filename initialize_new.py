@@ -1,16 +1,19 @@
 import pandas
 import random
 import operator
-from collections import Counter 
+import openpyxl
+from collections import Counter
 from classes import Player, Enemy, NPC, Actor, Command
 from combat import (randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal,
 inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition)
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
+path3 = r"Battle Results.xlsx"
 
 workbook = pandas.ExcelFile(path1)
 log = pandas.ExcelFile(path2)
+writer = pandas.ExcelWriter(path3, engine = 'openpyxl')
 
 monsters = workbook.parse("Monster", index_col = 'Index')
 commands = workbook.parse("Weapon", index_col = 'Index')
@@ -18,6 +21,7 @@ ms_prob = workbook.parse("Move Probability")
 
 # Loop through each sheet of the battle log, appending each to the battles list
 battles = []
+save_list = []
 
 for count in range(len(log.sheet_names)):
 	if count == 0:
@@ -32,6 +36,8 @@ commands["Status"].fillna("None", inplace = True)
 commands["Effect"].fillna("None", inplace = True)
 commands["Target Type"].fillna("None", inplace = True)
 players.fillna("blank", inplace = True)
+for each in range(len(battles)):
+	battles[each].fillna(0, inplace=True)
 
 run_sim = "y"
 while run_sim != "n":
@@ -54,7 +60,8 @@ while run_sim != "n":
 
 	# Populate the Combatants list
 	# I would prefer to be doing label lookups with Pandas loc instead of iloc, but I can't get the indexing right (at load time)
-	for count in range(len(battles[i].index)):
+	actor_count = len(battles[i].index)
+	for count in range(actor_count):
 		# Enemy groups require a for loop to create individual Actors for tracking initiative, deaths, etc.
 		if battles[i].iloc[count,1] == "Enemy":
 			for pos in range(int(battles[i].iloc[count,2])):
@@ -63,7 +70,10 @@ while run_sim != "n":
 				combatants[place].lives = 1
 				combatants[place].group = count
 				enemy_groups.append(tuple((combatants[place].name, combatants[place].group, count)))
+				copy_row = battles[i].loc[combatants[place].name]
+				battles[i].loc[len(battles[i].index)] = copy_row
 				place += 1
+			battles[i].drop(battles[i].tail(1).index,inplace=True)
 
 		elif battles[i].iloc[count,1] == "Player":
 			combatants.append(Player(battles[i].iloc[count,0]))
@@ -651,7 +661,37 @@ while run_sim != "n":
 #	for count in range(len(combatants)):
 #		print(combatants[count])
 
+	write_to_excel = input("Save battle? (y/n): ")
+	if write_to_excel == "y":
+		for count in range(len(combatants)):
+			battles[i].iloc[count,0] = combatants[count].name
+			battles[i].iloc[count,1] = combatants[count].role
+			battles[i].iloc[count,2] = combatants[count].lives
+			battles[i].iloc[count,3] = combatants[count].position
+			battles[i].iloc[count,4] = combatants[count].initiative
+			battles[i].iloc[count,5] = combatants[count].current_HP
+			battles[i].iloc[count,6] = combatants[count].current_Str
+			battles[i].iloc[count,7] = combatants[count].current_Agl
+			battles[i].iloc[count,8] = combatants[count].current_Mana
+			battles[i].iloc[count,9] = combatants[count].current_Def
+			battles[i].iloc[count,12] = combatants[count].stoned
+			battles[i].iloc[count,13] = combatants[count].cursed
+			battles[i].iloc[count,14] = combatants[count].blinded
+			battles[i].iloc[count,16] = combatants[count].asleep
+			battles[i].iloc[count,17] = combatants[count].paralyzed
+			battles[i].iloc[count,18] = combatants[count].poisoned
+			battles[i].iloc[count,19] = combatants[count].confused
+			battles[i].iloc[count,20] = combatants[count].actions_taken
+		save_list.append(tuple((i, log.sheet_names[i+1])))
+#	print(battles[i])
 	run_sim = input("Run another battle (y/n)?: ")
+
+#print(save_list)
+for bat in range(len(save_list)):
+ 	battles[save_list[bat][0]].to_excel(writer, sheet_name = save_list[bat][1])
+
+if len(save_list) > 0:
+	writer.save()
 
 char_sheets = input("Print character sheets (y/n)?: ")
 if char_sheets == "y":
