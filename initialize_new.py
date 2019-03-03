@@ -27,7 +27,7 @@ for count in range(len(log.sheet_names)):
 	if count == 0:
 		players = log.parse("Players", index_col = 'Index')
 	else:
-		battles.append(log.parse(count, index_col = 'Index', dtype = str))
+		battles.append(log.parse(count))
 
 # Remove NaN entries from certain sheets and columns
 monsters.fillna("blank", inplace = True)
@@ -37,7 +37,12 @@ commands["Effect"].fillna("None", inplace = True)
 commands["Target Type"].fillna("None", inplace = True)
 players.fillna("blank", inplace = True)
 for each in range(len(battles)):
-	battles[each].fillna(0, inplace=True)
+	battles[each]["COMMAND"].fillna('nan', inplace=True)
+	battles[each]["CURRENT HP"].fillna(-1, inplace=True)
+	battles[each]["CURRENT STR"].fillna(-1, inplace=True)
+	battles[each]["CURRENT AGL"].fillna(-1, inplace=True)
+	battles[each]["CURRENT MANA"].fillna(-1, inplace=True)
+	battles[each]["CURRENT DEF"].fillna(-1, inplace=True)
 
 run_sim = "y"
 while run_sim != "n":
@@ -64,16 +69,23 @@ while run_sim != "n":
 	for count in range(actor_count):
 		# Enemy groups require a for loop to create individual Actors for tracking initiative, deaths, etc.
 		if battles[i].iloc[count,1] == "Enemy":
-			for pos in range(int(battles[i].iloc[count,2])):
+			if pandas.isnull(battles[i].iloc[count,3]):
+				for pos in range(int(battles[i].iloc[count,2])):
+					combatants.append(Enemy(battles[i].iloc[count,0]))
+					combatants[place].position = pos + 1
+					combatants[place].lives = 1
+					combatants[place].group = count
+					enemy_groups.append(tuple((combatants[place].name, 0, 0)))
+					copy_row = battles[i].iloc[count]
+					battles[i].loc[len(battles[i].index)] = copy_row
+					place += 1
+				battles[i].drop(battles[i].tail(1).index,inplace=True)
+			else:
 				combatants.append(Enemy(battles[i].iloc[count,0]))
-				combatants[place].position = pos + 1
-				combatants[place].lives = 1
-				combatants[place].group = count
-				enemy_groups.append(tuple((combatants[place].name, combatants[place].group, count)))
-				copy_row = battles[i].loc[combatants[place].name]
-				battles[i].loc[len(battles[i].index)] = copy_row
-				place += 1
-			battles[i].drop(battles[i].tail(1).index,inplace=True)
+				combatants[count].position = battles[i].iloc[count,3]
+				combatants[count].lives = battles[i].iloc[count,2]
+				combatants[count].group = count
+				enemy_groups.append(tuple((combatants[count].name, 0, 0)))
 
 		elif battles[i].iloc[count,1] == "Player":
 			combatants.append(Player(battles[i].iloc[count,0]))
@@ -96,20 +108,21 @@ while run_sim != "n":
 	for count in range(len(combatants)):
 		current_com = combatants[count]
 
-		current_com.current_HP = battles[i].loc[current_com.name, "CURRENT HP"]
-		current_com.current_Str = battles[i].loc[current_com.name, "CURRENT STR"]
-		current_com.current_Agl = battles[i].loc[current_com.name, "CURRENT AGL"]
-		current_com.current_Mana = battles[i].loc[current_com.name, "CURRENT MANA"]
-		current_com.current_Def = battles[i].loc[current_com.name, "CURRENT DEF"]
-		current_com.command = battles[i].loc[current_com.name, "COMMAND"]
-		current_com.target_type = battles[i].loc[current_com.name, "TARGET"]
-		current_com.stoned = battles[i].loc[current_com.name, "Stoned"]
-		current_com.cursed = battles[i].loc[current_com.name, "Cursed"]
-		current_com.blinded = battles[i].loc[current_com.name, "Blinded"]
-		current_com.stunned = battles[i].loc[current_com.name, "Stunned"]
-		current_com.paralyzed = battles[i].loc[current_com.name, "Paralyzed"]
-		current_com.poisoned = battles[i].loc[current_com.name, "Poisoned"]
-		current_com.confused = battles[i].loc[current_com.name, "Confused"]
+		current_com.current_HP = battles[i].iloc[current_com.group, 5]
+		current_com.current_Str = battles[i].iloc[current_com.group, 6]
+		current_com.current_Agl = battles[i].iloc[current_com.group, 7]
+		current_com.current_Mana = battles[i].iloc[current_com.group, 8]
+		current_com.current_Def = battles[i].iloc[current_com.group, 9]
+		current_com.command = battles[i].iloc[current_com.group, 10]
+		current_com.target_type = battles[i].iloc[current_com.group, 11]
+		current_com.stoned = battles[i].iloc[current_com.group, 12]
+		current_com.cursed = battles[i].iloc[current_com.group, 13]
+		current_com.blinded = battles[i].iloc[current_com.group, 14]
+		current_com.stunned = battles[i].iloc[current_com.group, 15]
+		current_com.asleep = battles[i].iloc[current_com.group, 16]
+		current_com.paralyzed = battles[i].iloc[current_com.group, 17]
+		current_com.poisoned = battles[i].iloc[current_com.group, 18]
+		current_com.confused = battles[i].iloc[current_com.group, 19]
 	
 		# Lookup the static Enemy data
 		if current_com.role == "Enemy":
@@ -169,14 +182,14 @@ while run_sim != "n":
 		# SET CURRENT STATS (in Round 1 only), ROLL INITIATIVE, AND SORT
 		if rd == 1:
 			for count in range(len(combatants)):
-				if combatants[count].current_HP == 'nan':
+				if combatants[count].current_HP == -1:
 					combatants[count].current_HP = combatants[count].HP
 				else:
-					combatants[count].current_HP = int(combatants[count].current_HP)
-				combatants[count].current_Str = combatants[count].Str if combatants[count].current_Str == 'nan' else combatants[count].current_Str
-				combatants[count].current_Agl = combatants[count].Agl if combatants[count].current_Agl == 'nan' else combatants[count].current_Agl
-				combatants[count].current_Mana = combatants[count].Mana if combatants[count].current_Mana == 'nan' else combatants[count].current_Mana
-				combatants[count].current_Def = combatants[count].Def if combatants[count].current_Def == 'nan' else combatants[count].current_Def
+					combatants[count].current_HP = combatants[count].current_HP
+				combatants[count].current_Str = combatants[count].Str if combatants[count].current_Str == -1 else combatants[count].current_Str
+				combatants[count].current_Agl = combatants[count].Agl if combatants[count].current_Agl == -1 else combatants[count].current_Agl
+				combatants[count].current_Mana = combatants[count].Mana if combatants[count].current_Mana == -1 else combatants[count].current_Mana
+				combatants[count].current_Def = combatants[count].Def if combatants[count].current_Def == -1 else combatants[count].current_Def
 
 			# SURPRISE CHECK FOR ROUND 1
 
@@ -660,6 +673,7 @@ while run_sim != "n":
 	
 #	for count in range(len(combatants)):
 #		print(combatants[count])
+#	print(battles[i])
 
 	write_to_excel = input("Save battle? (y/n): ")
 	if write_to_excel == "y":
@@ -681,9 +695,9 @@ while run_sim != "n":
 			battles[i].iloc[count,17] = combatants[count].paralyzed
 			battles[i].iloc[count,18] = combatants[count].poisoned
 			battles[i].iloc[count,19] = combatants[count].confused
-			battles[i].iloc[count,20] = combatants[count].actions_taken
+#			battles[i].iloc[count,20] = combatants[count].actions_taken
 		save_list.append(tuple((i, log.sheet_names[i+1])))
-#	print(battles[i])
+
 	run_sim = input("Run another battle (y/n)?: ")
 
 #print(save_list)

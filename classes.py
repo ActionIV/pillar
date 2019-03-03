@@ -137,7 +137,7 @@ class Player(Actor):
 	def getRole(self):
 	 	return self.role
 
-class NPC:
+class NPC(Actor):
 	role = "NPC"
 	MS = 0
 	DS = 0
