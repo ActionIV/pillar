@@ -688,6 +688,8 @@ while run_sim != "n":
 			battles[i].iloc[count,7] = combatants[count].current_Agl
 			battles[i].iloc[count,8] = combatants[count].current_Mana
 			battles[i].iloc[count,9] = combatants[count].current_Def
+			battles[i].iloc[count,10] = combatants[count].command
+			battles[i].iloc[count,11] = combatants[count].target_type
 			battles[i].iloc[count,12] = combatants[count].stoned
 			battles[i].iloc[count,13] = combatants[count].cursed
 			battles[i].iloc[count,14] = combatants[count].blinded
@@ -695,7 +697,8 @@ while run_sim != "n":
 			battles[i].iloc[count,17] = combatants[count].paralyzed
 			battles[i].iloc[count,18] = combatants[count].poisoned
 			battles[i].iloc[count,19] = combatants[count].confused
-#			battles[i].iloc[count,20] = combatants[count].actions_taken
+			battles[i]["ACTIONS TAKEN"] = battles[i]["ACTIONS TAKEN"].astype(object)
+			battles[i].at[count,"ACTIONS TAKEN"] = combatants[count].actions_taken
 		save_list.append(tuple((i, log.sheet_names[i+1])))
 
 	run_sim = input("Run another battle (y/n)?: ")
