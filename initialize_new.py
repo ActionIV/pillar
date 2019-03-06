@@ -89,13 +89,13 @@ while run_sim != "n":
 
 		elif battles[i].iloc[count,1] == "Player":
 			combatants.append(Player(battles[i].iloc[count,0]))
-			combatants[count].position = int(battles[i].iloc[count,3])
+			combatants[place].position = int(battles[i].iloc[count,3])
 			combatants[place].group = count
 			place += 1
 
 		else:
 			combatants.append(NPC(battles[i].iloc[count,0]))
-			combatants[count].position = battles[i].iloc[count,3]
+			combatants[place].position = battles[i].iloc[count,3]
 			combatants[place].group = count
 			place += 1
 
@@ -118,11 +118,10 @@ while run_sim != "n":
 		current_com.stoned = battles[i].iloc[current_com.group, 12]
 		current_com.cursed = battles[i].iloc[current_com.group, 13]
 		current_com.blinded = battles[i].iloc[current_com.group, 14]
-		current_com.stunned = battles[i].iloc[current_com.group, 15]
-		current_com.asleep = battles[i].iloc[current_com.group, 16]
-		current_com.paralyzed = battles[i].iloc[current_com.group, 17]
-		current_com.poisoned = battles[i].iloc[current_com.group, 18]
-		current_com.confused = battles[i].iloc[current_com.group, 19]
+		current_com.asleep = battles[i].iloc[current_com.group, 15]
+		current_com.paralyzed = battles[i].iloc[current_com.group, 16]
+		current_com.poisoned = battles[i].iloc[current_com.group, 17]
+		current_com.confused = battles[i].iloc[current_com.group, 18]
 	
 		# Lookup the static Enemy data
 		if current_com.role == "Enemy":
@@ -693,10 +692,10 @@ while run_sim != "n":
 			battles[i].iloc[count,12] = combatants[count].stoned
 			battles[i].iloc[count,13] = combatants[count].cursed
 			battles[i].iloc[count,14] = combatants[count].blinded
-			battles[i].iloc[count,16] = combatants[count].asleep
-			battles[i].iloc[count,17] = combatants[count].paralyzed
-			battles[i].iloc[count,18] = combatants[count].poisoned
-			battles[i].iloc[count,19] = combatants[count].confused
+			battles[i].iloc[count,15] = combatants[count].asleep
+			battles[i].iloc[count,16] = combatants[count].paralyzed
+			battles[i].iloc[count,17] = combatants[count].poisoned
+			battles[i].iloc[count,18] = combatants[count].confused
 			battles[i]["ACTIONS TAKEN"] = battles[i]["ACTIONS TAKEN"].astype(object)
 			battles[i].at[count,"ACTIONS TAKEN"] = combatants[count].actions_taken
 		save_list.append(tuple((i, log.sheet_names[i+1])))
