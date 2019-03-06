@@ -63,39 +63,41 @@ while run_sim != "n":
 	# Need to track the right spot in combatants, which conflicts with 'count' due to enemy "lives" inflating the list vs the Log
 	place = 0
 
+	active_battle = battles[i].copy()
+
 	# Populate the Combatants list
 	# I would prefer to be doing label lookups with Pandas loc instead of iloc, but I can't get the indexing right (at load time)
-	actor_count = len(battles[i].index)
+	actor_count = len(active_battle.index)
 	for count in range(actor_count):
 		# Enemy groups require a for loop to create individual Actors for tracking initiative, deaths, etc.
-		if battles[i].iloc[count,1] == "Enemy":
-			if pandas.isnull(battles[i].iloc[count,3]):
-				for pos in range(int(battles[i].iloc[count,2])):
-					combatants.append(Enemy(battles[i].iloc[count,0]))
+		if active_battle.iloc[count,1] == "Enemy":
+			if pandas.isnull(active_battle.iloc[count,3]):
+				for pos in range(int(active_battle.iloc[count,2])):
+					combatants.append(Enemy(active_battle.iloc[count,0]))
 					combatants[place].position = pos + 1
 					combatants[place].lives = 1
 					combatants[place].group = count
 					enemy_groups.append(tuple((combatants[place].name, 0, 0)))
-					copy_row = battles[i].iloc[count]
-					battles[i].loc[len(battles[i].index)] = copy_row
+					copy_row = active_battle.iloc[count]
+					active_battle.loc[len(active_battle.index)] = copy_row
 					place += 1
-				battles[i].drop(battles[i].tail(1).index,inplace=True)
+				active_battle.drop(active_battle.tail(1).index,inplace=True)
 			else:
-				combatants.append(Enemy(battles[i].iloc[count,0]))
-				combatants[count].position = battles[i].iloc[count,3]
-				combatants[count].lives = battles[i].iloc[count,2]
+				combatants.append(Enemy(active_battle.iloc[count,0]))
+				combatants[count].position = active_battle.iloc[count,3]
+				combatants[count].lives = active_battle.iloc[count,2]
 				combatants[count].group = count
 				enemy_groups.append(tuple((combatants[count].name, 0, 0)))
 
-		elif battles[i].iloc[count,1] == "Player":
-			combatants.append(Player(battles[i].iloc[count,0]))
-			combatants[place].position = int(battles[i].iloc[count,3])
+		elif active_battle.iloc[count,1] == "Player":
+			combatants.append(Player(active_battle.iloc[count,0]))
+			combatants[place].position = int(active_battle.iloc[count,3])
 			combatants[place].group = count
 			place += 1
 
 		else:
-			combatants.append(NPC(battles[i].iloc[count,0]))
-			combatants[place].position = battles[i].iloc[count,3]
+			combatants.append(NPC(active_battle.iloc[count,0]))
+			combatants[place].position = active_battle.iloc[count,3]
 			combatants[place].group = count
 			place += 1
 
@@ -108,20 +110,20 @@ while run_sim != "n":
 	for count in range(len(combatants)):
 		current_com = combatants[count]
 
-		current_com.current_HP = battles[i].iloc[current_com.group, 5]
-		current_com.current_Str = battles[i].iloc[current_com.group, 6]
-		current_com.current_Agl = battles[i].iloc[current_com.group, 7]
-		current_com.current_Mana = battles[i].iloc[current_com.group, 8]
-		current_com.current_Def = battles[i].iloc[current_com.group, 9]
-		current_com.command = battles[i].iloc[current_com.group, 10]
-		current_com.target_type = battles[i].iloc[current_com.group, 11]
-		current_com.stoned = battles[i].iloc[current_com.group, 12]
-		current_com.cursed = battles[i].iloc[current_com.group, 13]
-		current_com.blinded = battles[i].iloc[current_com.group, 14]
-		current_com.asleep = battles[i].iloc[current_com.group, 15]
-		current_com.paralyzed = battles[i].iloc[current_com.group, 16]
-		current_com.poisoned = battles[i].iloc[current_com.group, 17]
-		current_com.confused = battles[i].iloc[current_com.group, 18]
+		current_com.current_HP = active_battle.iloc[current_com.group, 5]
+		current_com.current_Str = active_battle.iloc[current_com.group, 6]
+		current_com.current_Agl = active_battle.iloc[current_com.group, 7]
+		current_com.current_Mana = active_battle.iloc[current_com.group, 8]
+		current_com.current_Def = active_battle.iloc[current_com.group, 9]
+		current_com.command = active_battle.iloc[current_com.group, 10]
+		current_com.target_type = active_battle.iloc[current_com.group, 11]
+		current_com.stoned = active_battle.iloc[current_com.group, 12]
+		current_com.cursed = active_battle.iloc[current_com.group, 13]
+		current_com.blinded = active_battle.iloc[current_com.group, 14]
+		current_com.asleep = active_battle.iloc[current_com.group, 15]
+		current_com.paralyzed = active_battle.iloc[current_com.group, 16]
+		current_com.poisoned = active_battle.iloc[current_com.group, 17]
+		current_com.confused = active_battle.iloc[current_com.group, 18]
 	
 		# Lookup the static Enemy data
 		if current_com.role == "Enemy":
@@ -190,7 +192,57 @@ while run_sim != "n":
 				combatants[count].current_Mana = combatants[count].Mana if combatants[count].current_Mana == -1 else combatants[count].current_Mana
 				combatants[count].current_Def = combatants[count].Def if combatants[count].current_Def == -1 else combatants[count].current_Def
 
-			# SURPRISE CHECK FOR ROUND 1
+			# SURPRISE CHECK FOR ROUND 1 ACROSS ALL COMBATANTS - One copy of Surprise or Warning is all that is needed
+			# ENHANCEMENT:  More Surprise and Warning increases likelihood? Strongly favors enemy in that case
+			enemy_surprise = False
+			enemy_warning = False
+			player_surprise = False
+			player_warning = False
+			for comb in range(len(combatants)):
+				for skill in range(len(combatants[comb].skills)):
+					if combatants[comb].role == "Enemy":
+						if combatants[comb].skills[skill] == "Surprise":
+							enemy_surprise = True
+						elif combatants[comb].skills[skill] == "Warning":
+							enemy_warning = True
+					elif combatants[comb].role in ("Player", "NPC"):
+						if combatants[comb].skills[skill] == "Surprise":
+							player_surprise = True
+						elif combatants[comb].skills[skill] == "Warning":
+							player_warning = True
+			
+			# Warning overrides surprise
+			if player_warning:
+				enemy_surprise = False
+			if enemy_warning:
+				player_surprise = False
+
+			p_surprise_roll = random.randint(1,100)
+			e_surprise_roll = random.randint(1,100)
+			# SURPRISE LOGIC - check rolls
+			# If both sides have surprise, lower roll wins
+			if player_surprise and enemy_surprise:
+				if p_surprise_roll < e_surprise_roll and p_surprise_roll <= 50:
+					enemy_surprise = False
+					print("Strike First! %d" % p_surprise_roll)
+				elif p_surprise_roll > e_surprise_roll and e_surprise_roll <= 25:
+					player_surprise = False
+					print("Unexpected Attack! % d" % e_surprise_roll)
+				# If the rolls are the same, neither side wins a surprise round
+				else:
+					player_surprise = False
+					enemy_surprise = False
+					print("P: %d / E: %d" % (p_surprise_roll, e_surprise_roll))
+			elif player_surprise:
+				if p_surprise_roll > 50:
+					player_surprise = False
+				else:
+					print("Strike First! %d" % p_surprise_roll)
+			elif enemy_surprise:
+				if e_surprise_roll > 25:
+					player_surprise = False
+				else:
+					print("Unexpected Attack! % d" % e_surprise_roll)
 
 		# INITIATIVE
 		for count in range(len(combatants)):
@@ -217,6 +269,14 @@ while run_sim != "n":
 
 			# STATUS CHECK
 			if not attacker.isActive():
+				continue
+
+			# SURPRISE CHECK
+			if enemy_surprise and attacker.role in ("Player", "NPC"):
+				attacker.command = "None"
+				continue
+			elif player_surprise and attacker.role == "Enemy":
+				attacker.command = "None"
 				continue
 
 			# CONFUSION CHECK
@@ -256,6 +316,12 @@ while run_sim != "n":
 
 			# STATUS CHECK
 			if not attacker.isActive():
+				continue
+
+			# SURPRISE CHECK
+			if enemy_surprise and attacker.role in ("Player", "NPC"):
+				continue
+			elif player_surprise and attacker.role == "Enemy":
 				continue
 
 			sel_target = ""
@@ -429,6 +495,9 @@ while run_sim != "n":
 				if target.command != "None":
 					def_target_type = commands.loc[target.command, "Target Type"]
 					def_command_effect = commands.loc[target.command, "Effect"]
+				else:
+					def_target_type = "None"
+					def_command_effect = "None"
 				blocked = False
 				blockable = False
 				dmg_reduction = False
@@ -642,10 +711,15 @@ while run_sim != "n":
 				break
 		for each in range(len(combatants)):
 			combatants[each] = endOfTurn(combatants[each])
-			# Should only be needed for "Regained sanity" purposes...
+			# Should only be needed for "Regained sanity" purposes...and should go away in Alpha
 			if combatants[each].role == "Player" and combatants[each].command == "None":
-				combatants[each].command = battles[i].loc[attacker.name, "COMMAND"]
-				combatants[each].target_type = battles[i].loc[attacker.name, "TARGET"]
+				pc_row = 0
+				for pc in range(len(party_order)):
+					if combatants[each].name == party_order[pc][0]:
+						pc_row = party_order[pc][2]
+						break
+				combatants[each].command = active_battle.iloc[pc_row, 10]
+				combatants[each].target_type = active_battle.iloc[pc_row, 11]
 		if another_round != "n":
 			another_round = input("Run another round (y/n)?: ")
 
@@ -672,37 +746,37 @@ while run_sim != "n":
 	
 #	for count in range(len(combatants)):
 #		print(combatants[count])
-#	print(battles[i])
+#	print(active_battle)
 
 	write_to_excel = input("Save battle? (y/n): ")
 	if write_to_excel == "y":
 		for count in range(len(combatants)):
-			battles[i].iloc[count,0] = combatants[count].name
-			battles[i].iloc[count,1] = combatants[count].role
-			battles[i].iloc[count,2] = combatants[count].lives
-			battles[i].iloc[count,3] = combatants[count].position
-			battles[i].iloc[count,4] = combatants[count].initiative
-			battles[i].iloc[count,5] = combatants[count].current_HP
-			battles[i].iloc[count,6] = combatants[count].current_Str
-			battles[i].iloc[count,7] = combatants[count].current_Agl
-			battles[i].iloc[count,8] = combatants[count].current_Mana
-			battles[i].iloc[count,9] = combatants[count].current_Def
-			battles[i].iloc[count,10] = combatants[count].command
-			battles[i].iloc[count,11] = combatants[count].target_type
-			battles[i].iloc[count,12] = combatants[count].stoned
-			battles[i].iloc[count,13] = combatants[count].cursed
-			battles[i].iloc[count,14] = combatants[count].blinded
-			battles[i].iloc[count,15] = combatants[count].asleep
-			battles[i].iloc[count,16] = combatants[count].paralyzed
-			battles[i].iloc[count,17] = combatants[count].poisoned
-			battles[i].iloc[count,18] = combatants[count].confused
-			battles[i]["ACTIONS TAKEN"] = battles[i]["ACTIONS TAKEN"].astype(object)
-			battles[i].at[count,"ACTIONS TAKEN"] = combatants[count].actions_taken
+			active_battle.iloc[count,0] = combatants[count].name
+			active_battle.iloc[count,1] = combatants[count].role
+			active_battle.iloc[count,2] = combatants[count].lives
+			active_battle.iloc[count,3] = combatants[count].position
+			active_battle.iloc[count,4] = combatants[count].initiative
+			active_battle.iloc[count,5] = combatants[count].current_HP
+			active_battle.iloc[count,6] = combatants[count].current_Str
+			active_battle.iloc[count,7] = combatants[count].current_Agl
+			active_battle.iloc[count,8] = combatants[count].current_Mana
+			active_battle.iloc[count,9] = combatants[count].current_Def
+			active_battle.iloc[count,10] = combatants[count].command
+			active_battle.iloc[count,11] = combatants[count].target_type
+			active_battle.iloc[count,12] = combatants[count].stoned
+			active_battle.iloc[count,13] = combatants[count].cursed
+			active_battle.iloc[count,14] = combatants[count].blinded
+			active_battle.iloc[count,15] = combatants[count].asleep
+			active_battle.iloc[count,16] = combatants[count].paralyzed
+			active_battle.iloc[count,17] = combatants[count].poisoned
+			active_battle.iloc[count,18] = combatants[count].confused
+			active_battle["ACTIONS TAKEN"] = active_battle["ACTIONS TAKEN"].astype(object)
+			active_battle.at[count,"ACTIONS TAKEN"] = combatants[count].actions_taken
+		battles[i] = active_battle.copy()
 		save_list.append(tuple((i, log.sheet_names[i+1])))
 
 	run_sim = input("Run another battle (y/n)?: ")
 
-#print(save_list)
 for bat in range(len(save_list)):
  	battles[save_list[bat][0]].to_excel(writer, sheet_name = save_list[bat][1])
 
