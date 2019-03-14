@@ -156,6 +156,7 @@ while run_sim != "n":
 			current_com.Agl = players.loc[current_com.name,"AGL"]
 			current_com.Mana = players.loc[current_com.name,"MANA"]
 			current_com.Def = players.loc[current_com.name,"DEF"]
+			current_com.magi = players.loc[current_com.name,"EQUIPPED MAGI"]
 		
 			#There should be a better way to do this...but here's the lazy way
 			current_com.skills.append(players.loc[current_com.name,"S0"])
@@ -291,7 +292,7 @@ while run_sim != "n":
 			# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
 			# Could also be used for random ability selection for players if an appropriate MS were assigned
 			# May want to add one for when MS exists, another for completely random if it doesn't (or always pick top command)
-			if attacker.command == 'nan':
+			if attacker.command == 'nan' and attacker.role in ("Enemy","NPC"):
 				row = attacker.MS
 				roll = random.randint(0,255)
 				for choice in range(7):
@@ -328,7 +329,7 @@ while run_sim != "n":
 
 			# CONFUSED TARGETING
 			if attacker.isConfused():
-				confuse_roll = random.randint(1,90)
+				confuse_roll = random.randint(1,100)
 				if confuse_roll > 10:
 					print("%s is confused." % attacker.name, end = " ")
 					attacker.target_type = commands.loc[attacker.command, "Target Type"]
@@ -504,12 +505,25 @@ while run_sim != "n":
 				critical_hit = False
 
 				if command.targeting == "Single":
-					# HIT LOGIC
-					# Need:  Target Agility, Target Blind status, Speed Magi, Target command (does item provide a block)
-					# Need:  Attacker Agility
-					# Calc:  Defender score - 2x Attacker.AGL, then 97 - the result
 					print("%s attacks %s with %s." % (attacker.name, target.name, attacker.command), end = " ")
-					attacker_hit = attacker.current_Agl
+
+					# SETTING HIT CHANCE
+					# Ranged attacks are based on Percent chance unless using a Gun
+					if command.att_type == "Ranged":
+						# All guns and cannons have Robot Race Bonus and use STR as a calculation
+						if command.race_bonus == "Robot":
+							# Robots gain double their STR to hit with guns and cannons
+							if attacker.family == "Robot":
+								attacker_hit = attacker.current_Str * 2 + command.percent
+							else:
+								attacker_hit = attacker.current_Str + command.percent
+						# Bows use 2x AGL and the item's hit chance
+						else:
+							attacker_hit = attacker.current_Agl * 2 + command.percent
+					# Melee attacks just use AGL
+					else:
+						attacker_hit = attacker.current_Agl * 2
+
 					defender_score = target.current_Agl
 
 					# Account for blindness
@@ -567,8 +581,12 @@ while run_sim != "n":
 								else:
 									critical_hit = True
 
-					difference = defender_score - attacker_hit*2
-					hit_chance = 97 - difference
+					difference = defender_score - attacker_hit
+					if command.att_type in ("Melee", "Ranged"):
+						hit_chance = 97 - difference
+					# Magic attacks always hit
+					else:
+						hit_chance = 100
 
 					hit_roll = random.randint(1,100)
 					if hit_roll > hit_chance:
@@ -619,7 +637,6 @@ while run_sim != "n":
 						print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
 					else:
 						# Only print the command text the first time through
-						# FOR SOME REASON STOPS WORKING ON ALL ENEMY ATTACKS WHEN FIRST TARGET IS STONE
 						if foe == 0:
 							print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
 
@@ -712,14 +729,17 @@ while run_sim != "n":
 		for each in range(len(combatants)):
 			combatants[each] = endOfTurn(combatants[each])
 			# Should only be needed for "Regained sanity" purposes...and should go away in Alpha
+			# Being used for Surprise rounds...which means the input approach is not a good solution
 			if combatants[each].role == "Player" and combatants[each].command == "None":
-				pc_row = 0
-				for pc in range(len(party_order)):
-					if combatants[each].name == party_order[pc][0]:
-						pc_row = party_order[pc][2]
-						break
-				combatants[each].command = active_battle.iloc[pc_row, 10]
-				combatants[each].target_type = active_battle.iloc[pc_row, 11]
+				combatants[each].command = input("New command for %s: " % combatants[each].name)
+				combatants[each].target_type = input("New target for %s: " % combatants[each].name)
+#				pc_row = 0
+#				for pc in range(len(party_order)):
+#					if combatants[each].name == party_order[pc][0]:
+#						pc_row = party_order[pc][2]
+#						break
+#				combatants[each].command = active_battle.iloc[pc_row, 10]
+#				combatants[each].target_type = active_battle.iloc[pc_row, 11]
 		if another_round != "n":
 			another_round = input("Run another round (y/n)?: ")
 

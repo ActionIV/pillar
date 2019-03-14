@@ -166,6 +166,7 @@ class Command:
 	status = ""
 	effect = ""
 	percent = 0
+	race_bonus = ""
 
 	def __init__(self, name, commands):
 		self.name = name
@@ -179,3 +180,4 @@ class Command:
 		self.status = commands.loc[name, "Status"]
 		self.effect = commands.loc[name,"Effect"]
 		self.percent = commands.loc[name,"Percent"]
+		self.race_bonus = commands.loc[name,"Race Bonus"]

@@ -117,6 +117,9 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 					defense = 0
 				damage = counter_dmg - defense
 
+	if attacker.isPoisoned():
+		damage = round(damage/2)
+
 	# No damage on pure Status attacks
 	if command.stat == "Status":
 		pass
@@ -124,8 +127,8 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 		damage = 0
 		print("No damage.")
 	else:
-		print("%d damage to %s." % (counter_dmg, attacker.name))
-		if applyDamage(counter_dmg, attacker) == 1:
+		print("%d damage to %s." % (damage, attacker.name))
+		if applyDamage(damage, attacker) == 1:
 			print("%s fell." % attacker.name)
 
 def applyDamage(damage, target):
@@ -173,8 +176,10 @@ def rollDamage(command, attacker):
 		damage = calculateDamage(attacker.current_Mana, multiplier)
 	elif stat == "Set":
 		# Need to add race_bonus eventually
-		if command.rand_dmg > 0:
+		if isinstance(command.rand_dmg, int) and command.rand_dmg > 0:
 			damage = command.min_dmg + random.randint(1,command.rand_dmg)
+		elif command.rand_dmg == "Str":
+			damage = command.min_dmg + random.randint(1,attacker.current_Str)
 		else:
 			damage = command.min_dmg
 	else:
@@ -284,7 +289,7 @@ def removeCondition(status, target):
 		target.paralyzed = "n"
 		target.asleep = "n"
 		target.cursed = "n"
-		print("%s was fully restored." % target.name)
+		print("%s was restored." % target.name)
 
 def buildResistances(skills, resist_list, resist_table):
 	for count in range(len(skills)):
