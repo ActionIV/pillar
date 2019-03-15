@@ -107,6 +107,24 @@ class Enemy(Actor):
 	def getRole(self):
 	 	return self.role
 
+	def getStrength(self):
+		return self.current_Str
+
+	def getAgility(self):
+		agility = self.current_Agl
+		if self.isBlinded():
+			agility = round(agility/2)
+		return agility
+
+	def getMana(self):
+		return self.current_Mana
+
+	def getDefense(self):
+		defense = self.current_Def
+		if self.isCursed():
+			defense = round(defense/2)
+		return defense
+
 	role = "Enemy"
 	MS = 0
 	DS = 0
@@ -129,6 +147,7 @@ class Player(Actor):
 	Mana = 0
 	Def = 0
 	magi = ""
+	magi_count = 0
 
 	def __init__(self, name):
 		Actor.__init__(self, name)
@@ -136,6 +155,31 @@ class Player(Actor):
 	
 	def getRole(self):
 	 	return self.role
+
+	def getStrength(self):
+		return self.current_Str
+
+	def getAgility(self):
+		agility = self.current_Agl
+		if self.isBlinded():
+			agility = round(agility/2)
+		if self.magi == "Speed Magi":
+			agility += (5+self.magi_count)
+		return agility
+
+	def getMana(self):
+		mana = self.current_Mana
+		if self.magi == "Mana Magi":
+			mana += (5+self.magi_count)
+		return mana
+
+	def getDefense(self):
+		defense = self.current_Def
+		if self.isCursed():
+			defense = round(defense/2)
+		if self.magi == "Defense Magi":
+			defense += (5+self.magi_count)
+		return defense
 
 class NPC(Actor):
 	role = "NPC"
@@ -154,6 +198,24 @@ class NPC(Actor):
 	
 	def getRole(self):
 	 	return self.role
+
+	def getStrength(self):
+		return self.current_Str
+
+	def getAgility(self):
+		agility = self.current_Agl
+		if self.isBlinded():
+			agility = round(agility/2)
+		return agility
+
+	def getMana(self):
+		return self.current_Mana
+
+	def getDefense(self):
+		defense = self.current_Def
+		if self.isCursed():
+			defense = round(defense/2)
+		return defense
 
 class Command:
 	stat = ""

@@ -96,11 +96,11 @@ def groupAttack(combatants, name, damage):
 def counterAttack(avenger, attacker, command, damage_received, barriers):
 	print("%s counter-attacks with %s." % (avenger.name, command.name), end = " ")
 	if command.stat == "Str":
-		if damage_received < avenger.current_Str * 2:
-			counter_dmg = avenger.current_Str * 2
+		if damage_received < avenger.getStrength() * 2:
+			counter_dmg = avenger.getStrength() * 2
 		else:
 			counter_dmg = damage_received
-		damage = round(counter_dmg * command.multiplier / 10 + avenger.current_Str)
+		damage = round(counter_dmg * command.multiplier / 10 + avenger.getStrength())
 
 	# For MANA or Status-based counters
 	else:
@@ -141,7 +141,7 @@ def applyDamage(damage, target):
 
 def rollHeal(command, healer, ally):
 	if command.att_type == "Magic":
-		heal = (healer.current_Mana + ally.current_Mana) * command.multiplier + random.randint(1, healer.current_Mana)
+		heal = (healer.getMana() + ally.getMana()) * command.multiplier + random.randint(1, healer.getMana())
 	else:
 		heal = command.min_dmg
 	if ally.isDead():
@@ -161,25 +161,30 @@ def rollHit(attacker_stat, defender_stat):
 def rollDamage(command, attacker):
 	stat = command.stat
 	multiplier = command.multiplier
+	element = command.element
 	if stat == "Str":
-		if attacker.isCursed():
-			damage = calculateDamage(round(attacker.current_Str / 2), multiplier)
-		else:
-			damage = calculateDamage(attacker.current_Str, multiplier)
+		#if attacker.isCursed():
+		#	damage = calculateDamage(round(attacker.current_Str / 2), multiplier)
+		#else:
+		#	damage = calculateDamage(attacker.current_Str, multiplier)
+		damage = calculateDamage(attacker.getStrength(),multiplier)
 	elif stat == "Agl":
-		if attacker.isBlinded():
-			damage = calculateDamage(round(attacker.current_Agl / 2), multiplier)
-		else:
-			damage = calculateDamage(attacker.current_Agl, multiplier)
+		#if attacker.isBlinded():
+		#	damage = calculateDamage(round(attacker.current_Agl / 2), multiplier)
+		#else:
+		#	damage = calculateDamage(attacker.current_Agl, multiplier)
+		damage = calculateDamage(attacker.getAgility(), multiplier)
 	elif stat == "Mana":
-		# Need to check resistances
-		damage = calculateDamage(attacker.current_Mana, multiplier)
+		if attacker.role == "Player" and attacker.magi.startswith(command.element):
+			damage = calculateDamage(attacker.getMana() + 5 + attacker.magi_count, multiplier)
+		else:
+			damage = calculateDamage(attacker.getMana(), multiplier)
 	elif stat == "Set":
 		# Need to add race_bonus eventually
 		if isinstance(command.rand_dmg, int) and command.rand_dmg > 0:
 			damage = command.min_dmg + random.randint(1,command.rand_dmg)
 		elif command.rand_dmg == "Str":
-			damage = command.min_dmg + random.randint(1,attacker.current_Str)
+			damage = command.min_dmg + random.randint(1,attacker.getStrength())
 		else:
 			damage = command.min_dmg
 	else:
@@ -188,13 +193,13 @@ def rollDamage(command, attacker):
 
 def determineDefense(defender, attack_type, damage):
 	if attack_type in ("Melee", "Ranged"):
-		defense = defender.current_Def
-		if defender.isCursed():
-			defense = round(defense / 2)
-		defense = defender.current_Def * 5
-		return defense
+		#defense = defender.current_Def
+		#if defender.isCursed():
+		#	defense = round(defense / 2)
+		#defense = defender.current_Def * 5
+		return defender.getDefense() * 5
 	elif attack_type == "Magic":
-		return damage * defender.current_Mana / 200
+		return round(damage * defender.getMana() / 200)
 
 def affectStat(target, stat, amount):
 	if stat == "STR":
@@ -210,7 +215,7 @@ def affectStat(target, stat, amount):
 
 def inflictCondition(command, attacker, target):
 	# Originally (target - attacker) * 2 + 50
-	hit_chance = target.current_Mana - attacker.current_Mana + 50
+	hit_chance = target.getMana() - attacker.getMana() + 50
 	roll = random.randint(1,100)
 	if hit_chance < roll:
 		applyCondition(command.status, target)

@@ -156,7 +156,14 @@ while run_sim != "n":
 			current_com.Agl = players.loc[current_com.name,"AGL"]
 			current_com.Mana = players.loc[current_com.name,"MANA"]
 			current_com.Def = players.loc[current_com.name,"DEF"]
-			current_com.magi = players.loc[current_com.name,"EQUIPPED MAGI"]
+
+			# EQUIPPED MAGI
+			equipped_magi = players.loc[current_com.name,"EQUIPPED MAGI"]
+			if equipped_magi != "blank":
+				current_com.magi = equipped_magi[:-2]
+				current_com.magi_count = int(equipped_magi[-1:])
+			else:
+				current_com.magi = "blank"
 		
 			#There should be a better way to do this...but here's the lazy way
 			current_com.skills.append(players.loc[current_com.name,"S0"])
@@ -167,6 +174,8 @@ while run_sim != "n":
 			current_com.skills.append(players.loc[current_com.name,"S5"])
 			current_com.skills.append(players.loc[current_com.name,"S6"])
 			current_com.skills.append(players.loc[current_com.name,"S7"])
+			if current_com.magi != "blank":
+				current_com.skills.append(current_com.magi)
 
 		# Should be NPC code, but no separate sheet for that yet
 		else:
@@ -184,14 +193,25 @@ while run_sim != "n":
 		# SET CURRENT STATS (in Round 1 only), ROLL INITIATIVE, AND SORT
 		if rd == 1:
 			for count in range(len(combatants)):
-				if combatants[count].current_HP == -1:
-					combatants[count].current_HP = combatants[count].HP
-				else:
-					combatants[count].current_HP = combatants[count].current_HP
+				#if combatants[count].current_HP == -1:
+				#	combatants[count].current_HP = combatants[count].HP
+				#else:
+				#	combatants[count].current_HP = combatants[count].current_HP
+				combatants[count].current_HP = combatants[count].HP if combatants[count].current_HP == -1 else combatants[count].current_HP
 				combatants[count].current_Str = combatants[count].Str if combatants[count].current_Str == -1 else combatants[count].current_Str
 				combatants[count].current_Agl = combatants[count].Agl if combatants[count].current_Agl == -1 else combatants[count].current_Agl
 				combatants[count].current_Mana = combatants[count].Mana if combatants[count].current_Mana == -1 else combatants[count].current_Mana
 				combatants[count].current_Def = combatants[count].Def if combatants[count].current_Def == -1 else combatants[count].current_Def
+
+				# MAGI CHECK for current stats
+				#if combatants[count].magi == "Power Magi":
+				#	combatants[count].current_Str += (5 + combatants[count].magi_count)
+				#elif combatants[count].magi == "Speed Magi":
+				#	combatants[count].current_Agl += (5 + combatants[count].magi_count)
+				#elif combatants[count].magi == "Mana Magi":
+				#	combatants[count].current_Mana += (5 + combatants[count].magi_count)
+				#elif combatants[count].magi == "Defense Magi":
+				#	combatants[count].current_Def += (5 + combatants[count].magi_count)
 
 			# SURPRISE CHECK FOR ROUND 1 ACROSS ALL COMBATANTS - One copy of Surprise or Warning is all that is needed
 			# ENHANCEMENT:  More Surprise and Warning increases likelihood? Strongly favors enemy in that case
@@ -514,25 +534,23 @@ while run_sim != "n":
 						if command.race_bonus == "Robot":
 							# Robots gain double their STR to hit with guns and cannons
 							if attacker.family == "Robot":
-								attacker_hit = attacker.current_Str * 2 + command.percent
+								attacker_hit = attacker.getStrength() * 2 + command.percent
 							else:
-								attacker_hit = attacker.current_Str + command.percent
+								attacker_hit = attacker.getStrength() + command.percent
 						# Bows use 2x AGL and the item's hit chance
 						else:
-							attacker_hit = attacker.current_Agl * 2 + command.percent
+							attacker_hit = attacker.getAgility() * 2 + command.percent
 					# Melee attacks just use AGL
 					else:
-						attacker_hit = attacker.current_Agl * 2
+						attacker_hit = attacker.getAgility() * 2
 
-					defender_score = target.current_Agl
+					defender_score = target.getAgility()
 
 					# Account for blindness
-					if attacker.isBlinded():
-						attacker_hit = round(attacker_hit / 2)
-					if target.isBlinded():
-						defender_score = round(defender_score / 2)
-
-					# Need MAGI logic here
+					#if attacker.isBlinded():
+					#	attacker_hit = round(attacker_hit / 2)
+					#if target.isBlinded():
+					#	defender_score = round(defender_score / 2)
 
 					# Blockable logic
 					if command.att_type in ("Melee", "Ranged"):
@@ -741,6 +759,11 @@ while run_sim != "n":
 #				combatants[each].command = active_battle.iloc[pc_row, 10]
 #				combatants[each].target_type = active_battle.iloc[pc_row, 11]
 		if another_round != "n":
+			# Reset surprise flags
+			enemy_surprise = False
+			enemy_warning = False
+			player_surprise = False
+			player_warning = False
 			another_round = input("Run another round (y/n)?: ")
 
 	# Print party status line at the end of a simulation
@@ -803,6 +826,7 @@ for bat in range(len(save_list)):
 if len(save_list) > 0:
 	writer.save()
 
+# Print Character Snapshots
 char_sheets = input("Print character sheets (y/n)?: ")
 if char_sheets == "y":
 	for count in range(len(players.index)):
@@ -815,4 +839,7 @@ if char_sheets == "y":
 				print(players.iloc[count,skill+12], end = ", ")
 			else:
 				print(players.iloc[count,skill+12], end = "]\n")
-		# Still need MAGI and Inventory
+		print("MAGI: %s" % players.iloc[count, 20])
+		print("OTHER MAGI: %s" % players.iloc[count, 21])
+		print("INVENTORY: %s" % players.iloc[count,22])
+		print("")
