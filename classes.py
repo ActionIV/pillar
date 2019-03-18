@@ -97,7 +97,6 @@ class Actor(object):
 	paralyzed = "n"
 	poisoned = "n"
 	confused = "n"
-	block_percent = 0
 		
 class Enemy(Actor):
 	def __init__(self, name):
@@ -108,10 +107,15 @@ class Enemy(Actor):
 	 	return self.role
 
 	def getStrength(self):
-		return self.current_Str
+		strength = self.current_Str
+		if self.isCursed():
+			strength = round(strength/2)
+		return strength
 
 	def getAgility(self):
 		agility = self.current_Agl
+		if self.isParalyzed() or self.isAsleep():
+			return 0
 		if self.isBlinded():
 			agility = round(agility/2)
 		return agility
@@ -157,10 +161,17 @@ class Player(Actor):
 	 	return self.role
 
 	def getStrength(self):
-		return self.current_Str
+		strength = self.current_Str
+		if self.isCursed():
+			strength = round(strength/2)
+		if self.magi == "Power Magi":
+			strength += (5+self.magi_count)
+		return strength
 
 	def getAgility(self):
 		agility = self.current_Agl
+		if self.isParalyzed() or self.isAsleep():
+			return 0
 		if self.isBlinded():
 			agility = round(agility/2)
 		if self.magi == "Speed Magi":
@@ -200,10 +211,15 @@ class NPC(Actor):
 	 	return self.role
 
 	def getStrength(self):
-		return self.current_Str
+		strength = self.current_Str
+		if self.isCursed():
+			strength = round(strength/2)
+		return strength
 
 	def getAgility(self):
 		agility = self.current_Agl
+		if self.isParalyzed() or self.isAsleep():
+			return 0
 		if self.isBlinded():
 			agility = round(agility/2)
 		return agility

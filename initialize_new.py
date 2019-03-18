@@ -193,25 +193,12 @@ while run_sim != "n":
 		# SET CURRENT STATS (in Round 1 only), ROLL INITIATIVE, AND SORT
 		if rd == 1:
 			for count in range(len(combatants)):
-				#if combatants[count].current_HP == -1:
-				#	combatants[count].current_HP = combatants[count].HP
-				#else:
-				#	combatants[count].current_HP = combatants[count].current_HP
+				# If Current HP is blank in the log, replace it with Max HP from character sheet / monster list
 				combatants[count].current_HP = combatants[count].HP if combatants[count].current_HP == -1 else combatants[count].current_HP
 				combatants[count].current_Str = combatants[count].Str if combatants[count].current_Str == -1 else combatants[count].current_Str
 				combatants[count].current_Agl = combatants[count].Agl if combatants[count].current_Agl == -1 else combatants[count].current_Agl
 				combatants[count].current_Mana = combatants[count].Mana if combatants[count].current_Mana == -1 else combatants[count].current_Mana
 				combatants[count].current_Def = combatants[count].Def if combatants[count].current_Def == -1 else combatants[count].current_Def
-
-				# MAGI CHECK for current stats
-				#if combatants[count].magi == "Power Magi":
-				#	combatants[count].current_Str += (5 + combatants[count].magi_count)
-				#elif combatants[count].magi == "Speed Magi":
-				#	combatants[count].current_Agl += (5 + combatants[count].magi_count)
-				#elif combatants[count].magi == "Mana Magi":
-				#	combatants[count].current_Mana += (5 + combatants[count].magi_count)
-				#elif combatants[count].magi == "Defense Magi":
-				#	combatants[count].current_Def += (5 + combatants[count].magi_count)
 
 			# SURPRISE CHECK FOR ROUND 1 ACROSS ALL COMBATANTS - One copy of Surprise or Warning is all that is needed
 			# ENHANCEMENT:  More Surprise and Warning increases likelihood? Strongly favors enemy in that case
@@ -245,25 +232,24 @@ while run_sim != "n":
 			if player_surprise and enemy_surprise:
 				if p_surprise_roll < e_surprise_roll and p_surprise_roll <= 50:
 					enemy_surprise = False
-					print("Strike First! %d" % p_surprise_roll)
+					print("Strike First!")
 				elif p_surprise_roll > e_surprise_roll and e_surprise_roll <= 25:
 					player_surprise = False
-					print("Unexpected Attack! % d" % e_surprise_roll)
+					print("Unexpected Attack!")
 				# If the rolls are the same, neither side wins a surprise round
 				else:
 					player_surprise = False
 					enemy_surprise = False
-					print("P: %d / E: %d" % (p_surprise_roll, e_surprise_roll))
 			elif player_surprise:
 				if p_surprise_roll > 50:
 					player_surprise = False
 				else:
-					print("Strike First! %d" % p_surprise_roll)
+					print("Strike First!")
 			elif enemy_surprise:
 				if e_surprise_roll > 25:
 					player_surprise = False
 				else:
-					print("Unexpected Attack! % d" % e_surprise_roll)
+					print("Unexpected Attack!")
 
 		# INITIATIVE
 		for count in range(len(combatants)):
@@ -322,9 +308,7 @@ while run_sim != "n":
 					else:
 						continue
 
-			##########################
-			# May need logic here for commands that trigger immediately at the start of a round (e.g. shield barriers)
-			##########################
+			# Start of round triggers (shield barriers)
 			if (commands.loc[attacker.command, "Target Type"] == "Block" and commands.loc[attacker.command, "Effect"] != "None"):
 				if attacker.role == "Enemy":
 					enemy_barriers.append(commands.loc[attacker.command, "Effect"])
@@ -361,7 +345,7 @@ while run_sim != "n":
 					elif attacker.target_type == "Block":
 						print("%s is defending with %s." % (attacker.name, attacker.command), end = " ")
 						if commands.loc[attacker.command, "Effect"] != "None":
-							print("A barrier covered the party.")
+							print("A barrier covered...someone?")
 						else:
 							print("")
 						combatants[count] = afterTurn(attacker)
@@ -397,7 +381,11 @@ while run_sim != "n":
 					continue
 				
 			# Find an actual target based on Target Type, where applicable (i.e. not the "All" abilities)
-			elif attacker.role != "Player":
+			elif attacker.role not in ("Player", "NPC"):
+
+				# Whip winding
+				if attacker.command == "None":
+					continue
 
 				# Based on the Command, assign the Target Type to the Target line
 				attacker.target_type = commands.loc[attacker.command, "Target Type"]
@@ -546,12 +534,6 @@ while run_sim != "n":
 
 					defender_score = target.getAgility()
 
-					# Account for blindness
-					#if attacker.isBlinded():
-					#	attacker_hit = round(attacker_hit / 2)
-					#if target.isBlinded():
-					#	defender_score = round(defender_score / 2)
-
 					# Blockable logic
 					if command.att_type in ("Melee", "Ranged"):
 						blockable = True
@@ -560,52 +542,13 @@ while run_sim != "n":
 						if block_roll <= (commands.loc[target.command, "Percent"] + defender_score):
 							blocked = True
 
-					# Reflect - change target into the attacker
-					if (def_command_effect == "Reflect" or def_target_type == "Reflect") and command.att_type == "Magic":
-						print("%s reflected the attack." % target.command)
-						# Makes the attacker into the target of its own spell
-						target = attacker
-
-					# Nullify - end the attack since it was nullified on target
-					if (def_command_effect == "Nullify" or def_target_type == "Nullify") and command.att_type == "Magic":
-						print("%s repulsed the attack." % target.command)
-						continue
-
-					# Check for barriers and their effects
-					if target.role == "Enemy":
-						buildResistances(enemy_barriers, barriers, commands)
-					else:
-						buildResistances(player_barriers, barriers, commands)
-					
-					# Check total resists
-					if checkResistance(target.resists, command.element, command.status, barriers):
-						# Elemental resistance was found, but it's a melee attack so it can't be resisted
-						if command.element != "None" and command.att_type in ("Melee", "Ranged"):
-							dmg_reduction = True
-						else:
-							print("%s is strong against %s." % (attacker.targets[foe], command.name))
-							continue
-					else:
-						# Check for elemental / species weakness
-						if command.element != "None":
-							if checkWeakness(command.element, target):
-								print("Hits weakness.", end = " ")
-								crit_roll = random.randint(1,100)
-								if crit_roll <= 30:
-									target.current_HP = 0
-									target.lives -= 1
-									print("Mighty blow! %s fell." % target.name)
-									continue
-								else:
-									critical_hit = True
-
 					difference = defender_score - attacker_hit
-					if command.att_type in ("Melee", "Ranged"):
+					if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
 						hit_chance = 97 - difference
 					# Magic attacks always hit
 					else:
 						hit_chance = 100
-
+					# DETERMINE HIT
 					hit_roll = random.randint(1,100)
 					if hit_roll > hit_chance:
 						print("Missed!")
@@ -616,10 +559,49 @@ while run_sim != "n":
 
 					# DAMAGE ASSIGNMENT
 					else:
+						# Reflect - change target into the attacker
+						if (def_command_effect == "Reflect" or def_target_type == "Reflect") and command.att_type == "Magic":
+							print("%s reflected the attack." % target.command)
+							# Makes the attacker into the target of its own spell
+							target = attacker
+
+						# Nullify - end the attack since it was nullified on target
+						if (def_command_effect == "Nullify" or def_target_type == "Nullify") and command.att_type == "Magic":
+							print("%s repulsed the attack." % target.command)
+							continue
+
+						# Check for barriers and their effects
+						if target.role == "Enemy":
+							buildResistances(enemy_barriers, barriers, commands)
+						else:
+							buildResistances(player_barriers, barriers, commands)
+						
+						# Check total resists
+						if checkResistance(target.resists, command.element, command.status, barriers):
+							# Elemental resistance was found, but it's a melee attack so it can't be resisted
+							if command.element != "None" and command.att_type in ("Melee", "Ranged"):
+								dmg_reduction = True
+							else:
+								print("%s is strong against %s." % (attacker.targets[foe], command.name))
+								continue
+						else:
+							# Check for elemental / species weakness
+							if command.element != "None":
+								if checkWeakness(command.element, target):
+									print("Hits weakness.", end = " ")
+									crit_roll = random.randint(1,100)
+									if crit_roll <= 30:
+										target.current_HP = 0
+										target.lives -= 1
+										print("Mighty blow! %s fell." % target.name)
+										continue
+									else:
+										critical_hit = True
+
 						if command.status != "None":
 							inflictCondition(command, attacker, target)
 						offense = rollDamage(command, attacker)
-						defense = determineDefense(target, command.att_type, offense)
+						defense = determineDefense(target, command, offense)
 						damage = offense - defense
 						# Ranged attacks get blocked for 50% damage
 						if blocked == True:
@@ -632,14 +614,23 @@ while run_sim != "n":
 
 						# No damage on pure Status attacks
 						if command.stat == "Status":
-							pass
+							print("")
 						elif damage <= 0:
 							damage = 0
 							print("No damage.")
 						else:
-							print("%d damage to %s." % (damage, attacker.targets[foe]))
+							print("%d damage to %s." % (damage, attacker.targets[foe]), end = " ")
 							if applyDamage(damage, target) == 1:
 								print("%s fell." % target.name)
+							elif "WindUp" in command.effect:
+								wind_roll = random.randint(1, 100)
+								if wind_roll <= command.percent:
+									print("Winded the whip.")
+									target.command = "None"
+								else:
+									print("")
+							else:
+								print("")
 
 						# Counter-attacks if any exist and the target survived
 						if target.isActive() and (def_target_type == "Counter" or def_command_effect == "Counter"):
@@ -682,7 +673,7 @@ while run_sim != "n":
 								if combatants[who].name == target.name and combatants[who].isTargetable():
 									inflictCondition(command, attacker, combatants[who])
 						offense = rollDamage(command, attacker)
-						defense = determineDefense(target, command.att_type, offense)
+						defense = determineDefense(target, command, offense)
 
 						# Check for elemental / species weakness
 						if command.element != "None":
@@ -708,8 +699,17 @@ while run_sim != "n":
 						print("No damage.")
 					else:
 						# Loop through combatants to deal damage to all members of a group
-						# ONLY GETS USED ONCE. MOVE BACK?
-						groupAttack(combatants, target.name, damage)
+						body_count = 0
+						for who in range(len(combatants)):
+							# Only damage those matching the target name and that are not already dead or stoned
+							if combatants[who].name == target.name and combatants[who].isTargetable():
+								body_count += applyDamage(damage, combatants[who])
+						# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
+						print("%d damage to %s group." % (damage, target.name), end = " ")
+						if body_count > 0:
+							print("Defeated %d." % body_count)
+						else:
+							print("")
 
 				elif command.targeting == "Ally":
 					print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
@@ -740,12 +740,15 @@ while run_sim != "n":
 								removeCondition(command.status, combatants[who])
 
 			# Post-action tracking
+			if "Sacrifice" in command.effect:
+				applyDamage(attacker.HP, attacker)
+				print("%s sacrificed their life." % attacker.name)
 			combatants[count] = afterTurn(attacker)
 			if not battleStatus(combatants):
 				another_round = "n"
 				break
 		for each in range(len(combatants)):
-			combatants[each] = endOfTurn(combatants[each])
+			combatants[each] = endOfTurn(combatants[each], commands)
 			# Should only be needed for "Regained sanity" purposes...and should go away in Alpha
 			# Being used for Surprise rounds...which means the input approach is not a good solution
 			if combatants[each].role == "Player" and combatants[each].command == "None":

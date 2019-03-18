@@ -11,9 +11,9 @@ def randomTarget(target_list, combatants):
 		else:
 			continue
 
-def calculateDamage(stat, multiplier):
-	atk_power = stat * multiplier + random.randint(1, stat)
-	return atk_power
+#####################################
+####### END OF TURN FUNCTIONS #######
+#####################################
 
 def battleStatus(survivors):
 	players = 0
@@ -24,7 +24,10 @@ def battleStatus(survivors):
 		elif (survivors[count].role == "Player" or "NPC") and survivors[count].isTargetable():
 			players += 1
 	# Print if one side has no survivors, otherwise continue on
-	if enemies == 0:
+	if players == 0:
+		print("Odin beckons...")
+		return False
+	elif enemies == 0:
 		print("Right on!")
 		return False
 	elif players == 0:
@@ -38,7 +41,7 @@ def afterTurn(attacker):
 	attacker.targets.clear()
 	return attacker
 
-def endOfTurn(attacker):
+def endOfTurn(attacker, traits):
 	if attacker.isParalyzed():
 		roll = random.randint(1,100)
 		if roll <= 15:
@@ -65,9 +68,29 @@ def endOfTurn(attacker):
 			if applyDamage(poison_dmg, attacker) == 1:
 				print("%s succumbed to the poison." % attacker.name)
 
+	for skill in range(len(attacker.skills)):
+		if attacker.skills[skill] == "blank":
+			continue
+		else:
+			skill_effect = traits.loc[attacker.skills[skill],"Effect"]
+			if skill_effect == "Regen":
+				heal = attacker.HP * (traits.loc[attacker.skills[skill], "Percent"] / 100)
+				if attacker.isDead():
+					pass
+				elif (attacker.current_HP + heal) > attacker.HP:
+					heal = attacker.HP - attacker.current_HP
+					attacker.current_HP = attacker.HP
+				else:
+					attacker.current_HP += heal
+				print("%s regenerates %d HP." % (attacker.name, heal))
+
 	if attacker.role == "Enemy":
 		attacker.command = 'nan'
 	return attacker
+
+################################
+####### ATTACK FUNCTIONS #######
+################################
 
 def frontOfGroup(combatants, att, foe):
 	attacker = combatants[att]
@@ -96,11 +119,14 @@ def groupAttack(combatants, name, damage):
 def counterAttack(avenger, attacker, command, damage_received, barriers):
 	print("%s counter-attacks with %s." % (avenger.name, command.name), end = " ")
 	if command.stat == "Str":
-		if damage_received < avenger.getStrength() * 2:
-			counter_dmg = avenger.getStrength() * 2
+		avenger_str = avenger.getStrength()
+		if attacker.isPoisoned():
+			avenger_str = round(avenger_str/2)
+		if damage_received < (avenger_str * 2):
+			counter_dmg = avenger_str * 2
 		else:
 			counter_dmg = damage_received
-		damage = round(counter_dmg * command.multiplier / 10 + avenger.getStrength())
+		damage = round(counter_dmg * command.multiplier / 10 + avenger_str)
 
 	# For MANA or Status-based counters
 	else:
@@ -116,9 +142,6 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 					print("Hits weakness.", end = " ")
 					defense = 0
 				damage = counter_dmg - defense
-
-	if attacker.isPoisoned():
-		damage = round(damage/2)
 
 	# No damage on pure Status attacks
 	if command.stat == "Status":
@@ -139,6 +162,50 @@ def applyDamage(damage, target):
 	else:
 		return 0
 
+def rollDamage(command, attacker):
+	stat = command.stat
+	multiplier = command.multiplier
+	element = command.element
+	if stat == "Str":
+		damage = calculateDamage(attacker.getStrength(),multiplier)
+	# Currently, Blind status will also reduce AGL damage. Leave it or fix it?
+	elif stat == "Agl":
+		damage = calculateDamage(attacker.getAgility(), multiplier)
+	elif stat == "Mana":
+		# If the MAGI equipped is of the same element as the magic attack, increase the damage
+		if attacker.role == "Player" and attacker.magi.startswith(element):
+			damage = calculateDamage(attacker.getMana() + 5 + attacker.magi_count, multiplier)
+		else:
+			damage = calculateDamage(attacker.getMana(), multiplier)
+	elif stat == "Set":
+		# Need to add race_bonus eventually...or do I? Robots have enough power already
+		if isinstance(command.rand_dmg, int) and command.rand_dmg > 0:
+			damage = command.min_dmg + random.randint(1,command.rand_dmg)
+		elif command.rand_dmg == "Str":
+			damage = command.min_dmg + random.randint(1,attacker.getStrength())
+		else:
+			damage = command.min_dmg
+	else:
+		damage = 0
+	return damage
+
+def calculateDamage(stat, multiplier):
+	atk_power = stat * multiplier + random.randint(1, stat)
+	return atk_power
+
+def determineDefense(defender, attack, damage):
+	if "Pierce" in attack.effect:
+		return 0
+	elif attack.att_type in ("Melee", "Ranged"):
+		return defender.getDefense() * 5
+	elif attack.att_type == "Magic":
+#		return round((200 - defender.getMana()) * damage / 200)
+		return round(damage * defender.getMana() / 200)
+
+#######################################
+####### BUFF AND HEAL FUNCTIONS #######
+#######################################
+
 def rollHeal(command, healer, ally):
 	if command.att_type == "Magic":
 		heal = (healer.getMana() + ally.getMana()) * command.multiplier + random.randint(1, healer.getMana())
@@ -154,53 +221,6 @@ def rollHeal(command, healer, ally):
 		ally.current_HP += heal
 	print("%s recovers %d HP." % (ally.name, heal))
 
-def rollHit(attacker_stat, defender_stat):
-	difference = defender_stat - (attacker_stat * 2)
-	return 97 - difference
-
-def rollDamage(command, attacker):
-	stat = command.stat
-	multiplier = command.multiplier
-	element = command.element
-	if stat == "Str":
-		#if attacker.isCursed():
-		#	damage = calculateDamage(round(attacker.current_Str / 2), multiplier)
-		#else:
-		#	damage = calculateDamage(attacker.current_Str, multiplier)
-		damage = calculateDamage(attacker.getStrength(),multiplier)
-	elif stat == "Agl":
-		#if attacker.isBlinded():
-		#	damage = calculateDamage(round(attacker.current_Agl / 2), multiplier)
-		#else:
-		#	damage = calculateDamage(attacker.current_Agl, multiplier)
-		damage = calculateDamage(attacker.getAgility(), multiplier)
-	elif stat == "Mana":
-		if attacker.role == "Player" and attacker.magi.startswith(command.element):
-			damage = calculateDamage(attacker.getMana() + 5 + attacker.magi_count, multiplier)
-		else:
-			damage = calculateDamage(attacker.getMana(), multiplier)
-	elif stat == "Set":
-		# Need to add race_bonus eventually
-		if isinstance(command.rand_dmg, int) and command.rand_dmg > 0:
-			damage = command.min_dmg + random.randint(1,command.rand_dmg)
-		elif command.rand_dmg == "Str":
-			damage = command.min_dmg + random.randint(1,attacker.getStrength())
-		else:
-			damage = command.min_dmg
-	else:
-		damage = 0
-	return damage
-
-def determineDefense(defender, attack_type, damage):
-	if attack_type in ("Melee", "Ranged"):
-		#defense = defender.current_Def
-		#if defender.isCursed():
-		#	defense = round(defense / 2)
-		#defense = defender.current_Def * 5
-		return defender.getDefense() * 5
-	elif attack_type == "Magic":
-		return round(damage * defender.getMana() / 200)
-
 def affectStat(target, stat, amount):
 	if stat == "STR":
 		target.current_Str += amount
@@ -213,6 +233,10 @@ def affectStat(target, stat, amount):
 	print("%s increases by %d." % (stat, amount))
 	return target
 
+################################
+####### STATUS FUNCTIONS #######
+################################
+
 def inflictCondition(command, attacker, target):
 	# Originally (target - attacker) * 2 + 50
 	hit_chance = target.getMana() - attacker.getMana() + 50
@@ -220,7 +244,7 @@ def inflictCondition(command, attacker, target):
 	if hit_chance < roll:
 		applyCondition(command.status, target)
 	else:
-		print("%s resisted." % target.name)
+		print("%s resisted." % target.name, end = " ")
 
 def applyCondition(status, target):
 	if status == "Stone":
@@ -231,25 +255,25 @@ def applyCondition(status, target):
 		target.paralyzed = "n"
 		target.asleep = "n"
 		target.cursed = "n"
-		print("Turned %s to stone." % target.name)
+		print("Turned %s to stone." % target.name, end = " ")
 	elif status == "Curse":
 		target.cursed = "y"
-		print("Cursed %s." % target.name)
+		print("Cursed %s." % target.name, end = " ")
 	elif status == "Blind":
 		target.blinded = "y"
-		print("Blinded %s." % target.name)
+		print("Blinded %s." % target.name, end = " ")
 	elif status == "Sleep":
 		target.asleep = "y"
-		print("Put %s to sleep." % target.name)
+		print("Put %s to sleep." % target.name, end = " ")
 	elif status == "Paralyze":
 		target.paralyzed = "y"
-		print("Paralyzed %s." % target.name)
+		print("Paralyzed %s." % target.name, end = " ")
 	elif status == "Poison":
 		target.poisoned = "y"
-		print("Poisoned %s." % target.name)
+		print("Poisoned %s." % target.name, end = " ")
 	elif status == "Confuse":
 		target.confused = "y"
-		print("Confused %s." % target.name)
+		print("Confused %s." % target.name, end = " ")
 	elif status == "Stun":
 		target.current_HP = 0
 		target.lives -= 1
@@ -295,6 +319,10 @@ def removeCondition(status, target):
 		target.asleep = "n"
 		target.cursed = "n"
 		print("%s was restored." % target.name)
+
+####################################
+####### RESISTANCE FUNCTIONS #######
+####################################
 
 def buildResistances(skills, resist_list, resist_table):
 	for count in range(len(skills)):
