@@ -5,7 +5,7 @@ import openpyxl
 from collections import Counter
 from classes import Player, Enemy, NPC, Actor, Command
 from combat import (randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal,
-inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition)
+inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition, applyHeal)
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -35,6 +35,7 @@ commands["Element"].fillna("None", inplace = True)
 commands["Status"].fillna("None", inplace = True)
 commands["Effect"].fillna("None", inplace = True)
 commands["Target Type"].fillna("None", inplace = True)
+commands["Hits"].fillna(1, inplace = True)
 players.fillna("blank", inplace = True)
 for each in range(len(battles)):
 	battles[each]["COMMAND"].fillna('nan', inplace=True)
@@ -511,6 +512,7 @@ while run_sim != "n":
 				blockable = False
 				dmg_reduction = False
 				critical_hit = False
+				damage = 0
 
 				if command.targeting == "Single":
 					print("%s attacks %s with %s." % (attacker.name, target.name, attacker.command), end = " ")
@@ -549,8 +551,13 @@ while run_sim != "n":
 					else:
 						hit_chance = 100
 					# DETERMINE HIT
-					hit_roll = random.randint(1,100)
-					if hit_roll > hit_chance:
+					hit_count = 0
+					# For Multi-hit attacks, this will loop more than once
+					for hit in range(int(command.hits)):
+						hit_roll = random.randint(1,100)
+						if hit_roll <= hit_chance:
+							hit_count += 1
+					if hit_count == 0:
 						print("Missed!")
 					# Melee attacks get blocked fully (even status-based ones)
 					elif (blocked == True and command.att_type == "Melee"):
@@ -559,6 +566,8 @@ while run_sim != "n":
 
 					# DAMAGE ASSIGNMENT
 					else:
+						if hit_count > 1:
+							print("%d hits." % hit_count, end = " ")
 						# Reflect - change target into the attacker
 						if (def_command_effect == "Reflect" or def_target_type == "Reflect") and command.att_type == "Magic":
 							print("%s reflected the attack." % target.command)
@@ -600,18 +609,21 @@ while run_sim != "n":
 
 						if command.status != "None":
 							inflictCondition(command, attacker, target)
-						offense = rollDamage(command, attacker)
-						defense = determineDefense(target, command, offense)
-						damage = offense - defense
+						# One pass for most attacks, but accumulates damage for multi-hit attacks
+						for hit in range(hit_count):
+							offense = rollDamage(command, attacker)
+							defense = determineDefense(target, command, offense)
+							damage += offense - defense
 						# Ranged attacks get blocked for 50% damage
 						if blocked == True:
-							damage = round(damage/2)
+							damage = int(damage/2)
 						# If weapon resistance is found against a non-magical attack, damage is halved
 						if command.att_type in ("Melee", "Ranged") and checkResistance(target.resists, "Weapon", command.status, barriers):
-							damage = round(damage/2)
+							damage = int(damage/2)
 						if critical_hit == True:
-							damage = round(damage*1.5)
+							damage = int(damage*1.5)
 
+						# DAMAGE OUTPUT
 						# No damage on pure Status attacks
 						if command.stat == "Status":
 							print("")
@@ -619,6 +631,35 @@ while run_sim != "n":
 							damage = 0
 							print("No damage.")
 						else:
+							if command.effect in ("Absorb", "Drain", "Dissolve"):
+								absorb_type = command.effect
+								absorb = int(damage * (command.percent / 100))
+								reversed = False
+								if absorb_type == "Absorb":
+									if target.family in ("Golem"):
+										print("Cannot absorb from %s." % target.name)
+										absorb = 0
+									elif target.family in ("God", "Plant"):
+										reversed = True
+								elif absorb_type == "Drain":
+									if target.family == "Undead":
+										reversed = True
+									elif target.family in ("God", "Golem"):
+										print("Cannot drain from %s." % target.name)
+										absorb = 0
+								elif absorb_type == "Dissolve":
+									pass
+								if reversed:
+									print("Reversed the absorption. %d HP stolen from %s." % (damage, attacker.name), end = " ")
+									applyHeal(damage, target)
+									if applyDamage(damage, attacker) == 1:
+										print("%s fell." % attacker.name)
+									else:
+										print("")
+									continue
+								else:
+									absorb = applyHeal(absorb, attacker)
+									print("Absorbed %d HP." % absorb, end = " ")
 							print("%d damage to %s." % (damage, attacker.targets[foe]), end = " ")
 							if applyDamage(damage, target) == 1:
 								print("%s fell." % target.name)
@@ -687,7 +728,7 @@ while run_sim != "n":
 						damage = offense - defense
 
 						if command.att_type in ("Melee", "Ranged") and checkResistance(target.resists, "Weapon", command.status, barriers):
-							damage = round(damage/2)
+							damage = int(damage/2)
 						if critical_hit:
 							damage = damage * 1.5
 

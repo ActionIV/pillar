@@ -109,7 +109,7 @@ class Enemy(Actor):
 	def getStrength(self):
 		strength = self.current_Str
 		if self.isCursed():
-			strength = round(strength/2)
+			strength = int(strength/2)
 		return strength
 
 	def getAgility(self):
@@ -117,7 +117,7 @@ class Enemy(Actor):
 		if self.isParalyzed() or self.isAsleep():
 			return 0
 		if self.isBlinded():
-			agility = round(agility/2)
+			agility = int(agility/2)
 		return agility
 
 	def getMana(self):
@@ -126,7 +126,7 @@ class Enemy(Actor):
 	def getDefense(self):
 		defense = self.current_Def
 		if self.isCursed():
-			defense = round(defense/2)
+			defense = int(defense/2)
 		return defense
 
 	role = "Enemy"
@@ -163,7 +163,7 @@ class Player(Actor):
 	def getStrength(self):
 		strength = self.current_Str
 		if self.isCursed():
-			strength = round(strength/2)
+			strength = int(strength/2)
 		if self.magi == "Power Magi":
 			strength += (5+self.magi_count)
 		return strength
@@ -173,7 +173,7 @@ class Player(Actor):
 		if self.isParalyzed() or self.isAsleep():
 			return 0
 		if self.isBlinded():
-			agility = round(agility/2)
+			agility = int(agility/2)
 		if self.magi == "Speed Magi":
 			agility += (5+self.magi_count)
 		return agility
@@ -187,7 +187,7 @@ class Player(Actor):
 	def getDefense(self):
 		defense = self.current_Def
 		if self.isCursed():
-			defense = round(defense/2)
+			defense = int(defense/2)
 		if self.magi == "Defense Magi":
 			defense += (5+self.magi_count)
 		return defense
@@ -213,7 +213,7 @@ class NPC(Actor):
 	def getStrength(self):
 		strength = self.current_Str
 		if self.isCursed():
-			strength = round(strength/2)
+			strength = int(strength/2)
 		return strength
 
 	def getAgility(self):
@@ -221,7 +221,7 @@ class NPC(Actor):
 		if self.isParalyzed() or self.isAsleep():
 			return 0
 		if self.isBlinded():
-			agility = round(agility/2)
+			agility = int(agility/2)
 		return agility
 
 	def getMana(self):
@@ -230,7 +230,7 @@ class NPC(Actor):
 	def getDefense(self):
 		defense = self.current_Def
 		if self.isCursed():
-			defense = round(defense/2)
+			defense = int(defense/2)
 		return defense
 
 class Command:
@@ -243,6 +243,7 @@ class Command:
 	rand_dmg = 0
 	status = ""
 	effect = ""
+	hits = 1
 	percent = 0
 	race_bonus = ""
 
@@ -257,5 +258,6 @@ class Command:
 		self.rand_dmg = commands.loc[name,"Rand DMG"]
 		self.status = commands.loc[name, "Status"]
 		self.effect = commands.loc[name,"Effect"]
+		self.hits = commands.loc[name,"Hits"]
 		self.percent = commands.loc[name,"Percent"]
 		self.race_bonus = commands.loc[name,"Race Bonus"]

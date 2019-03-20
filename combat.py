@@ -67,21 +67,15 @@ def endOfTurn(attacker, traits):
 			print("%d damage." % poison_dmg)
 			if applyDamage(poison_dmg, attacker) == 1:
 				print("%s succumbed to the poison." % attacker.name)
-
+	# REGEN
 	for skill in range(len(attacker.skills)):
 		if attacker.skills[skill] == "blank":
 			continue
 		else:
 			skill_effect = traits.loc[attacker.skills[skill],"Effect"]
-			if skill_effect == "Regen":
-				heal = attacker.HP * (traits.loc[attacker.skills[skill], "Percent"] / 100)
-				if attacker.isDead():
-					pass
-				elif (attacker.current_HP + heal) > attacker.HP:
-					heal = attacker.HP - attacker.current_HP
-					attacker.current_HP = attacker.HP
-				else:
-					attacker.current_HP += heal
+			if skill_effect == "Regen" and attacker.isTargetable():
+				heal = int(attacker.HP * (traits.loc[attacker.skills[skill], "Percent"] / 100))
+				heal = applyHeal(heal, attacker)
 				print("%s regenerates %d HP." % (attacker.name, heal))
 
 	if attacker.role == "Enemy":
@@ -121,12 +115,12 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 	if command.stat == "Str":
 		avenger_str = avenger.getStrength()
 		if attacker.isPoisoned():
-			avenger_str = round(avenger_str/2)
+			avenger_str = int(avenger_str/2)
 		if damage_received < (avenger_str * 2):
 			counter_dmg = avenger_str * 2
 		else:
 			counter_dmg = damage_received
-		damage = round(counter_dmg * command.multiplier / 10 + avenger_str)
+		damage = int(counter_dmg * command.multiplier / 10 + avenger_str)
 
 	# For MANA or Status-based counters
 	else:
@@ -199,8 +193,8 @@ def determineDefense(defender, attack, damage):
 	elif attack.att_type in ("Melee", "Ranged"):
 		return defender.getDefense() * 5
 	elif attack.att_type == "Magic":
-#		return round((200 - defender.getMana()) * damage / 200)
-		return round(damage * defender.getMana() / 200)
+#		return int((200 - defender.getMana()) * damage / 200)
+		return int(damage * defender.getMana() / 200)
 
 #######################################
 ####### BUFF AND HEAL FUNCTIONS #######
@@ -211,15 +205,19 @@ def rollHeal(command, healer, ally):
 		heal = (healer.getMana() + ally.getMana()) * command.multiplier + random.randint(1, healer.getMana())
 	else:
 		heal = command.min_dmg
-	if ally.isDead():
-		print("No effect.")
-		return
-	elif (ally.current_HP + heal) > ally.HP:
-		heal = ally.HP - ally.current_HP
-		ally.current_HP = ally.HP
+	if ally.isTargetable():
+		heal = applyHeal(heal, ally)
+		print("%s recovers %d HP." % (ally.name, heal))
 	else:
-		ally.current_HP += heal
-	print("%s recovers %d HP." % (ally.name, heal))
+		print("No effect.")
+
+def applyHeal(heal, target):
+	if (target.current_HP + heal) > target.HP:
+		heal = target.HP - target.current_HP
+		target.current_HP = target.HP
+	else:
+		target.current_HP += heal
+	return heal
 
 def affectStat(target, stat, amount):
 	if stat == "STR":
