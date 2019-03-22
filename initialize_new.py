@@ -4,7 +4,7 @@ import operator
 import openpyxl
 from collections import Counter
 from classes import Player, Enemy, NPC, Actor, Command
-from combat import (randomTarget, battleStatus, afterTurn, frontOfGroup, groupAttack, rollDamage, determineDefense, affectStat, rollHeal,
+from combat import (randomTarget, battleStatus, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition,
 inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition, applyHeal)
 
 path1 = r"FFL2 Data.xlsx"
@@ -149,7 +149,7 @@ while run_sim != "n":
 			current_com.skills.append(monsters.loc[current_com.name,"S7"])
 
 		# Lookup the static player data
-		elif current_com.role == "Player":
+		elif current_com.role in ("Player", "NPC"):
 			current_com.Class = players.loc[current_com.name,"CLASS"]
 			current_com.family = monsters.loc[current_com.Class,"Family"]
 			current_com.HP = players.loc[current_com.name,"HP"]
@@ -252,10 +252,46 @@ while run_sim != "n":
 				else:
 					print("Unexpected Attack!")
 
+		# RUN CHECK - Currently lacks a random component for players. Might want to add one
+		run_attempt = False
+		run_success = False
+		party_AGL = 0
+		enemies_AGL = 0
+		# Check commands to see if players are running (all players run together)
+		for runner in range(len(combatants)):
+			if combatants[runner].command == "Run":
+				run_attempt = True
+				break
+		if run_attempt:
+			if player_surprise:
+				run_success = True
+			else:
+				for runner in range(len(combatants)):
+					if combatants[runner].role == "Enemy":
+						enemies_AGL += combatants[runner].current_Agl
+					else:
+						if combatants[runner].isDead():
+							party_AGL += 100
+						else:
+							party_AGL += combatants[runner].current_Agl		
+				#enemies_AGL += random.randint(1,50)
+				if party_AGL > enemies_AGL:
+					run_success = True
+			if run_success:
+				print("Run!!")
+				break
+			else:
+				print("Failed to run!")
+				enemy_surprise = True
+
 		# INITIATIVE
 		for count in range(len(combatants)):
+			if combatants[count].current_Str >= combatants[count].current_Def:
+				base_initiative = combatants[count].current_Agl
+			else:
+				base_initiative = combatants[count].current_Agl + combatants[count].current_Str - combatants[count].current_Def
 			variable = (1+(random.randint(1,25)/100))
-			combatants[count].initiative = float(combatants[count].current_Agl) * variable
+			combatants[count].initiative = base_initiative * variable
 
 		# Sort actors based on initiative score
 		combatants = sorted(combatants, key = operator.attrgetter("initiative"), reverse=True)
@@ -265,7 +301,7 @@ while run_sim != "n":
 		for count in range(len(combatants)):
 			if combatants[count].role in ("Player", "NPC"):
 				party_order.append(tuple((combatants[count].name, combatants[count].position, count)))
-		party_order = sorted(party_order, key = operator.itemgetter(1), reverse=False)
+		party_order = sorted(party_order, key = operator.itemgetter(1), reverse=True)
 
 		# Create barrier lists anew each round
 		enemy_barriers = []
@@ -282,9 +318,11 @@ while run_sim != "n":
 			# SURPRISE CHECK
 			if enemy_surprise and attacker.role in ("Player", "NPC"):
 				attacker.command = "None"
+				print("%s did nothing." % attacker.name)
 				continue
 			elif player_surprise and attacker.role == "Enemy":
 				attacker.command = "None"
+				print("%s did nothing." % attacker.name)
 				continue
 
 			# CONFUSION CHECK
@@ -539,7 +577,7 @@ while run_sim != "n":
 					# Blockable logic
 					if command.att_type in ("Melee", "Ranged"):
 						blockable = True
-					if (def_target_type == "Block" or def_command_effect == "Block") and blockable:
+					if (def_target_type == "Block" or "Block" in def_command_effect) and blockable:
 						block_roll = random.randint(1,100)
 						if block_roll <= (commands.loc[target.command, "Percent"] + defender_score):
 							blocked = True
@@ -568,14 +606,34 @@ while run_sim != "n":
 					else:
 						if hit_count > 1:
 							print("%d hits." % hit_count, end = " ")
+						if "Cut" in command.effect:
+							# Replace the normal attack roll, or just have both?
+							cut_roll = random.randint(1,100)
+							if cut_roll <= (50 + attacker.current_Str):
+								print("Failed to cut.")
+								continue
+							else:
+								cut_check = attacker.getStrength() + command.percent
+								# Check for weapon resistance and whether the attack was blocked (then again, a blocked attack wouldn't get here...)
+								if checkResistance(target.resists, "Weapon", command.status, barriers):
+									cut_check = int(cut_check/2)
+								if blocked:
+									cut_check = int(cut_check/2)
+								if cut_check > target.getDefense() and target.family != "God":
+									applyCondition("Stun", target)
+									print("%s was cut." % target.name)
+									continue
+								else:
+									print("Too hard to cut.")
+
 						# Reflect - change target into the attacker
-						if (def_command_effect == "Reflect" or def_target_type == "Reflect") and command.att_type == "Magic":
+						if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
 							print("%s reflected the attack." % target.command)
 							# Makes the attacker into the target of its own spell
 							target = attacker
 
 						# Nullify - end the attack since it was nullified on target
-						if (def_command_effect == "Nullify" or def_target_type == "Nullify") and command.att_type == "Magic":
+						if ("Nullify" in def_command_effect or def_target_type == "Nullify") and command.att_type == "Magic":
 							print("%s repulsed the attack." % target.command)
 							continue
 
@@ -631,7 +689,7 @@ while run_sim != "n":
 							damage = 0
 							print("No damage.")
 						else:
-							if command.effect in ("Absorb", "Drain", "Dissolve"):
+							if any(x in command.effect for x in ["Absorb", "Drain", "Dissolve"]):
 								absorb_type = command.effect
 								absorb = int(damage * (command.percent / 100))
 								reversed = False
@@ -674,7 +732,7 @@ while run_sim != "n":
 								print("")
 
 						# Counter-attacks if any exist and the target survived
-						if target.isActive() and (def_target_type == "Counter" or def_command_effect == "Counter"):
+						if target.isActive() and (def_target_type == "Counter" or "Counter" in def_command_effect):
 							counter_command = Command(target.command, commands)
 							if target.role == "Enemy":
 								buildResistances(player_barriers, barriers, commands)
@@ -691,12 +749,12 @@ while run_sim != "n":
 							print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
 
 					# Reflect - change target into the attacker
-					if (def_command_effect == "Reflect" or def_target_type == "Reflect") and command.att_type == "Magic":
+					if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
 						print("%s reflected the attack." % target.command)
 						target = attacker
 
 					# Nullify - end the attack since it was nullified on target
-					if (def_command_effect == "Nullify" or def_target_type == "Nullify") and command.att_type == "Magic":
+					elif ("Nullify" in def_command_effect or def_target_type == "Nullify") and command.att_type == "Magic":
 						print("%s repulsed the attack." % target.command)
 						continue
 
@@ -709,6 +767,10 @@ while run_sim != "n":
 						print("%s is strong against %s." % (target.name, command.name))
 						continue
 					else:
+						# Currently, no damage component with Debuff abilities
+						if "Debuff" in command.effect:
+							target = affectStat(target, command)
+							continue
 						if command.status != "None":
 							for who in range(len(combatants)):
 								if combatants[who].name == target.name and combatants[who].isTargetable():
@@ -754,31 +816,47 @@ while run_sim != "n":
 
 				elif command.targeting == "Ally":
 					print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
-					if command.effect == "Heal":
-						rollHeal(command, attacker, target)
-					elif command.effect == "Buff":
-						target = affectStat(target, command.effect, command.min_dmg)
-						print("%s increases by %d." % (command.effect, command.min_dmg))
-					elif command.status != "None":
+					# Reflect - change target into the caster
+					if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
+						print("%s reflected the attack." % target.command)
+						target = attacker
+					# Nullify - end the effect since it was nullified on target
+					elif ("Nullify" in def_command_effect or def_target_type == "Nullify") and command.att_type == "Magic":
+						print("%s repulsed the attack." % target.command)
+						continue
+					if command.status != "None":
 						removeCondition(command.status, target)
+					if "Heal" in command.effect:
+						rollHeal(command, attacker, target)
+					if "Buff" in command.effect:
+						target = affectStat(target, command)
 			
 				elif command.targeting == "Self":
-					if command.att_type == "Buff":
-						attacker = affectStat(attacker, command.effect, command.min_dmg)
-						print("%s uses %s." % (attacker.name, attacker.command), end = " ")
+					print("%s uses %s." % (attacker.name, attacker.command), end = " ")
+					if "Buff" in command.effect:
+						attacker = affectStat(attacker, command)
 
 				elif command.targeting == "Allies":
 					if foe == 0:
 						print("%s uses %s." % (attacker.name, attacker.command))
 					for who in range(len(combatants)):
 						if combatants[who].name == attacker.targets[foe]:
-							if command.effect == "Heal":
-								rollHeal(command, attacker, combatants[who])
-							elif command.effect == "Buff":
-								print("%s's" % combatants[who], end = " ")
-								combatants[who] == affectStat(combatants[who], command.effect, command.min_dmg)
-							elif command.status != "None":
+							# Reflect - change target into the caster
+							if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
+								print("%s reflected the attack." % target.command)
+								target = attacker
+							# Nullify - end the effect since it was nullified on target
+							elif ("Nullify" in def_command_effect or def_target_type == "Nullify") and command.att_type == "Magic":
+								print("%s repulsed the attack." % target.command)
+								continue
+							if command.status != "None":
 								removeCondition(command.status, combatants[who])
+							if "Heal" in command.effect:
+								rollHeal(command, attacker, combatants[who])
+							if "Buff" in command.effect:
+								print("%s's" % combatants[who], end = " ")
+								combatants[who] == affectStat(combatants[who], command)
+
 
 			# Post-action tracking
 			if "Sacrifice" in command.effect:
@@ -830,10 +908,6 @@ while run_sim != "n":
 	for key, number in remaining_enemies.items():
 		print("{ %s - %d" % (key, number), end = " }")
 	print("")
-	
-#	for count in range(len(combatants)):
-#		print(combatants[count])
-#	print(active_battle)
 
 	write_to_excel = input("Save battle? (y/n): ")
 	if write_to_excel == "y":

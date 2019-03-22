@@ -97,19 +97,6 @@ def frontOfGroup(combatants, att, foe):
 			defender = tar
 	return defender
 
-def groupAttack(combatants, name, damage):
-	body_count = 0
-	for who in range(len(combatants)):
-		# Only damage those matching the target name and that are not already dead or stoned
-		if combatants[who].name == name and combatants[who].isTargetable():
-			body_count += applyDamage(damage, combatants[who])
-	# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
-	print("%d damage to %s group." % (damage, name), end = " ")
-	if body_count > 0:
-		print("Defeated %d." % body_count)
-	else:
-		print("")
-
 def counterAttack(avenger, attacker, command, damage_received, barriers):
 	print("%s counter-attacks with %s." % (avenger.name, command.name), end = " ")
 	if command.stat == "Str":
@@ -219,16 +206,31 @@ def applyHeal(heal, target):
 		target.current_HP += heal
 	return heal
 
-def affectStat(target, stat, amount):
-	if stat == "STR":
+def affectStat(target, command):
+	stat = command.stat
+	amount = command.min_dmg
+	if "Debuff" in command.effect:
+		amount = amount * -1
+	if stat == "Str":
 		target.current_Str += amount
-	elif stat == "AGL":
+		if target.current_Str <= 0:
+			target.current_Str = 0
+	elif stat == "Agl":
 		target.current_Agl += amount
-	elif stat == "MANA":
+		if target.current_Agl <= 0:
+			target.current_Agl = 0
+	elif stat == "Mana":
 		target.current_Mana += amount
-	elif stat == "DEF":
+		if target.current_Mana <= 0:
+			target.current_Mana = 0
+	elif stat == "Def":
 		target.current_Def += amount
-	print("%s increases by %d." % (stat, amount))
+		if target.current_Def <= 0:
+			target.current_Def = 0
+	if "Debuff" in command.effect:
+		print("%s decreases by %d. Stat: %d" % (stat, amount, target.getAgility()))
+	else:
+		print("%s increases by %d. Stat: %d" % (stat, amount, target.getAgility()))
 	return target
 
 ################################
@@ -283,28 +285,28 @@ def applyCondition(status, target):
 		target.cursed = "n"
 
 def removeCondition(status, target):
-	if status == "Stone":
+	if status == "Stone" and target.isStoned():
 		target.stoned = "n"
 		print("Softened %s." % target.name)
-	elif status == "Curse":
+	elif status == "Curse" and target.isCursed():
 		target.cursed = "n"
 		print("Released %s from curse." % target.name)
-	elif status == "Blind":
+	elif status == "Blind" and target.isBlinded():
 		target.blinded = "n"
 		print("Restored sight to %s." % target.name)
-	elif status == "Sleep":
+	elif status == "Sleep" and target.isAsleep():
 		target.asleep = "n"
 		print("Woke %s." % target.name)
-	elif status == "Paralyze":
+	elif status == "Paralyze" and target.isParalyzed():
 		target.paralyzed = "n"
 		print("Released %s from paralysis." % target.name)
-	elif status == "Poison":
+	elif status == "Poison" and target.isPoisoned():
 		target.poisoned = "n"
 		print("Neutralized %s's poison." % target.name)
-	elif status == "Confuse":
+	elif status == "Confuse" and target.isConfused():
 		target.confused = "n"
 		print("Returned %s to sanity." % target.name)
-	elif status == "Revive":
+	elif status == "Revive" and target.isDead():
 		target.current_HP = 1
 		target.lives += 1
 		print("Revived %s." % target.name)
@@ -317,6 +319,8 @@ def removeCondition(status, target):
 		target.asleep = "n"
 		target.cursed = "n"
 		print("%s was restored." % target.name)
+	else:
+		print("No effect.")
 
 ####################################
 ####### RESISTANCE FUNCTIONS #######
