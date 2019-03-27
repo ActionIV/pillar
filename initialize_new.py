@@ -44,6 +44,7 @@ for each in range(len(battles)):
 	battles[each]["CURRENT AGL"].fillna(-1, inplace=True)
 	battles[each]["CURRENT MANA"].fillna(-1, inplace=True)
 	battles[each]["CURRENT DEF"].fillna(-1, inplace=True)
+	battles[each]["ACTIONS TAKEN"].fillna("", inplace = True)
 
 run_sim = "y"
 while run_sim != "n":
@@ -85,19 +86,22 @@ while run_sim != "n":
 				active_battle.drop(active_battle.tail(1).index,inplace=True)
 			else:
 				combatants.append(Enemy(active_battle.iloc[count,0]))
-				combatants[count].position = active_battle.iloc[count,3]
-				combatants[count].lives = active_battle.iloc[count,2]
-				combatants[count].group = count
+				combatants[place].position = active_battle.iloc[count,3]
+				combatants[place].lives = active_battle.iloc[count,2]
+				combatants[place].group = count
 				enemy_groups.append(tuple((combatants[count].name, 0, 0)))
+				place += 1
 
 		elif active_battle.iloc[count,1] == "Player":
 			combatants.append(Player(active_battle.iloc[count,0]))
+			combatants[place].lives = active_battle.iloc[count,2]
 			combatants[place].position = int(active_battle.iloc[count,3])
 			combatants[place].group = count
 			place += 1
 
 		else:
 			combatants.append(NPC(active_battle.iloc[count,0]))
+			combatants[place].lives = active_battle.iloc[count,2]
 			combatants[place].position = active_battle.iloc[count,3]
 			combatants[place].group = count
 			place += 1
@@ -125,10 +129,11 @@ while run_sim != "n":
 		current_com.paralyzed = active_battle.iloc[current_com.group, 16]
 		current_com.poisoned = active_battle.iloc[current_com.group, 17]
 		current_com.confused = active_battle.iloc[current_com.group, 18]
+		current_com.add_action(active_battle.iloc[current_com.group, 19])
 	
 		# Lookup the static Enemy data
 		if current_com.role == "Enemy":
-			current_com.DS = monsters.loc[current_com.name,"DS"]
+			current_com.DS = int(monsters.loc[current_com.name,"DS"])
 			current_com.MS = monsters.loc[current_com.name,"MS"]
 			current_com.Type = monsters.loc[current_com.name,"Type"]
 			current_com.HP = monsters.loc[current_com.name,"HP"]
@@ -248,7 +253,7 @@ while run_sim != "n":
 					print("Strike First!")
 			elif enemy_surprise:
 				if e_surprise_roll > 25:
-					player_surprise = False
+					enemy_surprise = False
 				else:
 					print("Unexpected Attack!")
 
@@ -371,6 +376,7 @@ while run_sim != "n":
 			sel_target = ""
 
 			# CONFUSED TARGETING
+			# Should confused targets flip a coin as to which side they attack as opposed to picking from the total pool?
 			if attacker.isConfused():
 				confuse_roll = random.randint(1,100)
 				if confuse_roll > 10:
@@ -527,7 +533,7 @@ while run_sim != "n":
 			for foe in range(len(attacker.targets)):
 				# Select the front-most member of a group with the same name (i.e. attack the front-most enemy of a group)
 				# FUNCTION ONLY CALLED ONCE. MOVE IT BACK?
-				defender = frontOfGroup(combatants, count, foe)
+				defender = frontOfGroup(combatants, count, foe, command)
 
 				# Defender == 100 means that group is gone. Go to the next foe
 				if defender == 100:
@@ -741,8 +747,10 @@ while run_sim != "n":
 							counterAttack(target, attacker, counter_command, damage, barriers)
 
 				elif command.targeting in ("Group", "All Enemies"):
-					if command.targeting == "Group":
+					if command.targeting == "Group" and target.role == "Enemy":
 						print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
+					elif command.targeting == "Group" and target.role in ("Player", "NPC"):
+						print("%s attacks %s with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
 					else:
 						# Only print the command text the first time through
 						if foe == 0:
@@ -796,7 +804,7 @@ while run_sim != "n":
 
 					# No damage on pure Status attacks
 					if command.stat == "Status":
-						pass
+						print("")
 					elif damage <= 0:
 						damage = 0
 						print("No damage.")
@@ -818,7 +826,7 @@ while run_sim != "n":
 					print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
 					# Reflect - change target into the caster
 					if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
-						print("%s reflected the attack." % target.command)
+						print("%s reflected the attack." % target.command, end = " ")
 						target = attacker
 					# Nullify - end the effect since it was nullified on target
 					elif ("Nullify" in def_command_effect or def_target_type == "Nullify") and command.att_type == "Magic":
@@ -830,6 +838,7 @@ while run_sim != "n":
 						rollHeal(command, attacker, target)
 					if "Buff" in command.effect:
 						target = affectStat(target, command)
+					print("")
 			
 				elif command.targeting == "Self":
 					print("%s uses %s." % (attacker.name, attacker.command), end = " ")
@@ -843,7 +852,7 @@ while run_sim != "n":
 						if combatants[who].name == attacker.targets[foe]:
 							# Reflect - change target into the caster
 							if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
-								print("%s reflected the attack." % target.command)
+								print("%s reflected the attack." % target.command, end = " ")
 								target = attacker
 							# Nullify - end the effect since it was nullified on target
 							elif ("Nullify" in def_command_effect or def_target_type == "Nullify") and command.att_type == "Magic":
@@ -856,7 +865,7 @@ while run_sim != "n":
 							if "Buff" in command.effect:
 								print("%s's" % combatants[who], end = " ")
 								combatants[who] == affectStat(combatants[who], command)
-
+							print("")
 
 			# Post-action tracking
 			if "Sacrifice" in command.effect:
@@ -931,8 +940,8 @@ while run_sim != "n":
 			active_battle.iloc[count,16] = combatants[count].paralyzed
 			active_battle.iloc[count,17] = combatants[count].poisoned
 			active_battle.iloc[count,18] = combatants[count].confused
-			active_battle["ACTIONS TAKEN"] = active_battle["ACTIONS TAKEN"].astype(object)
-			active_battle.at[count,"ACTIONS TAKEN"] = combatants[count].actions_taken
+			active_battle.iloc[count,19] = combatants[count].actions_taken
+#			active_battle.at[count,"ACTIONS TAKEN"] = combatants[count].actions_taken
 		battles[i] = active_battle.copy()
 		save_list.append(tuple((i, log.sheet_names[i+1])))
 

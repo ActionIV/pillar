@@ -1,4 +1,5 @@
 import random
+from collections import Counter
 
 def randomTarget(target_list, combatants):
 	target = ""
@@ -18,10 +19,11 @@ def randomTarget(target_list, combatants):
 def battleStatus(survivors):
 	players = 0
 	enemies = 0
+
 	for count in range(len(survivors)):
-		if (survivors[count].role == "Enemy") and survivors[count].isTargetable():
+		if survivors[count].role == "Enemy" and survivors[count].isTargetable():
 			enemies += 1
-		elif (survivors[count].role == "Player" or "NPC") and survivors[count].isTargetable():
+		elif survivors[count].role in ("Player", "NPC") and survivors[count].isTargetable():
 			players += 1
 	# Print if one side has no survivors, otherwise continue on
 	if players == 0:
@@ -29,12 +31,41 @@ def battleStatus(survivors):
 		return False
 	elif enemies == 0:
 		print("Right on!")
-		return False
-	elif players == 0:
-		print("Odin beckons...")
+		postBattle(survivors)
 		return False
 	else:
 		return True
+
+def postBattle(combatants):
+	enemies = []
+	players = []
+	for each in range(len(combatants)):
+		if combatants[each].role == "Enemy":
+			enemies.append(combatants[each].name)
+		elif combatants[each].role == "Player":
+			players.append(combatants[each])
+
+	# GOLD
+	total_gold = 0
+	defeated = Counter(enemies)
+	defeated.keys()
+	for key, number in defeated.items():
+		enemy_level = 1
+		for enemy in range(len(combatants)):
+			if combatants[enemy].name == key:
+				enemy_level = combatants[enemy].DS
+				break
+		total_gold = total_gold + (33 + (3*(number-1))) * enemy_level * number
+	indy_gold = round(total_gold / len(players))
+	print("Each party member receives %d GP." % indy_gold)
+
+	# ITEM DROPS
+
+	# HUMAN AND MUTANT STATS
+
+	# MUTANT SKILLS
+
+	# MEAT DROP
 
 def afterTurn(attacker):
 	attacker.add_action(attacker.command)
@@ -73,7 +104,7 @@ def endOfTurn(attacker, traits):
 			continue
 		else:
 			skill_effect = traits.loc[attacker.skills[skill],"Effect"]
-			if skill_effect == "Regen" and attacker.isTargetable():
+			if "Regen" in skill_effect and attacker.isTargetable():
 				heal = int(attacker.HP * (traits.loc[attacker.skills[skill], "Percent"] / 100))
 				heal = applyHeal(heal, attacker)
 				print("%s regenerates %d HP." % (attacker.name, heal))
@@ -86,7 +117,7 @@ def endOfTurn(attacker, traits):
 ####### ATTACK FUNCTIONS #######
 ################################
 
-def frontOfGroup(combatants, att, foe):
+def frontOfGroup(combatants, att, foe, command):
 	attacker = combatants[att]
 	priority = 100
 	defender = 100
@@ -95,6 +126,10 @@ def frontOfGroup(combatants, att, foe):
 		if (combatants[tar].name == attacker.targets[foe]) and (int(combatants[tar].position) < priority) and combatants[tar].isTargetable():
 			priority = combatants[tar].position
 			defender = tar
+		elif (combatants[tar].name == attacker.targets[foe] and command.targeting in ("Ally", "Allies")):
+			if (combatants[tar].isDead() and command.status == ("Revive")) or (combatants[tar].isStoned() and command.status == ("Stone")):
+				priority = combatants[tar].position
+				defender = tar
 	return defender
 
 def counterAttack(avenger, attacker, command, damage_received, barriers):
@@ -118,7 +153,7 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 				inflictCondition(command, avenger, attacker)
 			elif command.stat == "Mana":
 				counter_dmg = rollDamage(command, avenger)
-				defense = determineDefense(attacker, command.att_type, counter_dmg)
+				defense = determineDefense(attacker, command, counter_dmg)
 				if checkWeakness(command.element, attacker):
 					print("Hits weakness.", end = " ")
 					defense = 0
@@ -126,7 +161,7 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 
 	# No damage on pure Status attacks
 	if command.stat == "Status":
-		pass
+		print("")
 	elif damage <= 0:
 		damage = 0
 		print("No damage.")
@@ -194,9 +229,9 @@ def rollHeal(command, healer, ally):
 		heal = command.min_dmg
 	if ally.isTargetable():
 		heal = applyHeal(heal, ally)
-		print("%s recovers %d HP." % (ally.name, heal))
+		print("%s recovers %d HP." % (ally.name, heal), end = " ")
 	else:
-		print("No effect.")
+		print("No effect.", end = " ")
 
 def applyHeal(heal, target):
 	if (target.current_HP + heal) > target.HP:
@@ -287,29 +322,29 @@ def applyCondition(status, target):
 def removeCondition(status, target):
 	if status == "Stone" and target.isStoned():
 		target.stoned = "n"
-		print("Softened %s." % target.name)
+		print("Softened %s." % target.name, end = " ")
 	elif status == "Curse" and target.isCursed():
 		target.cursed = "n"
-		print("Released %s from curse." % target.name)
+		print("Released %s from curse." % target.name, end = " ")
 	elif status == "Blind" and target.isBlinded():
 		target.blinded = "n"
-		print("Restored sight to %s." % target.name)
+		print("Restored sight to %s." % target.name, end = " ")
 	elif status == "Sleep" and target.isAsleep():
 		target.asleep = "n"
-		print("Woke %s." % target.name)
+		print("Woke %s." % target.name, end = " ")
 	elif status == "Paralyze" and target.isParalyzed():
 		target.paralyzed = "n"
-		print("Released %s from paralysis." % target.name)
+		print("Released %s from paralysis." % target.name, end = " ")
 	elif status == "Poison" and target.isPoisoned():
 		target.poisoned = "n"
-		print("Neutralized %s's poison." % target.name)
+		print("Neutralized %s's poison." % target.name, end = " ")
 	elif status == "Confuse" and target.isConfused():
 		target.confused = "n"
-		print("Returned %s to sanity." % target.name)
+		print("Returned %s to sanity." % target.name, end = " ")
 	elif status == "Revive" and target.isDead():
 		target.current_HP = 1
 		target.lives += 1
-		print("Revived %s." % target.name)
+		print("Revived %s." % target.name, end = " ")
 	elif status == "Full Restore":
 		target.stoned = "n"
 		target.blinded = "n"
@@ -318,9 +353,7 @@ def removeCondition(status, target):
 		target.paralyzed = "n"
 		target.asleep = "n"
 		target.cursed = "n"
-		print("%s was restored." % target.name)
-	else:
-		print("No effect.")
+		print("%s was restored." % target.name, end = " ")
 
 ####################################
 ####### RESISTANCE FUNCTIONS #######

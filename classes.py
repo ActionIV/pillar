@@ -1,7 +1,7 @@
 class Actor(object):
 	def __init__(self, name):
 		self.name = name
-		self.actions_taken = []
+		self.actions_taken = ""
 		self.targets = []
 		self.resists = []
 		
@@ -12,7 +12,10 @@ class Actor(object):
 		return "%s = %s, commands = %s, target = %s" % (self.name, self.role, self.actions_taken, self.target_type)
 
 	def add_action(self, command):
-		self.actions_taken.append(command)
+		if not self.actions_taken:
+			self.actions_taken = command
+		else:
+			self.actions_taken = self.actions_taken + ", " + command
 
 	def add_target(self, target):
 		self.targets.append(target)
@@ -97,6 +100,7 @@ class Actor(object):
 	paralyzed = "n"
 	poisoned = "n"
 	confused = "n"
+	df_index = 0
 		
 class Enemy(Actor):
 	def __init__(self, name):
