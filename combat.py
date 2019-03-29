@@ -36,7 +36,7 @@ def battleStatus(survivors):
 	else:
 		return True
 
-def postBattle(combatants):
+def postBattle(combatants, m_skills, growth_rates):
 	enemies = []
 	players = []
 	for each in range(len(combatants)):
@@ -45,27 +45,73 @@ def postBattle(combatants):
 		elif combatants[each].role == "Player":
 			players.append(combatants[each])
 
-	# GOLD
-	total_gold = 0
+	# GOLD, ITEMS, AND MEAT
 	defeated = Counter(enemies)
 	defeated.keys()
+	highest_ds = 1
+	total_gold = 0
+
 	for key, number in defeated.items():
+		drop_roll = random.randint(1,100)
+		drop_chance = 20 + number
 		enemy_level = 1
+
 		for enemy in range(len(combatants)):
 			if combatants[enemy].name == key:
-				enemy_level = combatants[enemy].DS
-				break
-		total_gold = total_gold + (33 + (3*(number-1))) * enemy_level * number
-	indy_gold = round(total_gold / len(players))
-	print("Each party member receives %d GP." % indy_gold)
+				if drop_roll <= drop_chance:
+					# Meat drop for monsters
+					if combatants[enemy].Type == 2:
+						print("%s's meat!" % combatants[enemy].name)
+					# Item drops for humans, mutants, and robots
+					elif combatants[enemy].Type in (0,1,3):
+						print("%s dropped ITEM." % combatants[enemy].name)
+					break
+				# Otherwise, drop gold
+				else:
+					enemy_level = combatants[enemy].DS
+					if enemy_level > highest_ds:
+						highest_ds = enemy_level
+					total_gold = total_gold + (33 + (3*(number-1))) * enemy_level * number
+					break
+		indy_gold = round(total_gold / len(players))
+		print("Each party member receives %d GP." % indy_gold)
 
-	# ITEM DROPS
+	# SKILL AND STAT GAIN
+	for pc in range(len(players)):
+		if players[pc].family in ("Human", "Mutant"):
+			# VARIABLES
+			skill_base = growth_rates.loc[players[pc].family, "SKILL"]
+			skill_bonus = growth_rates.loc[players[pc].family, "SKILL BONUS"]
+			hp_base = growth_rates.loc[players[pc].family, "HP"]
+			hp_bonus = growth_rates.loc[players[pc].family, "HP BONUS"]
+			str_base = growth_rates.loc[players[pc].family, "STR"]
+			str_bonus = growth_rates.loc[players[pc].family, "STR BONUS"]
+			agl_base = growth_rates.loc[players[pc].family, "AGL"]
+			agl_bonus = growth_rates.loc[players[pc].family, "AGL BONUS"]
+			mana_base = growth_rates.loc[players[pc].family, "MANA"]
+			mana_bonus = growth_rates.loc[players[pc].family, "MANA BONUS"]
+			def_base = growth_rates.loc[players[pc].family, "DEF"]
+			def_bonus = growth_rates.loc[players[pc].family, "DEF BONUS"]
 
-	# HUMAN AND MUTANT STATS
+			# HP and SKILL DENOMINATOR
+			# DS level formula could be converted to 26*MHP / (MHP+1300)
+			hp_level = int(players[pc].HP / ((players[pc].HP / 26) + 50))
+			
+			# HP and SKILL CHANCE
+			hp_chance = hp_base + hp_bonus * (highest_ds - hp_level)
+			hp_roll = random.randint(1,200)
+			if hp_roll <= hp_chance:
+				hp_gain = int(players[pc].HP / 50) + random.randint(6,11)
+				players[pc].HP = players[pc].HP + hp_gain
+				print("%s max HP increased by %d." % (players[pc].name, hp_gain))
+				## NEED TO HAVE IT WRITE TO THE PLAYERS TABLE
 
-	# MUTANT SKILLS
+			# MUTANT SKILLS
+#			if players[pc].family == "Mutant":
 
-	# MEAT DROP
+
+
+
 
 def afterTurn(attacker):
 	attacker.add_action(attacker.command)

@@ -5,7 +5,7 @@ import openpyxl
 from collections import Counter
 from classes import Player, Enemy, NPC, Actor, Command
 from combat import (randomTarget, battleStatus, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition,
-inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition, applyHeal)
+inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition, applyHeal, postBattle)
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsx"
@@ -18,6 +18,8 @@ writer = pandas.ExcelWriter(path3, engine = 'openpyxl')
 monsters = workbook.parse("Monster", index_col = 'Index')
 commands = workbook.parse("Weapon", index_col = 'Index')
 ms_prob = workbook.parse("Move Probability")
+growth = workbook.parse("Growth Rates", index_col = 'RACE')
+m_skills = workbook.parse("Mutant Skills")
 
 # Loop through each sheet of the battle log, appending each to the battles list
 battles = []
@@ -872,24 +874,43 @@ while run_sim != "n":
 				applyDamage(attacker.HP, attacker)
 				print("%s sacrificed their life." % attacker.name)
 			combatants[count] = afterTurn(attacker)
-			if not battleStatus(combatants):
+			
+			# Check survivors
+			party_members = 0
+			enemies = 0
+
+			for count in range(len(combatants)):
+				if combatants[count].role == "Enemy" and combatants[count].isTargetable():
+					enemies += 1
+				elif combatants[count].role in ("Player", "NPC") and combatants[count].isTargetable():
+					party_members += 1
+			# Print if one side has no survivors, otherwise continue on
+			if party_members == 0:
+				print("Odin beckons...")
 				another_round = "n"
 				break
-		for each in range(len(combatants)):
-			combatants[each] = endOfTurn(combatants[each], commands)
-			# Should only be needed for "Regained sanity" purposes...and should go away in Alpha
-			# Being used for Surprise rounds...which means the input approach is not a good solution
-			if combatants[each].role == "Player" and combatants[each].command == "None":
-				combatants[each].command = input("New command for %s: " % combatants[each].name)
-				combatants[each].target_type = input("New target for %s: " % combatants[each].name)
-#				pc_row = 0
-#				for pc in range(len(party_order)):
-#					if combatants[each].name == party_order[pc][0]:
-#						pc_row = party_order[pc][2]
-#						break
-#				combatants[each].command = active_battle.iloc[pc_row, 10]
-#				combatants[each].target_type = active_battle.iloc[pc_row, 11]
+			elif enemies == 0:
+				print("Right on!")
+				postBattle(combatants, m_skills, growth)
+				another_round = "n"
+				break
+
+		# If the battle didn't end, perform end of round operations
 		if another_round != "n":
+			for each in range(len(combatants)):
+				combatants[each] = endOfTurn(combatants[each], commands)
+				# Should only be needed for "Regained sanity" purposes...and should go away in Alpha
+				# Being used for Surprise rounds...which means the input approach is not a good solution
+				if combatants[each].role == "Player" and combatants[each].command == "None":
+					combatants[each].command = input("New command for %s: " % combatants[each].name)
+					combatants[each].target_type = input("New target for %s: " % combatants[each].name)
+	#				pc_row = 0
+	#				for pc in range(len(party_order)):
+	#					if combatants[each].name == party_order[pc][0]:
+	#						pc_row = party_order[pc][2]
+	#						break
+	#				combatants[each].command = active_battle.iloc[pc_row, 10]
+	#				combatants[each].target_type = active_battle.iloc[pc_row, 11]
 			# Reset surprise flags
 			enemy_surprise = False
 			enemy_warning = False
