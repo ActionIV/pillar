@@ -4,7 +4,7 @@ import operator
 import openpyxl
 from collections import Counter
 from classes import Player, Enemy, NPC, Actor, Command
-from combat import (randomTarget, battleStatus, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition,
+from combat import (randomTarget, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition,
 inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition, applyHeal, postBattle)
 
 path1 = r"FFL2 Data.xlsx"
@@ -19,7 +19,7 @@ monsters = workbook.parse("Monster", index_col = 'Index')
 commands = workbook.parse("Weapon", index_col = 'Index')
 ms_prob = workbook.parse("Move Probability")
 growth = workbook.parse("Growth Rates", index_col = 'RACE')
-m_skills = workbook.parse("Mutant Skills")
+m_skills = workbook.parse("Mutant Skills", index_col = 'DS')
 
 # Loop through each sheet of the battle log, appending each to the battles list
 battles = []
@@ -47,6 +47,7 @@ for each in range(len(battles)):
 	battles[each]["CURRENT MANA"].fillna(-1, inplace=True)
 	battles[each]["CURRENT DEF"].fillna(-1, inplace=True)
 	battles[each]["ACTIONS TAKEN"].fillna("", inplace = True)
+	battles[each]["STATS USED"].fillna("", inplace = True)
 
 run_sim = "y"
 while run_sim != "n":
@@ -131,7 +132,7 @@ while run_sim != "n":
 		current_com.paralyzed = active_battle.iloc[current_com.group, 16]
 		current_com.poisoned = active_battle.iloc[current_com.group, 17]
 		current_com.confused = active_battle.iloc[current_com.group, 18]
-		current_com.add_action(active_battle.iloc[current_com.group, 19])
+		current_com.addAction(active_battle.iloc[current_com.group, 19], active_battle.iloc[current_com.group, 20])
 	
 		# Lookup the static Enemy data
 		if current_com.role == "Enemy":
@@ -172,6 +173,12 @@ while run_sim != "n":
 				current_com.magi_count = int(equipped_magi[-1:])
 			else:
 				current_com.magi = "blank"
+
+			# Grab natural stats for purposes of stat gain in humans and mutants. Do it for all just in case
+			current_com.natural_str = players.loc[current_com.name,"Natural STR"]
+			current_com.natural_agl = players.loc[current_com.name,"Natural AGL"]
+			current_com.natural_mana = players.loc[current_com.name,"Natural MANA"]
+			current_com.natural_def = players.loc[current_com.name,"Natural DEF"]
 		
 			#There should be a better way to do this...but here's the lazy way
 			current_com.skills.append(players.loc[current_com.name,"S0"])
@@ -395,11 +402,11 @@ while run_sim != "n":
 							print("A barrier covered...someone?")
 						else:
 							print("")
-						combatants[count] = afterTurn(attacker)
+						combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"])
 						continue
 					elif attacker.target_type in ("Counter", "Reflect"):
 						print("%s is waiting for the attack." % attacker.name)
-						combatants[count] = afterTurn(attacker)
+						combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"])
 						continue
 					elif attacker.target_type == "All":
 						for each in range(len(enemy_groups)):
@@ -458,12 +465,12 @@ while run_sim != "n":
 						print("A barrier covered the enemies.")
 					else:
 						print("")
-					combatants[count] = afterTurn(attacker)
+					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"])
 					continue
 				# Counter and reflect effects happen at start of turn. This is an announcement of the ability's usage on the character's turn
 				elif attacker.target_type in ("Counter", "Reflect"):
 					print("%s is waiting for the attack." % attacker.name)
-					combatants[count] = afterTurn(attacker)
+					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"])
 					continue
 				elif attacker.target_type == "All Enemies":
 					for each in range(len(party_order)):
@@ -506,12 +513,12 @@ while run_sim != "n":
 						print("A barrier covered the party.")
 					else:
 						print("")
-					combatants[count] = afterTurn(attacker)
+					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"])
 					continue
 				# May need logic to set a counter/reflect flag at beginning of a round so not every attack or spell is countered
 				elif temp_target in ("Counter", "Reflect"):
 					print("%s is waiting for the attack." % attacker.name)
-					combatants[count] = afterTurn(attacker)
+					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"])
 					continue
 				elif temp_target == "All Enemies":
 					for each in range(len(enemy_groups)):
@@ -726,7 +733,7 @@ while run_sim != "n":
 								else:
 									absorb = applyHeal(absorb, attacker)
 									print("Absorbed %d HP." % absorb, end = " ")
-							print("%d damage to %s." % (damage, attacker.targets[foe]), end = " ")
+							print("%d damage." % damage, end = " ")
 							if applyDamage(damage, target) == 1:
 								print("%s fell." % target.name)
 							elif "WindUp" in command.effect:
@@ -873,7 +880,7 @@ while run_sim != "n":
 			if "Sacrifice" in command.effect:
 				applyDamage(attacker.HP, attacker)
 				print("%s sacrificed their life." % attacker.name)
-			combatants[count] = afterTurn(attacker)
+			combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"])
 			
 			# Check survivors
 			party_members = 0
@@ -962,6 +969,7 @@ while run_sim != "n":
 			active_battle.iloc[count,17] = combatants[count].poisoned
 			active_battle.iloc[count,18] = combatants[count].confused
 			active_battle.iloc[count,19] = combatants[count].actions_taken
+			active_battle.iloc[count,20] = combatants[count].stats_used
 #			active_battle.at[count,"ACTIONS TAKEN"] = combatants[count].actions_taken
 		battles[i] = active_battle.copy()
 		save_list.append(tuple((i, log.sheet_names[i+1])))
@@ -982,12 +990,13 @@ if char_sheets == "y":
 		print("CLASS: %s" % players.iloc[count, 2])
 		print("HP: %d / STR: %d / DEF: %d / AGL: %d / MANA: %d" % (players.iloc[count, 3],players.iloc[count, 5],players.iloc[count, 7],players.iloc[count, 9],players.iloc[count, 11]))
 		print("[", end = "")
-		for skill in range(8):
-			if skill < 7:
+		for skill in range(16):
+			if skill < 15:
 				print(players.iloc[count,skill+12], end = ", ")
+				skill += 1
 			else:
 				print(players.iloc[count,skill+12], end = "]\n")
-		print("MAGI: %s" % players.iloc[count, 20])
-		print("OTHER MAGI: %s" % players.iloc[count, 21])
-		print("INVENTORY: %s" % players.iloc[count,22])
+		print("MAGI: %s" % players.iloc[count, 28])
+		print("OTHER MAGI: %s" % players.iloc[count, 30])
+		print("INVENTORY: %s" % players.iloc[count,31])
 		print("")

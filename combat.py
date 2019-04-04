@@ -16,25 +16,25 @@ def randomTarget(target_list, combatants):
 ####### END OF TURN FUNCTIONS #######
 #####################################
 
-def battleStatus(survivors):
-	players = 0
-	enemies = 0
+# def battleStatus(survivors):
+# 	players = 0
+# 	enemies = 0
 
-	for count in range(len(survivors)):
-		if survivors[count].role == "Enemy" and survivors[count].isTargetable():
-			enemies += 1
-		elif survivors[count].role in ("Player", "NPC") and survivors[count].isTargetable():
-			players += 1
-	# Print if one side has no survivors, otherwise continue on
-	if players == 0:
-		print("Odin beckons...")
-		return False
-	elif enemies == 0:
-		print("Right on!")
-		postBattle(survivors)
-		return False
-	else:
-		return True
+# 	for count in range(len(survivors)):
+# 		if survivors[count].role == "Enemy" and survivors[count].isTargetable():
+# 			enemies += 1
+# 		elif survivors[count].role in ("Player", "NPC") and survivors[count].isTargetable():
+# 			players += 1
+# 	# Print if one side has no survivors, otherwise continue on
+# 	if players == 0:
+# 		print("Odin beckons...")
+# 		return False
+# 	elif enemies == 0:
+# 		print("Right on!")
+# 		postBattle(survivors)
+# 		return False
+# 	else:
+# 		return True
 
 def postBattle(combatants, m_skills, growth_rates):
 	enemies = []
@@ -73,8 +73,8 @@ def postBattle(combatants, m_skills, growth_rates):
 						highest_ds = enemy_level
 					total_gold = total_gold + (33 + (3*(number-1))) * enemy_level * number
 					break
-		indy_gold = round(total_gold / len(players))
-		print("Each party member receives %d GP." % indy_gold)
+	indy_gold = round(total_gold / len(players))
+	print("Each party member receives %d GP." % indy_gold)
 
 	# SKILL AND STAT GAIN
 	for pc in range(len(players)):
@@ -93,28 +93,79 @@ def postBattle(combatants, m_skills, growth_rates):
 			def_base = growth_rates.loc[players[pc].family, "DEF"]
 			def_bonus = growth_rates.loc[players[pc].family, "DEF BONUS"]
 
-			# HP and SKILL DENOMINATOR
+			# HP and SKILL EQUIVALENT LEVEL
 			# DS level formula could be converted to 26*MHP / (MHP+1300)
-			hp_level = int(players[pc].HP / ((players[pc].HP / 26) + 50))
+			hp_level = equivalentLevel(players[pc].HP, 26, 50)
 			
 			# HP and SKILL CHANCE
-			hp_chance = hp_base + hp_bonus * (highest_ds - hp_level)
+			hp_chance = growthChance(hp_base, hp_bonus, highest_ds, hp_level)
 			hp_roll = random.randint(1,200)
 			if hp_roll <= hp_chance:
 				hp_gain = int(players[pc].HP / 50) + random.randint(6,11)
 				players[pc].HP = players[pc].HP + hp_gain
-				print("%s max HP increased by %d." % (players[pc].name, hp_gain))
-				## NEED TO HAVE IT WRITE TO THE PLAYERS TABLE
+				print("%s's Max HP increased by %d." % (players[pc].name, hp_gain))
+				# NEED TO HAVE IT WRITE TO THE PLAYERS TABLE
 
 			# MUTANT SKILLS
-#			if players[pc].family == "Mutant":
+			if players[pc].family == "Mutant":
+				skill_chance = growthChance(skill_base, skill_bonus, highest_ds, hp_level)
+				skill_roll = random.randint(1,200)
+				if skill_roll <= skill_chance:
+					ds_roll = random.randint(1,highest_ds)
+					option_count = m_skills.loc[ds_roll, "Count"]
+					option_roll = random.randint(1,option_count)
+					gained_skill = m_skills.iloc[ds_roll-1, option_roll]
+					for skill in range(4):
+						if players[pc].skills[skill] == 'blank':
+							print("%s acquired %s." % (players[pc].name, gained_skill))
+							players[pc].skills[skill] = gained_skill
+							break
+						elif skill == 3 and players[pc].skills[skill] != 'blank':
+							print("%s lost %s and acquired %s." % (players[pc].name, players[pc].skills[skill], gained_skill))
+							players[pc].skills[skill] = gained_skill
 
+			# OTHER STATS
+			str_count = players[pc].stats_used.count("Str")
+			agl_count = players[pc].stats_used.count("Agl")
+			mana_count = players[pc].stats_used.count("Mana")
+			def_count = players[pc].stats_used.count("Def")
 
+			if statGrowth(players[pc].natural_str, str_count, str_base, str_bonus, highest_ds):
+				players[pc].natural_str += 1
+				print("%s's STR increased by 1." % (players[pc].name))
+				# NEED TO HAVE IT WRITE TO THE PLAYERS TABLE
+			if statGrowth(players[pc].natural_agl, agl_count, agl_base, agl_bonus, highest_ds):
+				players[pc].natural_agl += 1
+				print("%s's AGL increased by 1." % (players[pc].name))
+				# NEED TO HAVE IT WRITE TO THE PLAYERS TABLE
+			if statGrowth(players[pc].natural_mana, mana_count, mana_base, mana_bonus, highest_ds):
+				players[pc].natural_mana += 1
+				print("%s's MANA increased by 1." % (players[pc].name))
+				# NEED TO HAVE IT WRITE TO THE PLAYERS TABLE
+			if statGrowth(players[pc].natural_def, def_count, def_base, def_bonus, highest_ds):
+				players[pc].natural_def += 1
+				print("%s's DEF increased by 1." % (players[pc].name))
+				# NEED TO HAVE IT WRITE TO THE PLAYERS TABLE
 
+# Used for all non-HP stats
+def statGrowth(stat, stat_count, stat_base, stat_bonus, highest_ds):
+	if stat_count > 0:
+		stat_level = equivalentLevel(stat, 20, 5)
+		stat_chance = growthChance(stat_base, stat_bonus, highest_ds, stat_level) + stat_count-1
+		stat_roll = random.randint(1,200)
+		if stat_roll <= stat_chance:
+			return True
 
+def equivalentLevel(stat, const1, const2):
+	level = int(stat / ((stat / const1) + const2))
+	return level
 
-def afterTurn(attacker):
-	attacker.add_action(attacker.command)
+def growthChance(base, bonus, enemy_ds, player_ds):
+	growthChance = base + bonus * (enemy_ds - player_ds)
+	return growthChance
+
+def afterTurn(attacker, stat_used):
+	attacker.addAction(attacker.command, stat_used)
 	attacker.targets.clear()
 	return attacker
 
@@ -212,7 +263,7 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 		damage = 0
 		print("No damage.")
 	else:
-		print("%d damage to %s." % (damage, attacker.name))
+		print("%d damage." % damage)
 		if applyDamage(damage, attacker) == 1:
 			print("%s fell." % attacker.name)
 
