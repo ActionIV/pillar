@@ -36,7 +36,7 @@ def randomTarget(target_list, combatants):
 # 	else:
 # 		return True
 
-def postBattle(combatants, m_skills, growth_rates):
+def postBattle(combatants, m_skills, growth_rates, commands):
 	enemies = []
 	players = []
 	for each in range(len(combatants)):
@@ -64,7 +64,12 @@ def postBattle(combatants, m_skills, growth_rates):
 						print("%s's meat!" % combatants[enemy].name)
 					# Item drops for humans, mutants, and robots
 					elif combatants[enemy].Type in (0,1,3):
-						print("%s dropped ITEM." % combatants[enemy].name)
+						drop = ""
+						while drop == "":
+							item_roll = random.randint(1,len(combatants[enemy].skills))-1
+							if combatants[enemy].skills[item_roll] != "blank" and commands.loc[combatants[enemy].skills[item_roll], "Price"] >= 0:
+								drop = combatants[enemy].skills[item_roll]
+								print("%s dropped %s." % (combatants[enemy].name, drop))
 					break
 				# Otherwise, drop gold
 				else:
@@ -213,6 +218,23 @@ def endOfTurn(attacker, traits):
 ################################
 ####### ATTACK FUNCTIONS #######
 ################################
+
+def hitScore(command, attacker):
+	# Ranged attacks are based on Percent chance unless using a Gun
+	if command.att_type == "Ranged":
+		# All guns and cannons have Robot Race Bonus and use STR as a calculation
+		if command.race_bonus == "Robot":
+			# Robots gain double their STR to hit with guns and cannons
+			if attacker.family == "Robot":
+				return attacker.getStrength() * 2 + command.percent
+			else:
+				return attacker.getStrength() + command.percent
+		# Bows use 2x AGL and the item's hit chance
+		else:
+			return attacker.getAgility() * 2 + command.percent
+	# Melee attacks just use AGL
+	else:
+		return attacker.getAgility() * 2
 
 def frontOfGroup(combatants, att, foe, command):
 	attacker = combatants[att]

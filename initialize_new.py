@@ -4,7 +4,7 @@ import operator
 import openpyxl
 from collections import Counter
 from classes import Player, Enemy, NPC, Actor, Command
-from combat import (randomTarget, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition,
+from combat import (randomTarget, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition, hitScore,
 inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition, applyHeal, postBattle)
 
 path1 = r"FFL2 Data.xlsx"
@@ -38,6 +38,7 @@ commands["Status"].fillna("None", inplace = True)
 commands["Effect"].fillna("None", inplace = True)
 commands["Target Type"].fillna("None", inplace = True)
 commands["Hits"].fillna(1, inplace = True)
+commands["Price"].fillna(-1, inplace = True)
 players.fillna("blank", inplace = True)
 for each in range(len(battles)):
 	battles[each]["COMMAND"].fillna('nan', inplace=True)
@@ -571,22 +572,7 @@ while run_sim != "n":
 					print("%s attacks %s with %s." % (attacker.name, target.name, attacker.command), end = " ")
 
 					# SETTING HIT CHANCE
-					# Ranged attacks are based on Percent chance unless using a Gun
-					if command.att_type == "Ranged":
-						# All guns and cannons have Robot Race Bonus and use STR as a calculation
-						if command.race_bonus == "Robot":
-							# Robots gain double their STR to hit with guns and cannons
-							if attacker.family == "Robot":
-								attacker_hit = attacker.getStrength() * 2 + command.percent
-							else:
-								attacker_hit = attacker.getStrength() + command.percent
-						# Bows use 2x AGL and the item's hit chance
-						else:
-							attacker_hit = attacker.getAgility() * 2 + command.percent
-					# Melee attacks just use AGL
-					else:
-						attacker_hit = attacker.getAgility() * 2
-
+					attacker_hit = hitScore(command, attacker)
 					defender_score = target.getAgility()
 
 					# Blockable logic
@@ -898,7 +884,7 @@ while run_sim != "n":
 				break
 			elif enemies == 0:
 				print("Right on!")
-				postBattle(combatants, m_skills, growth)
+				postBattle(combatants, m_skills, growth, commands)
 				another_round = "n"
 				break
 
