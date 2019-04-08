@@ -41,7 +41,7 @@ commands["Hits"].fillna(1, inplace = True)
 commands["Price"].fillna(-1, inplace = True)
 players.fillna("blank", inplace = True)
 for each in range(len(battles)):
-	battles[each]["COMMAND"].fillna('nan', inplace=True)
+	battles[each]["COMMAND"].fillna("None", inplace=True)
 	battles[each]["CURRENT HP"].fillna(-1, inplace=True)
 	battles[each]["CURRENT STR"].fillna(-1, inplace=True)
 	battles[each]["CURRENT AGL"].fillna(-1, inplace=True)
@@ -352,7 +352,7 @@ while run_sim != "n":
 			# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
 			# Could also be used for random ability selection for players if an appropriate MS were assigned
 			# May want to add one for when MS exists, another for completely random if it doesn't (or always pick top command)
-			if attacker.command == 'nan' and attacker.role in ("Enemy","NPC"):
+			if attacker.command == "None" and attacker.role in ("Enemy","NPC"):
 				row = attacker.MS
 				roll = random.randint(0,255)
 				for choice in range(7):
@@ -392,7 +392,7 @@ while run_sim != "n":
 				if confuse_roll > 10:
 					print("%s is confused." % attacker.name, end = " ")
 					attacker.target_type = commands.loc[attacker.command, "Target Type"]
-					confuse_targets = party_order + enemy_groups
+					confuse_targets = []
 					if attacker.target_type in ("Single", "Group", "Ally"):
 						sel_target = randomTarget(confuse_targets, combatants)
 						attacker.add_target(sel_target)
@@ -571,22 +571,18 @@ while run_sim != "n":
 				if command.targeting == "Single":
 					print("%s attacks %s with %s." % (attacker.name, target.name, attacker.command), end = " ")
 
-					# SETTING HIT CHANCE
-					attacker_hit = hitScore(command, attacker)
-					defender_score = target.getAgility()
-
 					# Blockable logic
 					if command.att_type in ("Melee", "Ranged"):
 						blockable = True
 					if (def_target_type == "Block" or "Block" in def_command_effect) and blockable:
 						block_roll = random.randint(1,100)
-						if block_roll <= (commands.loc[target.command, "Percent"] + defender_score):
+						if block_roll <= (commands.loc[target.command, "Percent"] + target.getAgility()):
 							blocked = True
 
-					difference = defender_score - attacker_hit
+					# SETTING HIT CHANCE
 					if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
-						hit_chance = 97 - difference
-					# Magic attacks always hit
+						hit_chance = hitScore(command, attacker, target.getAgility())
+					# Magic attacks always hit, as does a weapon with the Never miss property
 					else:
 						hit_chance = 100
 					# DETERMINE HIT
@@ -751,15 +747,50 @@ while run_sim != "n":
 						if foe == 0:
 							print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
 
+					group_hits = 0
+					group_misses = 0
+
+					for each in range(len(combatants)):
+						iter_target = combatants[each]
+						if iter_target.command != "None":
+							foe_target_type = commands.loc[iter_target.command, "Target Type"]
+							foe_command_effect = commands.loc[iter_target.command, "Effect"]
+						else:
+							foe_target_type = "None"
+							foe_command_effect = "None"
+						# Blockable logic
+						if command.att_type in ("Melee", "Ranged"):
+							blockable = True
+						if (foe_target_type == "Block" or "Block" in foe_command_effect) and blockable:
+							block_roll = random.randint(1,100)
+							if block_roll <= (commands.loc[iter_target.command, "Percent"] + iter_target.getAgility()):
+								blocked = True
+
+						# SETTING HIT CHANCE
+						if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
+							hit_chance = hitScore(command, attacker, iter_target.getAgility())
+						# Magic attacks always hit, as does a weapon with the Never miss property
+						else:
+							hit_chance = 100
+						# DETERMINE HIT
+						hit_roll = random.randint(1,100)
+						if hit_roll <= hit_chance:
+							group_hits += 1
+
+						# Melee attacks get blocked fully (even status-based ones)
+						if (blocked == True and command.att_type == "Melee"):
+							group_misses += 1
+
+						# Nullify - end the attack since it was nullified on target
+						if ("Nullify" in foe_command_effect or foe_target_type == "Nullify") and command.att_type == "Magic":
+							group_misses += 1
+						
+						group_hits = group_hits - group_misses
+
 					# Reflect - change target into the attacker
 					if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
 						print("%s reflected the attack." % target.command)
 						target = attacker
-
-					# Nullify - end the attack since it was nullified on target
-					elif ("Nullify" in def_command_effect or def_target_type == "Nullify") and command.att_type == "Magic":
-						print("%s repulsed the attack." % target.command)
-						continue
 
 					# Check resistances
 					if target.role == "Enemy":
@@ -805,17 +836,27 @@ while run_sim != "n":
 						print("No damage.")
 					else:
 						# Loop through combatants to deal damage to all members of a group
+						num_hits = 0
 						body_count = 0
-						for who in range(len(combatants)):
-							# Only damage those matching the target name and that are not already dead or stoned
-							if combatants[who].name == target.name and combatants[who].isTargetable():
-								body_count += applyDamage(damage, combatants[who])
-						# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
-						print("%d damage to %s group." % (damage, target.name), end = " ")
-						if body_count > 0:
-							print("Defeated %d." % body_count)
+						if group_hits > 0:
+							for who in range(len(combatants)):
+								# Only damage those matching the target name and that are not already dead or stoned
+								if combatants[who].name == target.name and combatants[who].isTargetable():
+									body_count += applyDamage(damage, combatants[who])
+									num_hits += 1
+								if num_hits == group_hits:
+									break
+
+							# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
+							print("%d damage to %s group." % (damage, target.name), end = " ")
+							if group_misses > 0:
+								print("Missed %d." % group_misses)
+							if body_count > 0:
+								print("Defeated %d." % body_count)
+							else:
+								print("")
 						else:
-							print("")
+							print("Missed!")
 
 				elif command.targeting == "Ally":
 					print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")

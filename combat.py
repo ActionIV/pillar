@@ -3,14 +3,22 @@ from collections import Counter
 
 def randomTarget(target_list, combatants):
 	target = ""
-	while target == "":
-		roll = random.randint(0,len(target_list)-1)
-		random_who = target_list[roll][2]
-		if combatants[random_who].isTargetable():
-			target = target_list[roll][0]
-			return target
-		else:
-			continue
+	if not target_list:
+		while target == "":
+			roll = random.randint(0, len(combatants)-1)
+			if combatants[roll].isTargetable():
+				return combatants[roll].name
+			else:
+				continue
+	else:
+		while target == "":
+			roll = random.randint(0,len(target_list)-1)
+			random_who = target_list[roll][2]
+			if combatants[random_who].isTargetable():
+				target = target_list[roll][0]
+				return target
+			else:
+				continue
 
 #####################################
 ####### END OF TURN FUNCTIONS #######
@@ -212,14 +220,14 @@ def endOfTurn(attacker, traits):
 				print("%s regenerates %d HP." % (attacker.name, heal))
 
 	if attacker.role == "Enemy":
-		attacker.command = 'nan'
+		attacker.command = "None"
 	return attacker
 
 ################################
 ####### ATTACK FUNCTIONS #######
 ################################
 
-def hitScore(command, attacker):
+def hitScore(command, attacker, target_agl):
 	# Ranged attacks are based on Percent chance unless using a Gun
 	if command.att_type == "Ranged":
 		# All guns and cannons have Robot Race Bonus and use STR as a calculation
@@ -231,10 +239,10 @@ def hitScore(command, attacker):
 				return attacker.getStrength() + command.percent
 		# Bows use 2x AGL and the item's hit chance
 		else:
-			return attacker.getAgility() * 2 + command.percent
+			return attacker.getAgility() * 2 + command.percent - target_agl
 	# Melee attacks just use AGL
 	else:
-		return attacker.getAgility() * 2
+		return 100 - (2 * (target_agl - attacker.getAgility()))
 
 def frontOfGroup(combatants, att, foe, command):
 	attacker = combatants[att]
