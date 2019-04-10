@@ -39,6 +39,15 @@ commands["Effect"].fillna("None", inplace = True)
 commands["Target Type"].fillna("None", inplace = True)
 commands["Hits"].fillna(1, inplace = True)
 commands["Price"].fillna(-1, inplace = True)
+players["S0 Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
+players["S1 Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
+players["S2 Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
+players["S3 Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
+players["S4 Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
+players["S5 Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
+players["S6 Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
+players["S7 Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
+players["MAGI Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
 players.fillna("blank", inplace = True)
 for each in range(len(battles)):
 	battles[each]["COMMAND"].fillna("None", inplace=True)
@@ -190,8 +199,17 @@ while run_sim != "n":
 			current_com.skills.append(players.loc[current_com.name,"S5"])
 			current_com.skills.append(players.loc[current_com.name,"S6"])
 			current_com.skills.append(players.loc[current_com.name,"S7"])
+			current_com.uses.append(players.loc[current_com.name,"S0 Uses Left"])
+			current_com.uses.append(players.loc[current_com.name,"S1 Uses Left"])
+			current_com.uses.append(players.loc[current_com.name,"S2 Uses Left"])
+			current_com.uses.append(players.loc[current_com.name,"S3 Uses Left"])
+			current_com.uses.append(players.loc[current_com.name,"S4 Uses Left"])
+			current_com.uses.append(players.loc[current_com.name,"S5 Uses Left"])
+			current_com.uses.append(players.loc[current_com.name,"S6 Uses Left"])
+			current_com.uses.append(players.loc[current_com.name,"S7 Uses Left"])
 			if current_com.magi != "blank":
 				current_com.skills.append(current_com.magi)
+				current_com.uses.append(players.loc[current_com.name,"MAGI Uses Left"])
 
 		# Should be NPC code, but no separate sheet for that yet
 		else:
@@ -543,7 +561,7 @@ while run_sim != "n":
 			for foe in range(len(attacker.targets)):
 				# Select the front-most member of a group with the same name (i.e. attack the front-most enemy of a group)
 				# FUNCTION ONLY CALLED ONCE. MOVE IT BACK?
-				defender = frontOfGroup(combatants, count, foe, command)
+				defender = frontOfGroup(combatants, attacker, foe, command)
 
 				# Defender == 100 means that group is gone. Go to the next foe
 				if defender == 100:
@@ -572,7 +590,7 @@ while run_sim != "n":
 					print("%s attacks %s with %s." % (attacker.name, target.name, attacker.command), end = " ")
 
 					# Blockable logic
-					if command.att_type in ("Melee", "Ranged"):
+					if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
 						blockable = True
 					if (def_target_type == "Block" or "Block" in def_command_effect) and blockable:
 						block_roll = random.randint(1,100)
@@ -750,6 +768,7 @@ while run_sim != "n":
 					group_hits = 0
 					group_misses = 0
 
+					# Iterate through every enemy in a Group to allow for misses or nullifies to be tallied
 					for each in range(len(combatants)):
 						iter_target = combatants[each]
 						if iter_target.command != "None":
@@ -758,8 +777,9 @@ while run_sim != "n":
 						else:
 							foe_target_type = "None"
 							foe_command_effect = "None"
-						# Blockable logic
-						if command.att_type in ("Melee", "Ranged"):
+
+						# Blockable logic - attack must be Melee or Ranged and not have the "Never miss" property
+						if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
 							blockable = True
 						if (foe_target_type == "Block" or "Block" in foe_command_effect) and blockable:
 							block_roll = random.randint(1,100)
@@ -778,7 +798,8 @@ while run_sim != "n":
 							group_hits += 1
 
 						# Melee attacks get blocked fully (even status-based ones)
-						if (blocked == True and command.att_type == "Melee"):
+						# Added Ranged to the list for Group and All Enemy attacks
+						if (blocked == True and command.att_type in ("Melee", "Ranged")):
 							group_misses += 1
 
 						# Nullify - end the attack since it was nullified on target
@@ -788,6 +809,8 @@ while run_sim != "n":
 						group_hits = group_hits - group_misses
 
 					# Reflect - change target into the attacker
+					# Cannot be used by monsters that can appear in groups due to group issues. Would require calling all combat code below
+					# inside the Reflect check
 					if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
 						print("%s reflected the attack." % target.command)
 						target = attacker
@@ -821,12 +844,20 @@ while run_sim != "n":
 								else:
 									critical_hit = True
 						
+						# No multi-hit ranged attacks
 						damage = offense - defense
 
+						# Ranged attacks get blocked for 50% damage
+						# Bug:  blocked will only be true if the last enemy in a group blocked the attack.
+						# Temp fix:  add blocked ranged group attacks to the miss count.
+						# if blocked == True:
+						# 	damage = int(damage/2)
+
+						# If weapon resistance is found against a non-magical attack, damage is halved
 						if command.att_type in ("Melee", "Ranged") and checkResistance(target.resists, "Weapon", command.status, barriers):
 							damage = int(damage/2)
-						if critical_hit:
-							damage = damage * 1.5
+						if critical_hit == True:
+							damage = int(damage*1.5)
 
 					# No damage on pure Status attacks
 					if command.stat == "Status":
@@ -954,12 +985,19 @@ while run_sim != "n":
 
 	# Print party status line at the end of a simulation
 	for each in range(len(party_order)):
-		for count in range(len(combatants)):
-			if combatants[count].name == party_order[each][0]:
-				print("| %s: %d/%d %s" % (combatants[count].name, combatants[count].current_HP, combatants[count].HP, combatants[count].characterStatus()), end = " |")
-
-	# Need only for endline during testing phase
+		pos = party_order[each][2]
+		print("| %s: %d/%d %s" % (combatants[pos].name, combatants[pos].current_HP, combatants[pos].HP, combatants[pos].characterStatus()), end = " |")
 	print("")
+	# BLOCK FOR PRINTING SKILLS COUNTS AT THE END OF A BATTLE
+	# for each in range(len(party_order)):
+	# 	pos = party_order[each][2]
+	# 	print(combatants[pos].name, end = ": [")
+	# 	for skill in range(len(combatants[pos].skills)):
+	# 		if combatants[pos].uses[skill] == -1:
+	# 			pass
+	# 		else:
+	# 			print("%s - %d" % (combatants[pos].skills[skill], combatants[pos].uses[skill]), end = ", ")
+	# 	print("]\n")
 
 	# Print enemy status line at the end of a simulation
 	enemy_list = []
@@ -997,7 +1035,6 @@ while run_sim != "n":
 			active_battle.iloc[count,18] = combatants[count].confused
 			active_battle.iloc[count,19] = combatants[count].actions_taken
 			active_battle.iloc[count,20] = combatants[count].stats_used
-#			active_battle.at[count,"ACTIONS TAKEN"] = combatants[count].actions_taken
 		battles[i] = active_battle.copy()
 		save_list.append(tuple((i, log.sheet_names[i+1])))
 
@@ -1017,12 +1054,26 @@ if char_sheets == "y":
 		print("CLASS: %s" % players.iloc[count, 2])
 		print("HP: %d / STR: %d / DEF: %d / AGL: %d / MANA: %d" % (players.iloc[count, 3],players.iloc[count, 5],players.iloc[count, 7],players.iloc[count, 9],players.iloc[count, 11]))
 		print("[", end = "")
-		for skill in range(16):
-			if skill < 15:
-				print(players.iloc[count,skill+12], end = ", ")
-				skill += 1
+		skill = 12
+		while skill < 28:
+			if skill < 26:
+				if players.iloc[count,skill] == "blank":
+					print("EMPTY", end = ", ")
+				elif players.iloc[count,skill+1] == -1:
+					print(players.iloc[count,skill], end = ", ")
+				else:
+					print(players.iloc[count,skill], end = " - ")
+					print(players.iloc[count,skill+1], end = ", ")
+				skill += 2
 			else:
-				print(players.iloc[count,skill+12], end = "]\n")
+				if players.iloc[count,skill] == "blank":
+					print("EMPTY", end = "]\n")
+				elif players.iloc[count,skill+1] == -1:
+					print(players.iloc[count,skill], end = "]\n")
+				else:
+					print(players.iloc[count,skill], end = " - ")
+					print(players.iloc[count,skill+1], end = "]\n")
+				break
 		print("MAGI: %s" % players.iloc[count, 28])
 		print("OTHER MAGI: %s" % players.iloc[count, 30])
 		print("INVENTORY: %s" % players.iloc[count,31])

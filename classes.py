@@ -169,6 +169,7 @@ class Player(Actor):
 	def __init__(self, name):
 		Actor.__init__(self, name)
 		self.skills = []
+		self.uses = []
 	
 	def getRole(self):
 	 	return self.role
@@ -219,6 +220,7 @@ class NPC(Actor):
 	def __init__(self, name):
 		Actor.__init__(self, name)
 		self.skills = []
+		self.uses = []
 	
 	def getRole(self):
 	 	return self.role

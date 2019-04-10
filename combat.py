@@ -244,8 +244,7 @@ def hitScore(command, attacker, target_agl):
 	else:
 		return 100 - (2 * (target_agl - attacker.getAgility()))
 
-def frontOfGroup(combatants, att, foe, command):
-	attacker = combatants[att]
+def frontOfGroup(combatants, attacker, foe, command):
 	priority = 100
 	defender = 100
 
@@ -310,7 +309,7 @@ def rollDamage(command, attacker):
 	multiplier = command.multiplier
 	element = command.element
 	if stat == "Str":
-		damage = calculateDamage(attacker.getStrength(),multiplier)
+		damage = calculateDamage(attacker.getStrength(), multiplier)
 	# Currently, Blind status will also reduce AGL damage. Leave it or fix it?
 	elif stat == "Agl":
 		damage = calculateDamage(attacker.getAgility(), multiplier)
