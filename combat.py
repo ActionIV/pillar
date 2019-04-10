@@ -177,9 +177,33 @@ def growthChance(base, bonus, enemy_ds, player_ds):
 	growthChance = base + bonus * (enemy_ds - player_ds)
 	return growthChance
 
-def afterTurn(attacker, stat_used):
+def afterTurn(attacker, stat_used, table):
 	attacker.addAction(attacker.command, stat_used)
 	attacker.targets.clear()
+	skill_slot = 0
+	if attacker.role in ("Player", "NPC"):
+		for slot in range(len(attacker.skills)):
+			if attacker.command == attacker.skills[slot]:
+				skill_slot = slot
+				break
+		if skill_slot == 0:
+			table.loc[attacker.name, "S0 Uses Left"] -= 1
+		elif skill_slot == 1:
+			table.loc[attacker.name, "S1 Uses Left"] -= 1
+		elif skill_slot == 2:
+			table.loc[attacker.name, "S2 Uses Left"] -= 1
+		elif skill_slot == 3:
+			table.loc[attacker.name, "S3 Uses Left"] -= 1
+		elif skill_slot == 4:
+			table.loc[attacker.name, "S4 Uses Left"] -= 1
+		elif skill_slot == 5:
+			table.loc[attacker.name, "S5 Uses Left"] -= 1
+		elif skill_slot == 6:
+			table.loc[attacker.name, "S6 Uses Left"] -= 1
+		elif skill_slot == 7:
+			table.loc[attacker.name, "S7 Uses Left"] -= 1
+		else:
+			table.loc[attacker.name, "MAGI Uses Left"] -= 1
 	return attacker
 
 def endOfTurn(attacker, traits):

@@ -421,11 +421,11 @@ while run_sim != "n":
 							print("A barrier covered...someone?")
 						else:
 							print("")
-						combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"])
+						combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
 						continue
 					elif attacker.target_type in ("Counter", "Reflect"):
 						print("%s is waiting for the attack." % attacker.name)
-						combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"])
+						combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
 						continue
 					elif attacker.target_type == "All":
 						for each in range(len(enemy_groups)):
@@ -484,12 +484,12 @@ while run_sim != "n":
 						print("A barrier covered the enemies.")
 					else:
 						print("")
-					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"])
+					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
 					continue
 				# Counter and reflect effects happen at start of turn. This is an announcement of the ability's usage on the character's turn
 				elif attacker.target_type in ("Counter", "Reflect"):
 					print("%s is waiting for the attack." % attacker.name)
-					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"])
+					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
 					continue
 				elif attacker.target_type == "All Enemies":
 					for each in range(len(party_order)):
@@ -532,12 +532,12 @@ while run_sim != "n":
 						print("A barrier covered the party.")
 					else:
 						print("")
-					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"])
+					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
 					continue
 				# May need logic to set a counter/reflect flag at beginning of a round so not every attack or spell is countered
 				elif temp_target in ("Counter", "Reflect"):
 					print("%s is waiting for the attack." % attacker.name)
-					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"])
+					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
 					continue
 				elif temp_target == "All Enemies":
 					for each in range(len(enemy_groups)):
@@ -938,7 +938,7 @@ while run_sim != "n":
 			if "Sacrifice" in command.effect:
 				applyDamage(attacker.HP, attacker)
 				print("%s sacrificed their life." % attacker.name)
-			combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"])
+			combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
 			
 			# Check survivors
 			party_members = 0
@@ -1055,8 +1055,8 @@ if char_sheets == "y":
 		print("HP: %d / STR: %d / DEF: %d / AGL: %d / MANA: %d" % (players.iloc[count, 3],players.iloc[count, 5],players.iloc[count, 7],players.iloc[count, 9],players.iloc[count, 11]))
 		print("[", end = "")
 		skill = 12
-		while skill < 28:
-			if skill < 26:
+		while skill < 36:
+			if skill < 33:
 				if players.iloc[count,skill] == "blank":
 					print("EMPTY", end = ", ")
 				elif players.iloc[count,skill+1] == -1:
@@ -1064,7 +1064,7 @@ if char_sheets == "y":
 				else:
 					print(players.iloc[count,skill], end = " - ")
 					print(players.iloc[count,skill+1], end = ", ")
-				skill += 2
+				skill += 3
 			else:
 				if players.iloc[count,skill] == "blank":
 					print("EMPTY", end = "]\n")
@@ -1074,7 +1074,7 @@ if char_sheets == "y":
 					print(players.iloc[count,skill], end = " - ")
 					print(players.iloc[count,skill+1], end = "]\n")
 				break
-		print("MAGI: %s" % players.iloc[count, 28])
-		print("OTHER MAGI: %s" % players.iloc[count, 30])
-		print("INVENTORY: %s" % players.iloc[count,31])
+		print("MAGI: %s" % players.iloc[count, 36])
+		print("OTHER MAGI: %s" % players.iloc[count, 38])
+		print("INVENTORY: %s" % players.iloc[count,39])
 		print("")
