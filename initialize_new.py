@@ -8,7 +8,7 @@ from combat import (randomTarget, afterTurn, frontOfGroup, rollDamage, determine
 inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition, applyHeal, postBattle)
 
 path1 = r"FFL2 Data.xlsx"
-path2 = r"Battle Log.xlsx"
+path2 = r"Battle Log.xlsm"
 path3 = r"Battle Results.xlsx"
 
 workbook = pandas.ExcelFile(path1)
@@ -24,6 +24,7 @@ m_skills = workbook.parse("Mutant Skills", index_col = 'DS')
 # Loop through each sheet of the battle log, appending each to the battles list
 battles = []
 save_list = []
+save_players = []
 
 for count in range(len(log.sheet_names)):
 	if count == 0:
@@ -39,6 +40,7 @@ commands["Effect"].fillna("None", inplace = True)
 commands["Target Type"].fillna("None", inplace = True)
 commands["Hits"].fillna(1, inplace = True)
 commands["Price"].fillna(-1, inplace = True)
+players["Current HP"].fillna(-1, inplace = True, downcast = 'infer')
 players["S0 Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
 players["S1 Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
 players["S2 Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
@@ -554,8 +556,22 @@ while run_sim != "n":
 					print("Invalid target!")
 					break
 
+			# Logic for finding remaining uses on a command for Players and NPCs
+			skill_slot = 0
+			remaining_uses = 100
+			if attacker.role in ("Player", "NPC"):
+				for slot in range(len(attacker.skills)):
+					if attacker.command == attacker.skills[slot]:
+						skill_slot = slot
+						break
+				if skill_slot < 8:
+					remaining_uses = players.loc[attacker.name, "S%d Uses Left" % skill_slot]
+				else:
+					remaining_uses = players.loc[attacker.name, "MAGI Uses Left"]
+
+			# DO I WANT TO MAKE "USES LEFT" THE WAY MARTIAL ARTS DEAL DAMAGE?
 			# Construct the command class for this instance
-			command = Command(attacker.command, commands)
+			command = Command(attacker.command, commands, remaining_uses)
 
 			# Cycle through targets for attacks
 			for foe in range(len(attacker.targets)):
@@ -568,7 +584,7 @@ while run_sim != "n":
 					if foe == 0 and command.targeting == "All Enemies":
 						print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
 					elif command.targeting not in ("All Enemies", "Allies", "All"):
-						print("%s attacks with %s. Ineffective." % (attacker.name, command.name))
+						print("%s uses %d on %s. Ineffective." % (attacker.name, attacker.command, command.name))
 					continue
 
 				# Combat parameters
@@ -748,7 +764,7 @@ while run_sim != "n":
 
 						# Counter-attacks if any exist and the target survived
 						if target.isActive() and (def_target_type == "Counter" or "Counter" in def_command_effect):
-							counter_command = Command(target.command, commands)
+							counter_command = Command(target.command, commands, 50)
 							if target.role == "Enemy":
 								buildResistances(player_barriers, barriers, commands)
 							else:
@@ -1035,31 +1051,39 @@ while run_sim != "n":
 			active_battle.iloc[count,18] = combatants[count].confused
 			active_battle.iloc[count,19] = combatants[count].actions_taken
 			active_battle.iloc[count,20] = combatants[count].stats_used
+			if combatants[count].role in ("Player", "NPC"):
+				save_players.append(combatants[count].name)
 		battles[i] = active_battle.copy()
 		save_list.append(tuple((i, log.sheet_names[i+1])))
 
 	run_sim = input("Run another battle (y/n)?: ")
 
+# Write all battles that were run to the Battle Results file
 for bat in range(len(save_list)):
  	battles[save_list[bat][0]].to_excel(writer, sheet_name = save_list[bat][1])
 
+# Write the PCs and NPCs that acted to the Battle Results file "Players" tab
 if len(save_list) > 0:
+	# SEE SAVED LINK IN PYTHON FOLDER ON HOW TO WRITE DIRECTLY TO A SPECIFIED COLUMN IN A SHEET
+	players[players.index.isin(save_players)].to_excel(writer, sheet_name = "Players")
+	#players.to_excel(writer, sheet_name = "Players")
 	writer.save()
 
 # Print Character Snapshots
 char_sheets = input("Print character sheets (y/n)?: ")
 if char_sheets == "y":
 	for count in range(len(players.index)):
-		print("CHARACTER: %s  PLAYER: %s" % (players.iloc[count, 0], players.iloc[count, 1]))
-		print("CLASS: %s" % players.iloc[count, 2])
-		print("HP: %d / STR: %d / DEF: %d / AGL: %d / MANA: %d" % (players.iloc[count, 3],players.iloc[count, 5],players.iloc[count, 7],players.iloc[count, 9],players.iloc[count, 11]))
+		print("CHARACTER: %s  PLAYER: %s" % (players.iloc[count, 0], players.iloc[count, 2]))
+		print("CLASS: %s" % players.iloc[count, 3])
+		print("HP: %d | STR: %d | DEF: %d | AGL: %d | MANA: %d" % (players.iloc[count, 5],players.iloc[count, 7],
+		players.iloc[count, 9],players.iloc[count, 11],players.iloc[count, 13]))
 		print("[", end = "")
-		skill = 12
-		while skill < 36:
-			if skill < 33:
+		skill = 14
+		while skill < 38:
+			if skill < 35:
 				if players.iloc[count,skill] == "blank":
 					print("EMPTY", end = ", ")
-				elif players.iloc[count,skill+1] == -1:
+				elif players.iloc[count,skill+1] in (-1, -2):
 					print(players.iloc[count,skill], end = ", ")
 				else:
 					print(players.iloc[count,skill], end = " - ")
@@ -1068,13 +1092,13 @@ if char_sheets == "y":
 			else:
 				if players.iloc[count,skill] == "blank":
 					print("EMPTY", end = "]\n")
-				elif players.iloc[count,skill+1] == -1:
+				elif players.iloc[count,skill+1] in (-1, -2):
 					print(players.iloc[count,skill], end = "]\n")
 				else:
 					print(players.iloc[count,skill], end = " - ")
 					print(players.iloc[count,skill+1], end = "]\n")
 				break
-		print("MAGI: %s" % players.iloc[count, 36])
-		print("OTHER MAGI: %s" % players.iloc[count, 38])
-		print("INVENTORY: %s" % players.iloc[count,39])
+		print("MAGI: %s" % players.iloc[count, 39])
+		print("OTHER MAGI: %s" % players.iloc[count, 40])
+		print("INVENTORY: %s" % players.iloc[count,41])
 		print("")

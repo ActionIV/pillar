@@ -142,6 +142,23 @@ def postBattle(combatants, m_skills, growth_rates, commands):
 			agl_count = players[pc].stats_used.count("Agl")
 			mana_count = players[pc].stats_used.count("Mana")
 			def_count = players[pc].stats_used.count("Def")
+			if players[pc].stats_used.count("Mix") > 0:
+				lowest_stat = ""
+				low_value = 0
+				if players[pc].natural_str > players[pc].natural_agl:
+					lowest_stat = "Agl"
+					low_value = players[pc].natural_agl
+				else:
+					lowest_stat = "Str"
+					low_value = players[pc].natural_str
+				if low_value > players[pc].natural_mana:
+					lowest_stat = "Mana"
+				if lowest_stat == "Str":
+					str_count += 1
+				elif lowest_stat == "Agl":
+					agl_count += 1
+				else:
+					mana_count += 1
 
 			if statGrowth(players[pc].natural_str, str_count, str_base, str_bonus, highest_ds):
 				players[pc].natural_str += 1
@@ -186,22 +203,8 @@ def afterTurn(attacker, stat_used, table):
 			if attacker.command == attacker.skills[slot]:
 				skill_slot = slot
 				break
-		if skill_slot == 0:
-			table.loc[attacker.name, "S0 Uses Left"] -= 1
-		elif skill_slot == 1:
-			table.loc[attacker.name, "S1 Uses Left"] -= 1
-		elif skill_slot == 2:
-			table.loc[attacker.name, "S2 Uses Left"] -= 1
-		elif skill_slot == 3:
-			table.loc[attacker.name, "S3 Uses Left"] -= 1
-		elif skill_slot == 4:
-			table.loc[attacker.name, "S4 Uses Left"] -= 1
-		elif skill_slot == 5:
-			table.loc[attacker.name, "S5 Uses Left"] -= 1
-		elif skill_slot == 6:
-			table.loc[attacker.name, "S6 Uses Left"] -= 1
-		elif skill_slot == 7:
-			table.loc[attacker.name, "S7 Uses Left"] -= 1
+		if skill_slot < 8:
+			table.loc[attacker.name, "S%d Uses Left" % skill_slot] -= 1
 		else:
 			table.loc[attacker.name, "MAGI Uses Left"] -= 1
 	return attacker
@@ -351,6 +354,8 @@ def rollDamage(command, attacker):
 			damage = command.min_dmg + random.randint(1,attacker.getStrength())
 		else:
 			damage = command.min_dmg
+	# elif stat == "Uses":
+	#  	damage = (command.uses - command.remaining) * multiplier
 	else:
 		damage = 0
 	return damage

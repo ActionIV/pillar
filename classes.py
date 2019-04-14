@@ -250,6 +250,8 @@ class NPC(Actor):
 
 class Command:
 	stat = ""
+	uses = 0
+	remaining = 0
 	multiplier = 0
 	att_type = ""
 	targeting = ""
@@ -262,8 +264,10 @@ class Command:
 	percent = 0
 	race_bonus = ""
 
-	def __init__(self, name, commands):
+	def __init__(self, name, commands, remaining_uses):
 		self.name = name
+		self.uses = commands.loc[name, "#Uses"]
+		self.remaining = remaining_uses
 		self.growth = commands.loc[name,"Growth Stat"]
 		self.stat = commands.loc[name,"Damage Stat"]
 		self.multiplier = commands.loc[name,"Multiplier"]
