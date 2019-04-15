@@ -44,7 +44,7 @@ def randomTarget(target_list, combatants):
 # 	else:
 # 		return True
 
-def postBattle(combatants, m_skills, growth_rates, commands):
+def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 	enemies = []
 	players = []
 	for each in range(len(combatants)):
@@ -89,9 +89,28 @@ def postBattle(combatants, m_skills, growth_rates, commands):
 	indy_gold = round(total_gold / len(players))
 	print("Each party member receives %d GP." % indy_gold)
 
-	# SKILL AND STAT GAIN
+	# PLAYER TABLE UPDATES
 	for pc in range(len(players)):
-		if players[pc].family in ("Human", "Mutant"):
+		# Add gold
+		player_table.loc[players[pc].name, "GOLD"] += indy_gold
+		# Set Current HP
+		if players[pc].current_HP > 0:
+			player_table.loc[players[pc].name, "Current HP"] = players[pc].current_HP
+		else:
+			player_table.loc[players[pc].name, "Current HP"] = 1
+		# Status Conditions
+		condition = ""
+		if players[pc].isBlinded():
+			condition.join("BLND")
+		if players[pc].isStoned():
+			condition.join("STON")
+		if players[pc].isCursed():
+			condition.join("CURS")
+		if condition == "":
+			condition = "GOOD"
+		player_table.loc[players[pc].name, "CONDITION"] = condition
+
+		if players[pc].family in ("Human", "Mutant") and players[pc].isTargetable():
 			# VARIABLES
 			skill_base = growth_rates.loc[players[pc].family, "SKILL"]
 			skill_bonus = growth_rates.loc[players[pc].family, "SKILL BONUS"]
@@ -117,7 +136,7 @@ def postBattle(combatants, m_skills, growth_rates, commands):
 				hp_gain = int(players[pc].HP / 50) + random.randint(6,11)
 				players[pc].HP = players[pc].HP + hp_gain
 				print("%s's Max HP increased by %d." % (players[pc].name, hp_gain))
-				# NEED TO HAVE IT WRITE TO THE PLAYERS TABLE
+				player_table.loc[players[pc].name, "HP"] = players[pc].HP
 
 			# MUTANT SKILLS
 			if players[pc].family == "Mutant":
@@ -132,10 +151,12 @@ def postBattle(combatants, m_skills, growth_rates, commands):
 						if players[pc].skills[skill] == 'blank':
 							print("%s acquired %s." % (players[pc].name, gained_skill))
 							players[pc].skills[skill] = gained_skill
+							player_table.loc[players[pc].name, "S%d" % skill] = gained_skill
 							break
 						elif skill == 3 and players[pc].skills[skill] != 'blank':
 							print("%s lost %s and acquired %s." % (players[pc].name, players[pc].skills[skill], gained_skill))
 							players[pc].skills[skill] = gained_skill
+							player_table.loc[players[pc].name, "S%d" % skill] = gained_skill
 
 			# OTHER STATS
 			str_count = players[pc].stats_used.count("Str")
@@ -163,19 +184,19 @@ def postBattle(combatants, m_skills, growth_rates, commands):
 			if statGrowth(players[pc].natural_str, str_count, str_base, str_bonus, highest_ds):
 				players[pc].natural_str += 1
 				print("%s's STR increased by 1." % (players[pc].name))
-				# NEED TO HAVE IT WRITE TO THE PLAYERS TABLE
+				player_table.loc[players[pc].name, "Natural STR"] = players[pc].natural_str
 			if statGrowth(players[pc].natural_agl, agl_count, agl_base, agl_bonus, highest_ds):
 				players[pc].natural_agl += 1
 				print("%s's AGL increased by 1." % (players[pc].name))
-				# NEED TO HAVE IT WRITE TO THE PLAYERS TABLE
+				player_table.loc[players[pc].name, "Natural AGL"] = players[pc].natural_agl
 			if statGrowth(players[pc].natural_mana, mana_count, mana_base, mana_bonus, highest_ds):
 				players[pc].natural_mana += 1
 				print("%s's MANA increased by 1." % (players[pc].name))
-				# NEED TO HAVE IT WRITE TO THE PLAYERS TABLE
+				player_table.loc[players[pc].name, "Natural MANA"] = players[pc].natural_mana
 			if statGrowth(players[pc].natural_def, def_count, def_base, def_bonus, highest_ds):
 				players[pc].natural_def += 1
 				print("%s's DEF increased by 1." % (players[pc].name))
-				# NEED TO HAVE IT WRITE TO THE PLAYERS TABLE
+				player_table.loc[players[pc].name, "Natural DEF"] = players[pc].natural_def
 
 # Used for all non-HP stats
 def statGrowth(stat, stat_count, stat_base, stat_bonus, highest_ds):
@@ -194,6 +215,7 @@ def growthChance(base, bonus, enemy_ds, player_ds):
 	growthChance = base + bonus * (enemy_ds - player_ds)
 	return growthChance
 
+# DEFECT: If the ability used is not in the skill list, the first slot is decremented (skill_slot = 0)
 def afterTurn(attacker, stat_used, table):
 	attacker.addAction(attacker.command, stat_used)
 	attacker.targets.clear()

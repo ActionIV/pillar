@@ -110,6 +110,7 @@ class Actor(object):
 	natural_agl = 0
 	natural_mana = 0
 	natural_def = 0
+	evasion = 0
 		
 class Enemy(Actor):
 	def __init__(self, name):

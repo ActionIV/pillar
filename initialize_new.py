@@ -158,7 +158,7 @@ while run_sim != "n":
 			current_com.Def = monsters.loc[current_com.name,"Def"]
 			current_com.family = monsters.loc[current_com.name,"Family"]
 	
-			#There should be a better way to do this...but here's the lazy way
+			# SEE AfterTurn LOGIC TO REWRITE TO A LOOP
 			current_com.skills.append(monsters.loc[current_com.name,"S0"])
 			current_com.skills.append(monsters.loc[current_com.name,"S1"])
 			current_com.skills.append(monsters.loc[current_com.name,"S2"])
@@ -177,6 +177,13 @@ while run_sim != "n":
 			current_com.Agl = players.loc[current_com.name,"AGL"]
 			current_com.Mana = players.loc[current_com.name,"MANA"]
 			current_com.Def = players.loc[current_com.name,"DEF"]
+			condition = players.loc[current_com.name, "CONDITION"]
+			if "BLND" in condition:
+				current_com.blinded = "y"
+			if "CURS" in condition:
+				current_com.cursed = "y"
+			if "STON" in condition:
+				current_com.stoned = "y"
 
 			# EQUIPPED MAGI
 			equipped_magi = players.loc[current_com.name,"EQUIPPED MAGI"]
@@ -192,7 +199,7 @@ while run_sim != "n":
 			current_com.natural_mana = players.loc[current_com.name,"Natural MANA"]
 			current_com.natural_def = players.loc[current_com.name,"Natural DEF"]
 		
-			#There should be a better way to do this...but here's the lazy way
+			# SEE AfterTurn LOGIC TO REWRITE TO A LOOP
 			current_com.skills.append(players.loc[current_com.name,"S0"])
 			current_com.skills.append(players.loc[current_com.name,"S1"])
 			current_com.skills.append(players.loc[current_com.name,"S2"])
@@ -319,14 +326,14 @@ while run_sim != "n":
 				print("Failed to run!")
 				enemy_surprise = True
 
-		# INITIATIVE
+		# INITIATIVE AND EVASION
 		for count in range(len(combatants)):
 			if combatants[count].current_Str >= combatants[count].current_Def:
-				base_initiative = combatants[count].current_Agl
+				combatants[count].evasion = combatants[count].current_Agl
 			else:
-				base_initiative = combatants[count].current_Agl + combatants[count].current_Str - combatants[count].current_Def
-			variable = (1+(random.randint(1,25)/100))
-			combatants[count].initiative = base_initiative * variable
+				combatants[count].evasion = combatants[count].current_Agl + combatants[count].current_Str - combatants[count].current_Def
+			variable = 1+(random.randint(1,25)/100)
+			combatants[count].initiative = combatants[count].evasion * variable
 
 		# Sort actors based on initiative score
 		combatants = sorted(combatants, key = operator.attrgetter("initiative"), reverse=True)
@@ -615,7 +622,7 @@ while run_sim != "n":
 
 					# SETTING HIT CHANCE
 					if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
-						hit_chance = hitScore(command, attacker, target.getAgility())
+						hit_chance = hitScore(command, attacker, target.evasion)
 					# Magic attacks always hit, as does a weapon with the Never miss property
 					else:
 						hit_chance = 100
@@ -804,7 +811,7 @@ while run_sim != "n":
 
 						# SETTING HIT CHANCE
 						if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
-							hit_chance = hitScore(command, attacker, iter_target.getAgility())
+							hit_chance = hitScore(command, attacker, iter_target.evasion)
 						# Magic attacks always hit, as does a weapon with the Never miss property
 						else:
 							hit_chance = 100
@@ -972,7 +979,7 @@ while run_sim != "n":
 				break
 			elif enemies == 0:
 				print("Right on!")
-				postBattle(combatants, m_skills, growth, commands)
+				postBattle(combatants, m_skills, growth, commands, players)
 				another_round = "n"
 				break
 
@@ -1101,4 +1108,5 @@ if char_sheets == "y":
 		print("MAGI: %s" % players.iloc[count, 39])
 		print("OTHER MAGI: %s" % players.iloc[count, 40])
 		print("INVENTORY: %s" % players.iloc[count,41])
+		print("GOLD: %d" % players.iloc[count,42])
 		print("")
