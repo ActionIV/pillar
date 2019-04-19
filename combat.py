@@ -24,26 +24,6 @@ def randomTarget(target_list, combatants):
 ####### END OF TURN FUNCTIONS #######
 #####################################
 
-# def battleStatus(survivors):
-# 	players = 0
-# 	enemies = 0
-
-# 	for count in range(len(survivors)):
-# 		if survivors[count].role == "Enemy" and survivors[count].isTargetable():
-# 			enemies += 1
-# 		elif survivors[count].role in ("Player", "NPC") and survivors[count].isTargetable():
-# 			players += 1
-# 	# Print if one side has no survivors, otherwise continue on
-# 	if players == 0:
-# 		print("Odin beckons...")
-# 		return False
-# 	elif enemies == 0:
-# 		print("Right on!")
-# 		postBattle(survivors)
-# 		return False
-# 	else:
-# 		return True
-
 def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 	enemies = []
 	players = []
@@ -221,10 +201,7 @@ def afterTurn(attacker, stat_used, table):
 	attacker.targets.clear()
 	skill_slot = 0
 	if attacker.role in ("Player", "NPC"):
-		for slot in range(len(attacker.skills)):
-			if attacker.command == attacker.skills[slot]:
-				skill_slot = slot
-				break
+		skill_slot = attacker.skillSlot()
 		if skill_slot < 8:
 			table.loc[attacker.name, "S%d Uses Left" % skill_slot] -= 1
 		else:
@@ -318,6 +295,12 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 		else:
 			counter_dmg = damage_received
 		damage = int(counter_dmg * command.multiplier / 10 + avenger_str)
+	elif command.stat == "Uses":
+		counter_dmg = (command.min_dmg - command.remaining) * command.multiplier
+		if damage_received < counter_dmg:
+			damage = int(counter_dmg / 2)
+		else:
+			damage = int(damage_received / 2)
 
 	# For MANA or Status-based counters
 	else:
@@ -376,8 +359,10 @@ def rollDamage(command, attacker):
 			damage = command.min_dmg + random.randint(1,attacker.getStrength())
 		else:
 			damage = command.min_dmg
-	# elif stat == "Uses":
-	#  	damage = (command.uses - command.remaining) * multiplier
+	# For Martial Arts, mostly. Reducing total uses while changing the starting point for damage calculation should make this more effective early
+	# but less powerful late in the weapon's existence
+	elif stat == "Uses":
+	  	damage = (command.min_dmg - command.remaining) * multiplier
 	else:
 		damage = 0
 	return damage

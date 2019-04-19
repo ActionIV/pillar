@@ -207,6 +207,11 @@ class Player(Actor):
 			defense += (5+self.magi_count)
 		return defense
 
+	def skillSlot(self):
+		for slot in range(len(self.skills)):
+			if self.command == self.skills[slot]:
+				return slot
+
 class NPC(Actor):
 	role = "NPC"
 	MS = 0
@@ -248,6 +253,11 @@ class NPC(Actor):
 		if self.isCursed():
 			defense = int(defense/2)
 		return defense
+
+	def skillSlot(self):
+		for slot in range(len(self.skills)):
+			if self.command == self.skills[slot]:
+				return slot
 
 class Command:
 	stat = ""
