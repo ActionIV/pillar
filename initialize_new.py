@@ -4,7 +4,7 @@ import operator
 import openpyxl
 from collections import Counter
 from classes import Player, Enemy, NPC, Actor, Command
-from combat import (randomTarget, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition, hitScore, rollGroupSize,
+from combat import (randomTarget, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition, hitScore,
 inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition, applyHeal, postBattle)
 
 path1 = r"FFL2 Data.xlsx"
@@ -20,7 +20,6 @@ commands = workbook.parse("Weapon", index_col = 'Index')
 ms_prob = workbook.parse("Move Probability")
 growth = workbook.parse("Growth Rates", index_col = 'RACE')
 m_skills = workbook.parse("Mutant Skills", index_col = 'DS')
-encounters = workbook.parse("Encounters")
 
 # Loop through each sheet of the battle log, appending each to the battles list
 battles = []
@@ -65,7 +64,6 @@ for each in range(len(battles)):
 print("1. Run simulator")
 print("2. Print character sheets")
 print("3. Monster transformation")
-print("4. Generate random encounter")
 operation = int(input("Enter a number: "))
 
 if operation == 1:
@@ -1168,36 +1166,42 @@ elif operation == 2:
 			print("GOLD: %d" % players.iloc[count,42])
 			print("")
 elif operation == 3:
-	pass
-elif operation == 4:
-	gen = "y"
-	while gen != "n":
-		zone = input("Generate encounter for which zone: ")
-		roll = random.randint(1,256)
-		group1 = ""
-		group2 = ""
-		group3 = ""
-		num1 = 0
-		num2 = 0
-		num3 = 0
+	transformations = workbook.parse("Evolve")
+	not_monsters = ["Human", "Mutant", "Robot"]
+	monster_players = players[players["CLASS"].isin(not_monsters) == False]
+	mp = monster_players.loc[players["PLAYER"] != "NPC"]
+	print(mp["CHARACTER"])
+	who = input("Transform which character?: ")
+	meat = input("Meat from which monster?: ")
+	current_monster = mp.loc[who, "CLASS"]
 
-		zone_table = encounters.loc[encounters["ZONE"] == zone]
-		for row in range(8):
-			if zone_table.iloc[row, 2] >= roll:
-				range1 = str(zone_table.iloc[row, 4])
-				num1 = rollGroupSize(range1)
-				group1 = zone_table.iloc[row, 5]
-				print("{ %s - %d" % (group1, num1), end = " ")
-				if not pandas.isnull(zone_table.iloc[row, 6]):
-					range2 = str(zone_table.iloc[row, 6])
-					num2 = rollGroupSize(range2)
-					group2 = zone_table.iloc[row, 7]
-					print("| %s - %d" % (group2, num2), end = " ")
-					if not pandas.isnull(zone_table.iloc[row, 8]):				
-						range3 = str(zone_table.iloc[row, 8])
-						num3 = rollGroupSize(range3)
-						group3 = zone_table.iloc[row, 9]
-						print("| %s - %d" % (group3, num3), end = " ")
-				print("}")
-				break
-		gen = input("Generate another (y/n)?: ")
+	meat_type = ""
+	meat_class = 0
+	meat_add = 0
+	meat_subtract = 0
+	current_ds = 0
+	current_class = 0
+	current_type = ""
+
+	for row in range(transformations.shape[0]):
+		for col in range(transformations.shape[1]):
+			if transformations.iloc[row,col] == meat:
+				meat_ds = transformations.iloc[row,col+1]
+				meat_class = transformations.loc[row,"FAMILY"]
+				meat_type = transformations.loc[row,"MEAT TYPE"]
+				mead_add = transformations.loc[row,"ADD"]
+				mead_subtract = transformations.loc[row,"SUBTRACT"]
+			elif transformation.iloc[row,col] == current_monster:
+				current_ds = transformations.iloc[row,col+1]
+				current_class = transformations.loc[row,"FAMILY"]
+				current_type = transformations.loc[row,"MEAT TYPE"]
+
+	next_class = current_class + meat_add
+	if next_class > 35:
+		next_class = current_class - meat_subtract
+
+	max_ds = max(current_ds, meat_ds)
+
+
+
+	#print("Current: %s | Meat Class: %d | Meat Type: %s" % (current_class, meat_class, meat_type))
