@@ -1,0 +1,1532 @@
+First Overworld					
+68/256  1-4 Jaguar				
+68/256  1-4 Gang				
+34/256  1 Spider				
+34/256  1 Spider 1 Skelton 1 Jaguar		
+17/256  1 Asigaru				
+17/256  1 Goblin 1 Asigaru 1 Skelton		
+10/256  1 Asigaru				
+8/256   1 Goblin 1 Asigaru 1 Skelton		
+
+
+Cave of North
+68/256  1-4 Jaguar
+68/256  1 Spider 1 Skelton 1 Jaguar
+34/256  1-4 Gang
+34/256  1 Goblin 1 Asigaru 1 Skelton
+17/256  1 Spider
+17/256  1-3 Lizard 1-3 Goblin
+10/256  1 Asigaru
+8/256   1-3 Lizard 1-3 Goblin
+
+
+Relics of the Ancient Gods- Outside		
+68/256  1 Goblin 1 Asigaru 1 Skelton		
+68/256  1-3 Lizard 1-3 Goblin			
+34/256  1 Spider 1 Skelton 1 Jaguar		
+34/256  1-3 Toad 1-3 Fungus			
+17/256  1 Spider 1 Skelton 1 Jaguar		
+17/256  1-3 Toad 1-3 Fungus			
+10/256  1-4 Gang				
+8/256   4-8 Lizard				
+
+
+Relics of the Ancient Gods 1F
+68/256  1-3 Lizard 1-3 Goblin
+68/256  1-3 Toad 1-3 Fungus
+34/256  1 Goblin 1 Asigaru 1 Skelton
+34/256  4-8 Lizard
+17/256  1 Spider 1 Skelton 1 Jaguar
+17/256  4-8 Lizard
+10/256  1-4 Gang
+8/256   4-8 Fly
+
+
+Relics of the Ancient Gods 2F			
+68/256  1-3 Toad 1-3 Fungus			
+68/256  4-8 Lizard				
+34/256  1-3 Lizard 1-3 Goblin			
+34/256  4-8 Fly					
+17/256  1-3 Lizard 1-3 Goblin			
+17/256  1-3 Jaguar 1-3 Toad 1-3 Gang		
+10/256  1 Goblin 1 Asigaru 1 Skelton		
+8/256   1-3 Jaguar 1-3 Toad 1-3 Gang		
+
+
+Relics of the Ancient Gods 3F
+68/256  4-8 Lizard
+68/256  4-8 Fly
+34/256  4-8 Lizard
+34/256  1-3 Jaguar 1-3 Toad 1-3 Gang
+17/256  1-3 Toad 1-3 Fungus
+17/256  1-3 Spider 1-3 Asigaru
+10/256  1-3 Lizard 1-3 Goblin
+8/256   0-3 Skelton 3-5 Goblin 0-3 Fly
+
+
+Ashura's Base 1F				
+68/256  4-8 Fly					
+68/256  1-3 Jaguar 1-3 Toad 1-3 Gang		
+34/256  4-8 Fly					
+34/256  1-3 Jaguar 1-3 Toad 1-3 Gang		
+17/256  4-8 Lizard				
+17/256  1-3 Spider 1-3 Asigaru			
+10/256  1-3 Toad 1-3 Fungus			
+8/256   0-3 Skelton 3-5 Goblin 0-3 Fly		
+
+
+Ashura's Base 2F
+68/256  1-3 Jaguar 1-3 Toad 1-3 Gang
+68/256  1-3 Spider 1-3 Asigaru
+34/256  4-8 Fly
+34/256  1-3 Spider 1-3 Asigaru
+17/256  4-8 Lizard
+17/256  0-3 Skelton 3-5 Goblin 0-3 Fly
+10/256  1-3 Toad 1-3 Fungus
+8/256   0-3 Toad 3-5 Fungus 3-5 Spider
+
+
+Ashura's Base 3F				
+68/256  1-3 Spider 1-3 Asigaru			
+68/256  0-3 Skelton 3-5 Goblin 0-3 Fly		
+34/256  1-3 Jaguar 1-3 Toad 1-3 Gang		
+34/256  0-3 Toad 3-5 Fungus 3-5 Spider		
+17/256  4-8 Fly					
+17/256  3-5 Fungus 3-5 Lizard 3-5 Goblin	
+10/256  4-8 Lizard				
+8/256   3-5 Fungus 3-5 Lizard 3-5 Goblin	
+
+
+Ashura's Base 4F
+68/256  0-3 Skelton 3-5 Goblin 0-3 Fly
+68/256  0-3 Asigaru 3-6 Jaguar
+34/256  1-3 Spider 1-3 Asigaru
+34/256  0-3 Toad 3-5 Fungus 3-5 Spider
+17/256  1-3 Jaguar 1-3 Toad 1-3 Gang
+17/256  3-5 Fungus 3-5 Lizard 3-5 Goblin
+10/256  4-8 Fly
+8/256   3-5 Fungus 3-5 Lizard 3-5 Goblin
+
+
+Ashura's Base 5F				
+68/256  0-3 Asigaru 3-6 Jaguar			
+68/256  0-3 Toad 3-5 Fungus 3-5 Spider		
+34/256  0-3 Asigaru 3-6 Jaguar			
+34/256  3-5 Fungus 3-5 Lizard 3-5 Goblin	
+17/256  0-3 Skelton 3-5 Goblin 0-3 Fly		
+17/256  3-5 Fungus 3-5 Lizard 3-5 Goblin	
+10/256  1-3 Spider 1-3 Asigaru			
+8/256   3-5 Fungus 3-5 Lizard 3-5 Goblin	
+
+
+Ashura's Base- Final Room
+68/256  0-3 Asigaru 3-6 Jaguar			
+68/256  0-3 Toad 3-5 Fungus 3-5 Spider		
+34/256  0-3 Asigaru 3-6 Jaguar			
+34/256  3-5 Fungus 3-5 Lizard 3-5 Goblin	
+17/256  0-3 Skelton 3-5 Goblin 0-3 Fly		
+17/256  3-5 Fungus 3-5 Lizard 3-5 Goblin	
+10/256  1-3 Spider 1-3 Asigaru			
+8/256   3-5 Fungus 3-5 Lizard 3-5 Goblin
+
+Ashura's Overworld				
+68/256	1 Slime 1 Barracud 1 Eagle		
+68/256	1-3 Zombie 1-3 Slime			
+34/256	1-4 Flower				
+34/256	1-3 Pebble 1-3 WereRat			
+17/256	1 Zombie				
+17/256	4-8 BabyWyrm				
+10/256	1 Eagle					
+8/256	1-3 Zombie 1-3 Pebble 1-3 Snake		
+
+
+Desert Town
+68/256  1-4 Trooper
+68/256  1 Snake 1 Trooper 1 Flower
+34/256  1-4 Flower
+34/256  1 Snake 1 Trooper 1 Flower
+17/256  1 Eagle
+17/256  1-3 Pebble 1-3 WereRat
+10/256  1 Eagle
+8/256   4-8 BabyWyrm
+
+
+Ashura's Tower 1F				
+68/256	1-3 Pebble 1-3 WereRat			
+68/256	4-8 Beetle				
+34/256	1-3 Zombie 1-3 Slime			
+34/256	1-3 Zombie 1-3 Pebble 1-3 Snake		
+17/256	1 Slime 1 Barracud 1 Eagle		
+17/256	1-3 Zombie 1-3 Pebble 1-3 Snake		
+10/256	1 Zombie				
+8/256	1-3 Zombie 1-3 Pebble 1-3 Snake		
+
+
+Ashura's Tower 2F
+68/256  4-8 Beetle
+68/256  4-8 BabyWyrm
+34/256  1-3 Zombie 1-3 Slime
+34/256  1-3 Zombie 1-3 Pebble 1-3 Snake
+17/256  1 Slime 1 Barracud 1 Eagle
+17/256  1-3 Zombie 1-3 Pebble 1-3 Snake
+10/256  1 Zombie
+8/256   1-3 Eagle 1-3 Octopus 1-3 Red Bone
+
+
+Ashura's Tower 3F				
+68/256	4-8 BabyWyrm				
+68/256	1-3 Zombie 1-3 Pebble 1-3 Snake		
+34/256	4-8 Beetle				
+34/256	1-3 Eagle 1-3 Octopus 1-3 Red Bone	
+17/256	1-3 Pebble 1-3 WereRat			
+17/256	1-3 Eagle 1-3 Octopus 1-3 Red Bone	
+10/256	1-3 Zombie 1-3 Slime			
+8/256	1-3 Eagle 1-3 Octopus 1-3 Red Bone	
+
+
+Ashura's Tower 4F
+68/256  1-3 Eagle 1-3 Octopus 1-3 Red Bone
+68/256  0-3 Zombie 3-6 Snake
+34/256  1-3 Eagle 1-3 Octopus 1-3 Red Bone
+34/256  0-3 Zombie 3-6 Snake
+17/256  1-3 Zombie 1-3 Pebble 1-3 Snake
+17/256  0-3 Zombie 3-6 Snake
+10/256  4-8 BabyWyrm
+8/256   0-3 Barracud 3-6 Red Bone
+
+
+Ashura's Tower 5F				
+68/256	0-3 Zombie 3-6 Snake			
+68/256	0-3 Barracud 3-6 Red Bone		
+34/256	0-3 Zombie 3-6 Snake			
+34/256	0-3 Barracud 3-6 Red Bone		
+17/256	1-3 Eagle 1-3 Octopus 1-3 Red Bone	
+17/256	0-3 Trooper 3-5 Eagle 0-3 Beetle	
+10/256	1-3 Zombie 1-3 Pebble 1-3 Snake		
+8/256	0-3 Flower 0-3 Barracud 3-5 Zombie	
+
+
+Ashura's Tower 6F
+68/256  0-3 Barracud 3-6 Red Bone
+68/256  0-3 Trooper 3-5 Eagle 0-3 Beetle
+34/256  0-3 Barracud 3-6 Red Bone
+34/256  0-3 Flower 0-3 Barracud 3-5 Zombie
+17/256  1-3 Eagle 1-3 Octopus 1-3 Red Bone
+17/256  3-6 Slime 3-6 Eagle
+10/256  1-3 Eagle 1-3 Octopus 1-3 Red Bone
+8/256   3-6 Trooper 3-6 Flower
+
+
+Ashura's Tower 7F				
+68/256	0-3 Flower 0-3 Barracud 3-5 Zombie	
+68/256	3-6 Slime 3-6 Eagle			
+34/256	0-3 Trooper 3-5 Eagle 0-3 Beetle	
+34/256	3-6 Trooper 3-6 Flower			
+17/256	0-3 Barracud 3-6 Red Bone		
+17/256	0-3 Pebble 3-5 Beetle 3-5 WereRat	
+10/256	0-3 Zombie 3-6 Snake			
+8/256	3-5 BabyWyrm 3-5 Snake 3-5 Barracud	
+
+
+Ashura's Tower 8F
+68/256  0-3 Flower 0-3 Barracud 3-5 Zombie
+68/256  3-6 Slime 3-6 Eagle
+34/256  0-3 Trooper 3-5 Eagle 0-3 Beetle
+34/256  3-6 Trooper 3-6 Flower
+17/256  0-3 Trooper 3-5 Eagle 0-3 Beetle
+17/256  0-3 Pebble 3-5 Beetle 3-5 WereRat
+10/256  0-3 Trooper 3-5 Eagle 0-3 Beetle
+8/256   3-5 BabyWyrm 3-5 Snake 3-5 Barracud
+
+
+Ashura's Tower 9F				
+68/256	0-3 Pebble 3-5 Beetle 3-5 WereRat	
+68/256	0-3 Beetle 3-5 Zombie 3-5 BabyWyrm	
+34/256	3-6 Trooper 3-6 Flower			
+34/256	3-5 Zombie 3-5 Slime 3-5 Octopus	
+17/256	3-6 Trooper 3-6 Flower			
+17/256	3-5 BabyWyrm 3-5 Snake 3-5 Barracud	
+10/256	3-6 Slime 3-6 Eagle			
+8/256	3-5 BabyWyrm 3-5 Snake 3-5 Barracud	
+
+
+Ashura's Tower 10F
+68/256  0-3 Beetle 3-5 Zombie 3-5 BabyWyrm
+68/256  3-5 Zombie 3-5 Slime 3-5 Octopus
+34/256  0-3 Pebble 3-5 Beetle 3-5 WereRat
+34/256  3-5 BabyWyrm 3-5 Snake 3-5 Barracud
+17/256  3-6 Trooper 3-6 Flower
+17/256  3-5 BabyWyrm 3-5 Snake 3-5 Barracud
+10/256  3-6 Trooper 3-6 Flower
+8/256   3-5 BabyWyrm 3-5 Snake 3-5 Barracud
+
+
+Giants Overworld				
+68/256	1 Rhino					
+68/256	1 Fiend 1 Oni 1 Amoeba			
+34/256	1 Amoeba				
+34/256	1-3 Worm 1-3 Fiend			
+17/256	1 Amoeba				
+17/256	4-8 Terorist				
+10/256	1 Amoeba				
+8/256	4-8 Terorist				
+
+
+Giants Town- Magi House
+68/256  1 Fiend 1 Oni 1 Amoeba
+68/256  1 Silver 1 Crab 1 ROBO-28
+34/256  1 Fiend 1 Oni 1 Amoeba
+34/256  1-3 Worm 1-3 Fiend
+17/256  1 Fiend 1 Oni 1 Amoeba
+17/256  4-8 Terorist
+10/256  1 Amoeba
+8/256   4-8 Terorist
+
+
+Giants Town- Micron House			
+68/256	1 Silver 1 Crab 1 ROBO-28		
+68/256	1-3 Worm 1-3 Fiend			
+34/256	1 Silver 1 Crab 1 ROBO-28		
+34/256	4-8 Terorist				
+17/256	1 Silver 1 Crab 1 ROBO-28		
+17/256	4-8 Terorist				
+10/256	1 Rhino					
+8/256	4-8 Terorist				
+
+
+Ki's Body- Main
+68/256  1-3 Grippe 1-3 Plasma
+68/256  4-8 Cobble
+34/256  1-4 Grippe
+34/256  1-3 Amoeba 1-3 Terorist 1-3 Silver
+17/256  1-4 Plasma
+17/256  1-3 Amoeba 1-3 Terorist 1-3 Silver
+10/256  1-4 Plasma
+8/256   0-3 Worm 3-6 Crab
+
+
+Ki's Body- Left Hand				
+68/256	0-3 Worm 3-6 Crab			
+68/256	1-3 Rhino 1-3 Conjurer 1-3 Samurai	
+34/256	0-3 ROBO-28 3-6 Terorist		
+34/256	1 Terorist 1 Samurai 2 Worm		
+17/256	1-3 Amoeba 1-3 Terorist 1-3 Silver	
+17/256	3-6 Oni 3-6 Woodman			
+10/256	1-3 Amoeba 1-3 Terorist 1-3 Silver	
+8/256	3-6 Oni 3-6 Woodman			
+
+
+Ki's Body- Right Hand
+68/256  1-3 Rhino 1-3 Conjurer 1-3 Samurai
+68/256  1 Terorist 1 Samurai 2 Worm
+34/256  0-3 Worm 3-6 Crab
+34/256  3-6 Oni 3-6 Woodman
+17/256  0-3 ROBO-28 3-6 Terorist
+17/256  0-3 Woodman 3-5 Rhino 3-5 Cobble
+10/256  0-3 ROBO-28 3-6 Terorist
+8/256   3-5 Fiend 3-5 Oni 3-5 Amoeba
+
+
+Ki's Body- Left Foot				
+68/256	3-6 Oni 3-6 Woodman			
+68/256	3-6 Woodman 3-6 Rhino			
+34/256	1 Terorist 1 Samurai 2 Worm		
+34/256	0-3 Woodman 3-5 Rhino 3-5 Cobble	
+17/256	1 Terorist 1 Samurai 2 Worm		
+17/256	0-3 Woodman 3-5 Rhino 3-5 Cobble	
+10/256	1-3 Rhino 1-3 Conjurer 1-3 Samurai	
+8/256	3-5 Fiend 3-5 Oni 3-5 Amoeba		
+
+
+Ki's Body- Right Foot
+68/256  0-3 Worm 3-5 Fiend 3-5 Conjurer
+68/256  0-3 Woodman 3-5 Rhino 3-5 Cobble
+34/256  3-6 Woodman 3-6 Rhino
+34/256  3-5 Silver 3-5 Crab 3-5 ROBO-28
+17/256  3-6 Oni 3-6 Woodman
+17/256  3-5 Fiend 3-5 Oni 3-5 Amoeba
+10/256  1 Terorist 1 Samurai 2 Worm
+8/256   3-5 Fiend, 3-5 Oni 3-5 Amoeba
+
+
+Ki's Body- Heart				
+68/256	1-3 Grippe 1-3 Cobble 1-3 Plasma	
+68/256	0-3 ROBO-28 3-6 Terorist		
+34/256	4-8 Cobble				
+34/256	0-3 Worm 3-6 Crab			
+17/256	4-8 Cobble				
+17/256	1-3 Rhino 1-3 Conjurer 1-3 Samurai	
+10/256	1-4 Plasma				
+8/256	1 Terorist 1 Samurai 2 Worm		
+
+
+Ki's Body- Stomach
+68/256  1-3 Grippe 1-3 Cobble 1-3 Plasma
+68/256  1-3 Amoeba 1-3 Terorist 1-3 Silver
+34/256  1-3 Grippe 1-3 Plasma
+34/256  0-3 ROBO-28 3-6 Terorist
+17/256  1-4 Grippe
+17/256  0-3 Worm 3-6 Crab
+10/256  1-4 Plasma
+8/256   1-3 Rhino 1-3 Conjurer 1-3 Samurai
+
+
+Ki's Body- Head
+68/256	0-3 Worm 3-5 Fiend 3-5 Conjurer
+68/256	3-5 Silver 3-5 Crab 3-5 ROBO-28
+34/256	3-6 Woodman 3-6 Rhino
+34/256	3-5 Fiend 3-5 Oni 3-5 Amoeba
+17/256	3-6 Woodman 3-6 Rhino
+17/256	3-5 Fiend 3-5 Oni 3-5 Amoeba
+10/256	3-6 Oni 3-6 Woodman
+8/256	3-5 Fiend 3-5 Oni 3-5 Amoeba
+
+
+Apollo's Overworld			
+68/256	1 Kelpie		
+68/256	1-4 Big Eye		
+34/256	1 Moth			
+34/256	1 Griffon			
+17/256	1 Griffon		
+17/256	1-4 Big Eye		
+10/256	1 Moth			
+8/256	1-4 Raven		
+
+
+Cave of the Mountains 1F
+68/256  1-4 Raven
+68/256  4-8 Hofud
+34/256  4-8 Hofud
+34/256  1-3 Jelly 1-3 Kelpie 1-3 P-Spider
+17/256  1-4 Raven
+17/256  1-3 Jelly 1-3 Kelpie 1-3 P-Spider
+10/256  1-4 Big Eye
+8/256   1-3 Phagocyt 1-3 Big Eye 1-3 Moth
+
+
+Cave of the Mountains 2F			
+68/256	4-8 Medusa				
+68/256	1-3 Jelly 1-3 Kelpie 1-3 P-Spider	
+34/256	4-8 Medusa				
+34/256	1-3 Phagocyt 1-3 Big Eye 1-3 Moth	
+17/256	4-8 Hofud				
+17/256	1-3 Phagocyt 1-3 Big Eye 1-3 Moth	
+10/256	4-8 Hofud				
+8/256	1-3 Cameleon 1-3 Jelly 1-3 Hofud	
+
+
+Cave of the Mountains 3F
+68/256  4-8 Medusa
+68/256  1-3 Jelly 1-3 Kelpie 1-3 P-Spider
+34/256  4-8 Medusa
+34/256  1-3 Phagocyt 1-3 Big Eye 1-3 Moth
+17/256  4-8 Medusa
+17/256  1-3 Phagocyt 1-3 Big Eye 1-3 Moth
+10/256  4-8 Hofud
+8/256   1-3 Cameleon 1-3 Jelly 1-3 Hofud
+
+
+Cave of the Mountains 4F			
+68/256	1-3 Phagocyt 1-3 Big Eye 1-3 Moth		
+68/256	1-3 Cameleon 1-3 Jelly 1-3 Hofud	
+34/256	1-3 Jelly 1-3 Kelpie 1-3 P-Spider		
+34/256	1-3 Cameleon 1-3 Jelly 1-3 Hofud	
+17/256	1-3 Jelly 1-3 Kelpie 1-3 P-Spider		
+17/256	1-3 Cameleon 1-3 Jelly 1-3 Hofud	
+10/256	4-8 Medusa				
+8/256	1-3 Cameleon 1-3 Jelly 1-3 Hofud	
+
+
+Cave of the Mountains 5F
+68/256  1-3 Phagocyt 1-3 Big Eye 1-3 Moth
+68/256  1-3 Cameleon 1-3 Jelly 1-3 Hofud
+34/256  1-3 Phagocyt 1-3 Big Eye 1-3 Moth
+34/256  1-3 Cameleon 1-3 Jelly 1-3 Hofud
+17/256  1-3 Jelly 1-3 Kelpie 1-3 P-Spider
+17/256  1-3 Cameleon 1-3 Jelly 1-3 Hofud
+10/256  1-3 Jelly 1-3 Kelpie 1-3 P-Spider
+8/256   1-3 Cameleon 1-3 Jelly 1-3 Hofud
+
+
+Undersea Volcano 1F				
+68/256	1 Ghoul 1 Cameleon 1 MapleMan		
+68/256	1 Tortoise 1 Phagocyt 1 Raven		
+34/256	1-4 Tortoise				
+34/256	1 Virus 1 Wyrm Kid 1 Cameleon		
+17/256	1-4 Tortoise			
+17/256	1-3 Ghoul 1-3 MapleMan		
+10/256	1-4 Tortoise			
+8/256	4-8 Jelly			
+
+
+Undersea Volcano 2F
+68/256  1 Tortoise 1 Phagocyt 1 Raven
+68/256  1 Virus 1 Wyrm Kid 1 Cameleon
+34/256  1 Ghoul 1 Cameleon 1 MapleMan
+34/256  1-3 Ghoul 1-3 MapleMan
+17/256  1-4 Tortoise
+17/256  1-3 Cameleon 1-3 Hofud
+10/256  1-4 Tortoise
+8/256   4-8 Jelly
+
+
+Undersea Volcano 3F				
+68/256	1-3 Ghoul 1-3 MapleMan			
+68/256	1-3 Phagocyt 1-3 Big Eye		
+34/256	1 Virus 1 Wyrm Kid 1 Cameleon		
+34/256	1-3 Cameleon 1-3 Hofud		
+17/256	1 Ghoul 1 Cameleon 1 MapleMan		
+17/256	4-8 Jelly				
+10/256	1 Ghoul 1 Cameleon 1 MapleMan	
+8/256	4-8 Jelly				
+
+
+Undersea Volcano 4F
+68/256  1-3 Phagocyt 1-3 Big Eye
+68/256  1-3 Cameleon 1-3 Hofud
+34/256  1-3 Ghoul 1-3 MapleMan
+34/256  4-8 Jelly
+17/256  1-3 Ghoul 1-3 MapleMan
+17/256  4-8 Jelly
+10/256  1 Virus 1 Wyrm Kid 1 Cameleon
+8/256   4-8 Jelly
+
+
+Undersea Volcano 5F			
+68/256	1-3 Cameleon 1-3 Hofud		
+68/256	4-8 Jelly			
+34/256	1-3 Phagocyt 1-3 Big Eye
+34/256	4-8 Jelly			
+17/256	1-3 Phagocyt 1-3 Big Eye	
+17/256	4-8 Jelly			
+10/256	1-3 Ghoul 1-3 MapleMan		
+8/256	4-8 Jelly			
+
+
+Cave of Light 1F
+68/256  4-8 Hofud
+68/256  0-3 Virus 3-6 Wyrm Kid
+34/256  0-3 Virus 3-6 Wyrm Kid
+34/256  3-6 Tortoise 0-3 Raven
+17/256  4-8 Hofud
+17/256  3-6 Tortoise 0-3 Raven
+10/256  4-8 Hofud
+8/256   3-5 Big Eye 0-3 Medusa 0-3 SabreCat
+
+
+Cave of Light 2F				
+68/256	0-3 Virus 3-6 Wyrm Kid			
+68/256	3-6 Tortoise 0-3 Raven			
+34/256	0-3 Virus 3-6 Wyrm Kid			
+34/256	3-5 Big Eye 0-3 Medusa 0-3 SabreCat	
+17/256	0-3 Virus 3-6 Wyrm Kid			
+17/256	3-5 Big Eye 0-3 Medusa 0-3 SabreCat	
+10/256	0-3 Virus 3-6 Wyrm Kid			
+8/256	0-3 Moth 0-3 Hofud 3-5 Ghoul		
+
+
+Cave of Light 3F
+68/256  3-6 Tortoise 0-3 Raven
+68/256  3-5 Big Eye 0-3 Medusa 0-3 SabreCat
+34/256  3-6 Tortoise 0-3 Raven
+34/256  0-3 Moth 0-3 Hofud 3-5 Ghoul
+17/256  3-6 Tortoise 0-3 Raven
+17/256  0-3 Moth 0-3 Hofud 3-5 Ghoul
+10/256  0-3 Virus 3-6 Wyrm Kid
+8/256   3-6 Griffon 3-6 MapleMan
+
+
+Cave of Light 4F				
+68/256	0-3 Moth 0-3 Hofud 3-5 Ghoul		
+68/256	3-6 Griffon 3-6 MapleMan		
+34/256	3-5 Big Eye 0-3 Medusa 0-3 SabreCat	
+34/256	3-6 Medusa 3-6 Wyrm Kid			
+17/256	3-5 Big Eye 0-3 Medusa 0-3 SabreCat	
+17/256	3-6 Medusa 3-6 Wyrm Kid			
+10/256	0-3 Virus 3-6 Wyrm Kid			
+8/256	3-5 MapleMan 3-5 Moth 3-5 Tortoise	
+
+
+Cave of Light 5F
+68/256  3-6 Griffon 3-6 MapleMan
+68/256  3-6 Medusa 3-6 Wyrm Kid
+34/256  0-3 Moth 0-3 Hofud 3-5 Ghoul
+34/256  3-5 Raven 3-5 P-Spider 0-3 Virus
+17/256  0-3 Moth 0-3 Hofud 3-5 Ghoul
+17/256  3-5 Griffon 3-5 Raven 3-5 Wyrm Kid
+10/256  3-5 Big Eye 0-3 Medusa 0-3 SabreCat
+8/256   3-5 Griffon 3-5 Raven 3-5 Wyrm Kid
+
+
+Cave of Light 6F				
+68/256	3-5 Raven 3-5 P-Spider 0-3 Virus	
+68/256	0-3 Hofud 3-5 SabreCat 3-5 Kelpie	
+34/256	3-6 Medusa 3-6 Wyrm Kid			
+34/256	3-5 MapleMan 3-5 Moth 3-5 Tortoise	
+17/256	3-6 Griffon 3-6 MapleMan		
+17/256	3-5 Griffon 3-5 Raven 3-5 Wyrm Kid	
+10/256	0-3 Moth 0-3 Hofud 3-5 Ghoul		
+8/256	3-5 Griffon 3-5 Raven 3-5 Wyrm Kid	
+
+
+Cave of Light 7F
+68/256  0-3 Hofud 3-5 SabreCat 3-5 Kelpie
+68/256  3-5 MapleMan 3-5 Moth 3-5 Tortoise
+34/256  3-5 Raven 3-5 P-Spider 0-3 Virus
+34/256  3-5 Griffon 3-5 Raven 3-5 Wyrm Kid
+17/256  3-6 Medusa 3-6 Wyrm Kid
+17/256  3-5 Griffon 3-5 Raven 3-5 Wyrm Kid
+10/256  3-6 Griffon 3-6 MapleMan
+8/256   3-5 Griffon 3-5 Raven 3-5 Wyrm Kid
+
+
+
+Guardians Base 3F				
+68/256	1-4 MechBug				
+68/256	1-4 Clayman				
+34/256	1 LiveOrk				
+34/256	1 P-Toad 1 Mushroom 1 Wh. Belt		
+17/256	1 Baby-D				
+17/256	1-4 Sprite				
+10/256	1 Baby-D				
+8/256	1-3 LiveOrk 1-3 Mushroom		
+
+
+Guardians Base 3F- Storage Room
+68/256  1 Hornet 1 Thunder 1 ROBO-Z
+68/256  1 Turtle 1 LiveOrk 1 Mushroom
+34/256  1 P-Toad 1 Mushroom 1 Wh. Belt
+34/256  1-3 LiveOrk 1-3 Mushroom
+17/256  1-4 MechBug
+17/256  1-3 Mushroom 1-3 O-Bake
+10/256  1 Baby-D
+8/256   1-3 LiveOrk 1-3 Mushroom
+
+
+Guardians Base 2F				
+68/256	1-4 Sprite				
+68/256	1 P-Toad 1 Mushroom 1 Wh. Belt		
+34/256	1 ROBO-Z				
+34/256	1 Hornet 1 Thunder 1 ROBO-Z		
+17/256	1 LiveOrk				
+17/256	1-3 LiveOrk 1-3 Mushroom		
+10/256	1 Baby-D				
+8/256	1-3 LiveOrk 1-3 Mushroom		
+
+
+Guardians Base 2F- Meeting Room/Monitor Room
+68/256  1 Turtle 1 LiveOrk 1 Mushroom
+68/256  1-3 LiveOrk 1-3 Mushroom
+34/256  1 Hornet 1 Thunder 1 ROBO-Z
+34/256  1-3 Mushroom 1-3 O-Bake
+17/256  1-4 Clayman
+17/256  1-3 Hornet 1-3 P-Worm
+10/256  1 ROBO-Z
+8/256   4-8 O-Bake
+
+
+Guardians Base 1F				
+68/256	4-8 WereWolf				
+68/256	1-3 O-Bake 1-3 Hornet 1-3 P-Worm	
+34/256	4-8 WereWolf				
+34/256	1-3 O-Bake 1-3 Hornet 1-3 P-Worm	
+17/256	4-8 P-Worm				
+17/256	1-3 Mushroom 1-3 O-Bake 1-3 Sprite	
+10/256	4-8 O-Bake				
+8/256	1-3 WereWolf 1-3 Clayman 1-3 Hornet	
+
+
+Guardians Base 1F- Bedroom/Jail
+68/256  4-8 O-Bake
+68/256  4-8 P-Worm
+34/256  4-8 O-Bake
+34/256  4-8 WereWolf
+17/256  1-3 Hornet 1-3 P-Worm
+17/256  1-3 O-Bake 1-3 Hornet 1-3 P-Worm
+10/256  1-3 Mushroom 1-3 O-Bake
+8/256   1-3 Mushroom 1-3 O-Bake 1-3 Sprite
+
+
+Guardians Base- Cafe
+68/256	1-3 Mushroom 1-3 O-Bake
+68/256	1-3 Hornet 1-3 P-Worm
+34/256	1-3 Mushroom 1-3 O-Bake
+34/256	1-3 Hornet 1-3 P-Worm
+17/256	1-3 LiveOrk 1-3 Mushroom
+17/256	4-8 O-Bake
+10/256	1-3 LiveOrk 1-3 Mushroom
+8/256	4-8 P-Worm
+
+
+Guardians' Overworld			
+68/256	4-8 O-Bake			
+68/256	4-8 P-Worm			
+34/256	1-3 Hornet 1-3 P-Worm		
+34/256	4-8 P-Worm			
+17/256	1-3 Mushroom 1-3 O-Bake		
+17/256	4-8 WereWolf			
+10/256	1-3 LiveOrk 1-3 Mushroom	
+8/256	1-3 O-Bake 1-3 Hornet 1-3 P-Worm
+
+
+Monsters' Overworld
+68/256  1-3 O-Bake 1-3 Hornet 1-3 P-Worm
+68/256  1-3 Mushroom 1-3 O-Bake 1-3 Sprite
+34/256  4-8 WereWolf
+34/256  1-3 Mushroom 1-3 O-Bake 1-3 Sprite
+17/256  4-8 WereWolf
+17/256  1-3 WereWolf 1-3 Clayman 1-3 Hornet
+10/256  4-8 P-Worm
+8/256   3-6 Hornet 0-3 Thunder
+
+
+Venus' Overworld				
+68/256	1-3 Mushroom 1-3 O-Bake 1-3 Sprite	
+68/256	1-3 WereWolf 1-3 Clayman 1-3 Hornet	
+34/256	1-3 O-Bake 1-3 Hornet 1-3 P-Worm	
+34/256	1-3 WereWolf 1-3 Clayman 1-3 Hornet	
+17/256	4-8 WereWolf				
+17/256	3-6 Hornet 0-3 Thunder			
+10/256	4-8 P-Worm				
+8/256	3-6 Mushroom 0-3 Wh. Belt		
+
+
+Sewers 1F
+68/256  3-6 Hornet 0-3 Thunder
+68/256  3-6 Mushroom 0-3 Wh. Belt
+34/256  1-3 WereWolf 1-3 Clayman 1-3 Hornet
+34/256  3-6 Mushroom 0-3 Wh. Belt
+17/256  1-3 Mushroom 1-3 O-Bake 1-3 Sprite
+17/256  3-5 Baby-D 0-3 Guard 0-3 O-Bake
+10/256  1-3 Mushroom 1-3 O-Bake 1-3 Sprite
+8/256   0-3 Chafer 0-3 P-Worm 3-5 P-Toad
+
+
+Sewers 2F					
+68/256	3-6 Mushroom 0-3 Wh. Belt		
+68/256	3-5 Baby-D 0-3 Guard 0-3 O-Bake		
+34/256	3-6 Hornet 0-3 Thunder			
+34/256	0-3 Chafer 0-3 P-Worm 3-5 P-Toad	
+17/256	1-3 WereWolf 1-3 Clayman 1-3 Hornet	
+17/256	3-6 Wh. Belt 3-6 Chafer			
+10/256	1-3 WereWolf 1-3 Clayman 1-3 Hornet	
+8/256	3-6 Thunder 3-6 Guard			
+
+
+Sewers- Hermit Room
+68/256  3-5 Guard 0-3 ROBO-Z 3-5 WereWolf
+68/256  3-5 LiveOrk 3-5 MechBug 3-5 Harpy
+34/256  3-5 Clayman 0-3 Baby-D 3-5 Chafer
+34/256  3-5 Sprite 3-5 Baby-D 3-5 Turtle
+17/256  3-6 Thunder 3-6 Guard
+17/256  3-5 Sprite 3-5 Baby-D 3-5 Turtle
+10/256  3-6 Thunder 3-6 Guard
+8/256   3-5 Sprite 3-5 Baby-D 3-5 Turtle
+
+
+Sewers 3F					
+68/256	0-3 Chafer 0-3 P-Worm 3-5 P-Toad	
+68/256	3-6 Wh. Belt 3-6 Chafer			
+34/256	3-5 Baby-D 0-3 Guard 0-3 O-Bake		
+34/256	3-6 Thunder 3-6 Guard			
+17/256	3-6 Mushroom 0-3 Wh. Belt		
+17/256	3-5 Clayman 0-3 Baby-D 3-5 Chafer	
+10/256	3-6 Mushroom 0-3 Wh. Belt		
+8/256	3-5 Sprite 3-5 Baby-D 3-5 Turtle	
+
+
+Sewers 4F
+68/256  0-3 Chafer 0-3 P-Worm 3-5 P-Toad
+68/256  3-6 Wh. Belt 3-6 Chafer
+34/256  3-5 Baby-D 0-3 Guard 0-3 O-Bake
+34/256  3-6 Thunder 3-6 Guard
+17/256  3-5 Baby-D 0-3 Guard 0-3 O-Bake
+17/256  3-5 Clayman 0-3 Baby-D 3-5 Chafer
+10/256  3-6 Mushroom 0-3 Wh. Belt
+8/256   3-5 Sprite 3-5 Baby-D 3-5 Turtle
+
+
+Sewers 5F					
+68/256	3-5 Clayman 0-3 Baby-D 3-5 Chafer	
+68/256	3-5 Guard 0-3 ROBO-Z 3-5 WereWolf	
+34/256	3-6 Thunder 3-6 Guard			
+34/256	3-5 LiveOrk 3-5 MechBug 3-5 Harpy	
+17/256	3-6 Thunder 3-6 Guard			
+17/256	3-5 Sprite 3-5 Baby-D 3-5 Turtle	
+10/256	3-6 Wh. Belt 3-6 Chafer			
+8/256	3-5 Sprite 3-5 Baby-D 3-5 Turtle	
+
+
+Sewers- City Exit
+68/256  1-3 WereWolf 1-3 Clayman 1-3 Hornet
+68/256  3-6 Hornet 0-3 Thunder
+34/256  1-3 Mushroom 1-3 O-Bake 1-3 Sprite
+34/256  3-6 Hornet 0-3 Thunder
+17/256  1-3 O-Bake 1-3 Hornet 1-3 P-Worm
+17/256  3-6 Mushroom 0-3 Wh. Belt
+10/256  1-3 O-Bake 1-3 Hornet 1-3 P-Worm
+8/256   3-5 Baby-D 0-3 Guard 0-3 O-Bake
+
+
+
+Volcano 1F				
+68/256	1-4 Ogre			
+68/256	1-4 Warrior			
+34/256	1 Piranha			
+34/256	1-3 Piranha 1-3 Hawk		
+17/256	1 Magician			
+17/256	1-3 Piranha 1-3 Hawk		
+10/256	1 Magician			
+8/256	1-3 Komodo 1-3 Triceras		
+
+
+Volcano 2F
+68/256  1 Triceras 1 Hawk 1 Ogre
+68/256  1 Mantcore 1 P-Flower 1 Hawk
+34/256  1 Triceras 1 Hawk 1 Ogre
+34/256  1-3 Piranha 1-3 Hawk
+17/256  1 Piranha
+17/256  1-3 Komodo 1-3 Triceras
+10/256  1 Magician
+8/256   4-8 Serpent
+
+
+Volcano 3F					
+68/256	1-3 Komodo 1-3 Triceras			
+68/256	4-8 Serpent				
+34/256	1-3 Piranha 1-3 Hawk			
+34/256	4-8 Champgno				
+17/256	1 Mantcore 1 P-Flower 1 Hawk		
+17/256	4-8 Champgno				
+10/256	1 Mantcore 1 P-Flower 1 Hawk		
+8/256	1-3 Warrior 1-3 Magician 1-3 Mercenar	
+
+
+Volcano 4F
+68/256  4-8 Serpent
+68/256  4-8 Champgno
+34/256  1-3 Komodo 1-3 Triceras
+34/256  1-3 Warrior 1-3 Magician 1-3 Mercenar
+17/256  1-3 Piranha 1-3 Hawk
+17/256  1-3 Warrior 1-3 Magician 1-3 Mercenar
+10/256  1 Mantcore 1 P-Flower 1 Hawk
+8/256   0-3 Triceras 3-6 Ogre
+
+
+Volcano 5F					
+68/256	1-3 Warrior 1-3 Magician 1-3 Mercenar	
+68/256	1-3 Serpent 1-3 Champgno 1-3 Magician	
+34/256	4-8 Champgno				
+34/256	0-3 Triceras 3-6 Ogre			
+17/256	4-8 Serpent				
+17/256	0-3 Triceras 3-6 Ogre			
+10/256	1-3 Komodo 1-3 Triceras			
+8/256	0-3 Mantcore 3-6 P-Flower		
+
+
+Volcano 6F
+68/256  1-3 Serpent 1-3 Champgno 1-3 Magician
+68/256  0-3 Triceras 3-6 Ogre
+34/256  1-3 Warrior 1-3 Magician 1-3 Mercenar
+34/256  0-3 Mantcore 3-6 P-Flower
+17/256  4-8 Champgno
+17/256  0-3 Magician 0-3 Triceras 3-5 Piranha
+10/256  4-8 Serpent
+8/256   0-3 Magician 0-3 Triceras 3-5 Piranha
+
+
+Volcano 7F					
+68/256	1-3 Serpent 1-3 Champgno 1-3 Magician	
+68/256	0-3 Triceras 3-6 Ogre			
+34/256	1-3 Warrior 1-3 Magician 1-3 Mercenar	
+34/256	0-3 Mantcore 3-6 P-Flower		
+17/256	1-3 Warrior 1-3 Magician 1-3 Mercenar	
+17/256	0-3 Magician 0-3 Triceras 3-5 Piranha	
+10/256	4-8 Champgno				
+8/256	3-5 Ant Lion 0-3 Ogre 0-3 P-Flower	
+
+
+Racing Overworld
+68/256  0-3 Mantcore 3-6 P-Flower
+68/256  0-3 Magician 0-3 Triceras 3-5 Piranha
+34/256  0-3 Mantcore 3-6 P-Flower
+34/256  3-5 Ant Lion 0-3 Ogre 0-3 P-Flower
+17/256  0-3 Triceras 3-6 Ogre
+17/256  3-5 Ant Lion 0-3 Ogre 0-3 P-Flower
+10/256  1-3 Serpent 1-3 Champgno 1-3 Magician
+8/256   3-5 Ant Lion 0-3 Ogre 0-3 P-Flower
+
+
+Dragon Race- Section 1				
+68/256	0-3 Magician 0-3 Triceras 3-5 Piranha	
+68/256	3-5 Ant Lion 0-3 Ogre 0-3 P-Flower	
+34/256	0-3 Mantcore 3-6 P-Flower		
+34/256	3-6 Ammonite 3-6 Tororo			
+17/256	0-3 Mantcore 3-6 P-Flower		
+17/256	3-5 Tororo 3-5 Piranha 0-3 Hawk		
+10/256	0-3 Triceras 3-6 Ogre			
+8/256	3-5 Komodo 3-5 Corpuscl 3-5 Triceras	
+
+
+Dragon Race- Section 2
+68/256  3-6 Ammonite 3-6 Tororo
+68/256  3-6 Mercenar 3-6 Swallow
+34/256  3-6 Ammonite 3-6 Tororo
+34/256  3-6 Mercenar 3-6 Swallow
+17/256  3-5 Ant Lion 0-3 Ogre 0-3 P-Flower
+17/256  3-5 Tororo 3-5 Piranha 0-3 Hawk
+10/256  3-5 Ant Lion 0-3 Ogre 0-3 P-Flower
+8/256   3-5 Komodo 3-5 Corpuscl 3-5 Triceras
+
+
+Dragon Race- Section 3				
+68/256	3-5 Tororo 3-5 Piranha 0-3 Hawk		
+68/256	3-5 P-Flower 0-3 Serpent 3-5 Mantcore	
+34/256	3-6 Mercenar 3-6 Swallow		
+34/256	3-5 Serpent 3-5 Champgno 3-5 Magician	
+17/256	3-6 Ammonite 3-6 Tororo			
+17/256	3-5 Komodo 3-5 Corpuscl 3-5 Triceras	
+10/256	3-5 Ant Lion 0-3 Ogre 0-3 P-Flower		
+8/256	3-5 Komodo 3-5 Corpuscl 3-5 Triceras	
+
+
+Dragon Race- Section 4
+68/256  3-5 P-Flower 0-3 Serpent 3-5 Mantcore
+68/256  3-5 Serpent 3-5 Champgno 3-5 Magician
+34/256  3-5 Tororo 3-5 Piranha 0-3 Hawk
+34/256  3-5 Komodo 3-5 Corpuscl 3-5 Triceras
+17/256  3-6 Mercenar 3-6 Swallow
+17/256  3-5 Komodo 3-5 Corpuscl 3-5 Triceras
+10/256  3-6 Ammonite 3-6 Tororo
+8/256   3-5 Komodo 3-5 Corpuscl 3-5 Triceras
+
+
+
+Edo Overworld					
+68/256	1-4 Tarantla				
+68/256	1-4 Gae Bolg				
+34/256	1 Mephisto				
+34/256	1-4 Gae Bolg				
+17/256	1 Hermit				
+17/256	1 Phantom 1 Wyvern 1 Gae Bolg		
+10/256	1 Hermit				
+8/256	1-3 Gazer 1-3 Mosquito			
+
+
+Harbor- Pier
+68/256  1 Phantom 1 Wyvern 1 Gae Bolg
+68/256  1 Boulder 1 Tarantla 1 EvilPine
+34/256  1-4 Tarantla
+34/256  1-3 Gazer 1-3 Mosquito
+17/256  1 Mephisto
+17/256  1-3 Anaconda 1-3 Fairy
+10/256  1 Hermit
+8/256   1-3 Anaconda 1-3 Fairy
+
+
+Harbor- Ship Deck				
+68/256	1 Boulder 1 Tarantla 1 EvilPine		
+68/256	1-3 Gazer 1-3 Mosquito			
+34/256	1 Phantom 1 Wyvern 1 Gae Bolg		
+34/256	1-3 Anaconda 1-3 Fairy			
+17/256	1 Phantom 1 Wyvern 1 Gae Bolg		
+17/256	4-8 Gazer				
+10/256	1 Hermit				
+8/256	4-8 Gazer				
+
+
+Harbor- Ship 1F
+68/256  1-3 Gazer 1-3 Mosquito
+68/256  1-3 Anaconda 1-3 Fairy
+34/256  1 Boulder 1 Tarantla 1 EvilPine
+34/256  4-8 Gazer
+17/256  1 Phantom 1 Wyvern 1 Gae Bolg
+17/256  4-8 Knight
+10/256  1 Hermit
+8/256   1-3 EvilPine 1-3 Gae Bolg 1-3 Pathogen
+
+
+Harbor- Ship 2F					
+68/256	1-3 Anaconda 1-3 Fairy			
+68/256	4-8 Gazer				
+34/256	1-3 Gazer 1-3 Mosquito			
+34/256	4-8 Knight					
+17/256	1 Phantom 1 Wyvern 1 Gae Bolg			
+17/256	4-8 Knight					
+10/256	1 Mephisto					
+8/256	1-3 EvilPine 1-3 Gae Bolg 1-3 Pathogen		
+
+
+Edo- EchiGoya's Basement
+68/256  4-8 Gazer
+68/256  4-8 Knight
+34/256  4-8 Gazer
+34/256  1-3 Tarantla 1-3 Commando 1-3 Wyvern
+17/256  1-3 Anaconda 1-3 Fairy
+17/256  1-3 EvilPine 1-3 Gae Bolg 1-3 Pathogen
+10/256  1-3 Gazer 1-3 Mosquito
+8/256   1-3 EvilPine 1-3 Gae Bolg 1-3 Pathogen
+
+
+Sho-Gun's Castle- Entrance				
+68/256	4-8 Knight					
+68/256	1-3 Tarantla 1-3 Commando 1-3 Wyvern		
+34/256	4-8 Gazer					
+34/256	1-3 Tarantla 1-3 Commando 1-3 Wyvern		
+17/256	4-8 Gazer					
+17/256	1-3 EvilPine 1-3 Gae Bolg 1-3 Pathogen		
+10/256	1-3 Anaconda 1-3 Fairy			
+8/256	3-6 Mosquito 0-3 Stoneman		
+
+
+Sho-Gun's Castle- Lower Left
+68/256  1-3 Tarantla 1-3 Commando 1-3 Wyvern
+68/256  1-3 EvilPine 1-3 Gae Bolg 1-3 Pathogen
+34/256  4-8 Knight
+34/256  1-3 EvilPine 1-3 Gae Bolg 1-3 Pathogen
+17/256  4-8 Knight
+17/256  3-6 Mosquito 0-3 Stoneman
+10/256  1-3 Anaconda 1-3 Fairy
+8/256   3-6 Mosquito 0-3 Stoneman
+
+
+Sho-Gun's Castle- Upper Left				
+68/256	4-8 Knight				
+68/256	1-3 Tarantla 1-3 Commando 1-3 Wyvern	
+34/256	4-8 Gazer				
+34/256	1-3 Tarantla 1-3 Commando 1-3 Wyvern	
+17/256	4-8 Gazer				
+17/256	1-3 EvilPine 1-3 Gae Bolg 1-3 Pathogen	
+10/256	1-3 Anaconda 1-3 Fairy			
+8/256	3-6 Mosquito 0-3 Stoneman		
+
+
+Sho-Gun's Castle- Right
+68/256  1-3 Tarantla 1-3 Commando 1-3 Wyvern
+68/256  1-3 EvilPine 1-3 Gae Bolg 1-3 Pathogen
+34/256  4-8 Knight
+34/256  1-3 EvilPine 1-3 Gae Bolg 1-3 Pathogen
+17/256  4-8 Knight
+17/256  3-6 Mosquito 0-3 Stoneman
+10/256  1-3 Anaconda 1-3 Fairy
+8/256   3-6 Mosquito 0-3 Stoneman
+
+
+Sho-Gun's Castle- Center			
+68/256	1-3 Tarantla 1-3 Commando 1-3 Wyvern	
+68/256	1-3 EvilPine 1-3 Gae Bolg 1-3 Pathogen	
+34/256	1-3 Tarantla 1-3 Commando 1-3 Wyvern	
+34/256	3-6 Mosquito 0-3 Stoneman		
+17/256	4-8 Knight				
+17/256	3-6 Mosquito 0-3 Stoneman		
+10/256	4-8 Knight				
+8/256	0-3 Phantom 3-6 Wyvern			
+
+
+Sho-Gun's Castle 1F
+68/256  1-3 EvilPine 1-3 Gae Bolg 1-3 Pathogen
+68/256  3-6 Mosquito 0-3 Stoneman
+34/256  1-3 EvilPine 1-3 Gae Bolg 1-3 Pathogen
+34/256  0-3 Phantom 3-6 Wyvern
+17/256  1-3 Tarantla 1-3 Commando 1-3 Wyvern
+17/256  0-3 Phantom 3-6 Wyvern
+10/256  1-3 Tarantla 1-3 Commando 1-3 Wyvern
+8/256   0-3 Phantom 3-6 Wyvern
+
+
+Sho-Gun's Castle 2F					
+68/256	3-6 Mosquito 0-3 Stoneman		
+68/256	0-3 Phantom 3-6 Wyvern			
+34/256	3-6 Mosquito 0-3 Stoneman		
+34/256	3-5 Knight 0-3 Gazer 0-3 Commando	
+17/256	3-6 Mosquito 0-3 Stoneman		
+17/256	0-3 Anaconda 0-3 Boulder 3-5 Fairy		
+10/256	3-6 Mosquito 0-3 Stoneman			
+8/256	3-6 Boulder 3-6 Tarantla			
+
+
+Sho-Gun's Castle 3F
+68/256  0-3 Phantom 3-6 Wyvern
+68/256  3-5 Knight 0-3 Gazer 0-3 Commando
+34/256  0-3 Phantom 3-6 Wyvern
+34/256  3-5 Knight 0-3 Gazer 0-3 Commando
+17/256  0-3 Phantom 3-6 Wyvern
+17/256  0-3 Anaconda 0-3 Boulder 3-5 Fairy
+10/256  3-6 Mosquito 0-3 Stoneman
+8/256   3-6 Boulder 3-6 Tarantla
+
+
+Sho-Gun's Castle 4F				
+68/256	0-3 Anaconda 0-3 Boulder 3-5 Fairy		
+68/256	0-3 Ninja 3-5 Stoneman 0-3 Knight		
+34/256	3-5 Knight 0-3 Gazer 0-3 Commando		
+34/256	3-6 Boulder 3-6 Tarantla		
+17/256	0-3 Phantom 3-6 Wyvern			
+17/256	3-6 Boulder 3-6 Tarantla		
+10/256	0-3 Phantom 3-6 Wyvern			
+8/256	0-3 Mosquito 3-5 Phantom 3-5 Hermit	
+
+
+Sho-Gun's Castle 5F
+68/256  0-3 Anaconda 0-3 Boulder 3-5 Fairy
+68/256  0-3 Ninja 3-5 Stoneman 0-3 Knight
+34/256  3-5 Knight 0-3 Gazer 0-3 Commando
+34/256  3-6 Boulder 3-6 Tarantla
+17/256  3-5 Knight 0-3 Gazer 0-3 Commando
+17/256  3-6 Boulder 3-6 Tarantla
+10/256  0-3 Phantom 3-6 Wyvern
+8/256   0-3 Mosquito 3-5 Phantom 3-5 Hermit
+
+
+Sho-Gun's Castle 5F- Back Room				
+68/256	0-3 Ninja 3-5 Stoneman 0-3 Knight	
+68/256	3-6 Boulder 3-6 Tarantla		
+34/256	0-3 Anaconda 0-3 Boulder 3-5 Fairy	
+34/256	0-3 Mosquito 3-5 Phantom 3-5 Hermit	
+17/256	0-3 Anaconda 0-3 Boulder 3-5 Fairy	
+17/256	0-3 Mosquito 3-5 Phantom 3-5 Hermit	
+10/256	3-5 Knight 0-3 Gazer 0-3 Commando	
+8/256	3-5 Fairy 3-5 Hermit 3-5 Mephisto	
+
+
+Sho-Gun's Castle- Roof
+68/256  0-3 Mosquito 3-5 Phantom 3-5 Hermit
+68/256  3-5 Fairy 3-5 Hermit 3-5 Mephisto
+34/256  0-3 Mosquito 3-5 Phantom 3-5 Hermit
+34/256  3-5 Fairy 3-5 Hermit 3-5 Mephisto
+17/256  3-6 Boulder 3-6 Tarantla
+17/256  3-5 Fairy 3-5 Hermit 3-5 Mephisto
+10/256  0-3 Anaconda 0-3 Boulder 3-5 Fairy
+8/256   3-5 Fairy 3-5 Hermit 3-5 Mephisto
+
+
+
+Dungeon Overworld			
+68/256	1-4 FireMoth			
+68/256	1-4 Nitemare			
+34/256	1 CatWoman			
+34/256	1 Young-D 1 Wraith 1 CatWoman	
+17/256	1 Adamant			
+17/256	1 Young-D 1 Wraith 1 CatWoman	
+10/256	1-4 FireMoth			
+8/256	4-8 Dinosaur			
+
+
+Nasty Dungeon 1F
+68/256	1-4 FireMoth			
+68/256	1-4 Nitemare			
+34/256	1 CatWoman			
+34/256	1 Young-D 1 Wraith 1 CatWoman	
+17/256	1 Adamant			
+17/256	1 Young-D 1 Wraith 1 CatWoman	
+10/256	1-4 FireMoth			
+8/256	4-8 Dinosaur			
+
+
+Nasty Dungeon 2F				
+68/256	3-6 Demon 0-3 Answerer			
+68/256	0-3 Young-D 3-6 CatWoman		
+34/256	1-3 Shark 1-3 SnowCat 1-3 Lamia		
+34/256	3-5 LavaWorm 0-3 FireMoth 0-3 Young-D	
+17/256	1-3 Shark 1-3 SnowCat 1-3 Lamia		
+17/256	0-3 Answerer 3-5 CatWoman 3-5 Nitemare	
+10/256	1-3 Ghast 1-3 Killer 1-3 Dinosaur	
+8/256	3-5 Dinosaur 3-5 Adamant 3-5 SnowCat		
+
+
+Nasty Dungeon 3F
+68/256  0-3 Young-D 3-6 CatWoman
+68/256  3-5 LavaWorm 0-3 FireMoth 0-3 Young-D
+34/256  3-6 Demon 0-3 Answerer
+34/256  3-6 Demon 3-6 Adamant
+17/256  1-3 Shark 1-3 SnowCat 1-3 Lamia
+17/256  0-3 Answerer 3-5 CatWoman 3-5 Nitemare
+10/256  1-3 Shark 1-3 SnowCat 1-3 Lamia
+8/256   3-5 Dinosaur 3-5 Adamant 3-5 SnowCat
+
+
+Nasty Dungeon 4F					
+68/256	3-6 Demon 3-6 Adamant			
+68/256	0-3 Answerer 3-5 CatWoman 3-5 Nitemare	
+34/256	3-5 LavaWorm 0-3 FireMoth 0-3 Young-D	
+34/256	3-5 Dinosaur 3-5 Adamant 3-5 SnowCat	
+17/256	0-3 Young-D 3-6 CatWoman		
+17/256	3-5 Dinosaur 3-5 Adamant 3-5 SnowCat	
+10/256	3-6 Demon 0-3 Answerer			
+8/256	3-5 Dinosaur 3-5 Adamant 3-5 SnowCat	
+
+
+Nasty Dungeon 5F
+68/256	1-4 FireMoth			
+68/256	1-4 Nitemare			
+34/256	1 CatWoman			
+34/256	1 Young-D 1 Wraith 1 CatWoman	
+17/256	1 Adamant			
+17/256	1 Young-D 1 Wraith 1 CatWoman	
+10/256	1-4 FireMoth			
+8/256	4-8 Dinosaur			
+
+
+Odin's Overworld			
+68/256	1 Lamia 1 LavaWorm 1 Killer	
+68/256	1-3 Wraith 1-3 Answerer		
+34/256	1 Young-D 1 Wraith 1 CatWoman	
+34/256	1-3 Lamia 1-3 Killer		
+17/256	1 Adamant			
+17/256	4-8 Dinosaur			
+10/256	1-4 Nitemare			
+8/256	1-3 Ghast 1-3 Killer 1-3 Dinosaur
+
+
+Valhalla Palace 1F
+68/256  1-3 Wraith 1-3 Answerer
+68/256  1-3 Lamia 1-3 Killer
+34/256  1 Lamia 1 LavaWorm 1 Killer
+34/256  4-8 Dinosaur
+17/256  1 Young-D 1 Wraith 1 CatWoman
+17/256  1-3 Ghast 1-3 Killer 1-3 Dinosaur
+10/256  1 Young-D 1 Wraith 1 CatWoman
+8/256   1-3 Shark 1-3 SnowCat 1-3 Lamia
+
+
+Valhalla Palace 2F				
+68/256	4-8 Dinosaur				
+68/256	4-8 Shark				
+34/256	1-3 Lamia 1-3 Killer			
+34/256	1-3 Ghast 1-3 Killer 1-3 Dinosaur	
+17/256	1-3 Wraith 1-3 Answerer			
+17/256	1-3 Shark 1-3 SnowCat 1-3 Lamia		
+10/256	1 Lamia 1 LavaWorm 1 Killer		
+8/256	3-6 Demon 0-3 Answerer			
+
+
+Valhalla Palace 3F
+68/256  4-8 Shark
+68/256  1-3 Ghast 1-3 Killer 1-3 Dinosaur
+34/256  4-8 Dinosaur
+34/256  1-3 Shark 1-3 SnowCat 1-3 Lamia
+17/256  4-8 Dinosaur
+17/256  3-6 Demon 0-3 Answerer
+10/256  1-3 Lamia 1-3 Killer
+8/256   3-6 Demon 3-6 Adamant
+
+
+Valhalla Palace 4F				
+68/256	1-3 Ghast 1-3 Killer 1-3 Dinosaur	
+68/256	1-3 Shark 1-3 SnowCat 1-3 Lamia		
+34/256	4-8 Shark				
+34/256	3-6 Demon 0-3 Answerer			
+17/256	4-8 Shark				
+17/256	0-3 Young-D 3-6 CatWoman		
+10/256	4-8 Dinosaur				
+8/256	3-6 Demon 3-6 Adamant			
+
+
+Valhalla Palace 5F
+68/256  3-6 Demon 0-3 Answerer
+68/256  0-3 Young-D 3-6 CatWoman
+34/256  1-3 Shark 1-3 SnowCat 1-3 Lamia
+34/256  3-5 LavaWorm 0-3 FireMoth 0-3 Young-D
+17/256  1-3 Shark 1-3 SnowCat 1-3 Lamia
+17/256  0-3 Answerer 3-5 CatWoman 3-5 Nitemare
+10/256  1-3 Ghast 1-3 Killer 1-3 Dinosaur
+8/256   3-5 Dinosaur 3-5 Adamant 3-5 SnowCat
+
+
+Valhalla Palace 6F				
+68/256	0-3 Young-D 3-6 CatWoman		
+68/256	3-5 LavaWorm 0-3 FireMoth 0-3 Young-D	
+34/256	3-6 Demon 0-3 Answerer			
+34/256	3-6 Demon 3-6 Adamant			
+17/256	1-3 Shark 1-3 SnowCat 1-3 Lamia		
+17/256	0-3 Answerer 3-5 CatWoman 3-5 Nitemare	
+10/256	1-3 Shark 1-3 SnowCat 1-3 Lamia		
+8/256	3-5 Dinosaur 3-5 Adamant 3-5 SnowCat	
+
+
+Valhalla Palace 7F
+68/256	3-6 Demon 3-6 Adamant			
+68/256	0-3 Answerer 3-5 CatWoman 3-5 Nitemare	
+34/256	3-5 LavaWorm 0-3 FireMoth 0-3 Young-D	
+34/256	3-5 Dinosaur 3-5 Adamant 3-5 SnowCat	
+17/256	0-3 Young-D 3-6 CatWoman		
+17/256	3-5 Dinosaur 3-5 Adamant 3-5 SnowCat	
+10/256	3-6 Demon 0-3 Answerer			
+8/256	3-5 Dinosaur 3-5 Adamant 3-5 SnowCat	
+
+
+Valhalla Palace Stairs (East)
+68/256	1-3 Wraith 1-3 Answerer
+68/256	1-3 Lamia 1-3 Killer
+34/256	1 Lamia 1 LavaWorm 1 Killer
+34/256	4-8 Dinosaur
+17/256	1 Young-D 1 Wraith 1 CatWoman
+17/256	1-3 Ghast 1-3 Killer 1-3 Dinosaur
+10/256	1 Young-D 1 Wraith 1 CatWoman
+8/256	1-3 Shark 1-3 SnowCat 1-3 Lamia
+
+
+
+Nasty Dungeon 6F				
+68/256	3-6 Cocatris 3-6 Watcher		
+68/256	3-5 Ten-Gu 3-5 F-Flower 0-3 Dragon	
+34/256	3-6 Dragon 3-6 Chimera			
+34/256	3-5 Naga 0-3 Sorcerer 3-5 Chimera	
+17/256	3-6 Dragon 3-6 Chimera			
+17/256	3-5 Naga 0-3 Sorcerer 3-5 Chimera	
+10/256	3-5 Sorcerer 0-3 Falcon 0-3 Ice Crab	
+8/256	3-5 HugeToad 3-5 Watcher 3-5 Naga	
+
+
+Nasty Dungeon 7F
+68/256  3-5 Ten-Gu 3-5 F-Flower 0-3 Dragon
+68/256  3-5 Naga 0-3 Sorcerer 3-5 Chimera
+34/256  3-5 Ten-Gu 3-5 F-Flower 0-3 Dragon
+34/256  3-5 HugeToad 3-5 Watcher 3-5 Naga
+17/256  3-6 Cocatris 3-6 Watcher
+17/256  3-5 HugeToad 3-5 Watcher 3-5 Naga
+10/256  3-6 Dragon 3-6 Chimera
+8/256   3-5 F-Flower 3-5 Ridean 3-5 HugeToad
+
+
+Nasty Dungeon 8F
+68/256	3-5 HugeToad 3-5 Watcher 3-5 Naga
+68/256	3-5 F-Flower 3-5 Ridean 3-5 HugeToad
+34/256	3-5 Naga 0-3 Sorcerer 3-5 Chimera
+34/256	3-5 F-Flower 3-5 Ridean 3-5 HugeToad
+17/256	3-6 Cocatris 3-6 Watcher
+17/256	3-5 F-Flower 3-5 Ridean 3-5 HugeToad
+10/256	3-6 Dragon 3-6 Chimera
+8/256	3-5 F-Flower 3-5 Ridean 3-5 HugeToad
+
+
+Final Overworld					
+68/256	1 Cocatris 1 Ice Crab 1 Watcher		
+68/256	1-3 Nymph 1-3 Falcon			
+34/256	1-4 Ridean				
+34/256	1-3 Nymph 1-3 Falcon			
+17/256	1 HugeToad				
+17/256	1-3 Nymph 1-3 Falcon			
+10/256	1 HugeToad				
+8/256	1-3 Ice Crab 1-3 Ten-Gu 1-3 Nymph	
+
+
+Final Dungeon 1F
+68/256  4-8 Dragon
+68/256  4-8 Sorcerer
+34/256  1 Cocatris 1 Ice Crab 1 Watcher
+34/256  1-3 Ice Crab 1-3 Ten-Gu 1-3 Nymph
+17/256  1-4 Ridean
+17/256  1-3 Ice Crab 1-3 Ten-Gu 1-3 Nymph
+10/256  1 HugeToad
+8/256   0-3 Falcon 3-6 Ice Crab
+
+
+Final Dungeon 2F				
+68/256	4-8 Dragon				
+68/256	4-8 Sorcerer				
+34/256	1-3 Nymph 1-3 Falcon			
+34/256	1-3 Ice Crab 1-3 Ten-Gu 1-3 Nymph	
+17/256	1 Cocatris 1 Ice Crab 1 Watcher		
+17/256	0-3 Falcon 3-6 Ice Crab			
+10/256	1-4 Ridean				
+8/256	0-3 Ice Crab 3-6 Ten-Gu			
+
+
+Final Dungeon 3F
+68/256  1-3 Ice Crab 1-3 Ten-Gu 1-3 Nymph
+68/256  1-3 Dragon 1-3 Chimera 1-3 Ridean
+34/256  4-8 Sorcerer
+34/256  0-3 Falcon 3-6 Ice Crab
+17/256  4-8 Dragon
+17/256  0-3 Ice Crab 3-6 Ten-Gu
+10/256  1-4 Ridean
+8/256   0-3 Nymph 3-5 Cocatris 0-3 Falcon
+
+
+Final Dungeon 4F				
+68/256	1-3 Dragon 1-3 Chimera 1-3 Ridean	
+68/256	0-3 Falcon 3-6 Ice Crab			
+34/256	1-3 Ice Crab 1-3 Ten-Gu 1-3 Nymph	
+34/256	0-3 Ice Crab 3-6 Ten-Gu			
+17/256	4-8 Dragon				
+17/256	0-3 Nymph 3-5 Cocatris 0-3 Falcon	
+10/256	4-8 Dragon				
+8/256	3-5 Sorcerer 0-3 Falcon 0-3 Ice Crab	
+
+
+Final Dungeon 5F
+68/256  0-3 Falcon 3-6 Ice Crab
+68/256  0-3 Ice Crab 3-6 Ten-Gu
+34/256  0-3 Falcon 3-6 Ice Crab
+34/256  0-3 Nymph 3-5 Cocatris 0-3 Falcon
+17/256  1-3 Dragon 1-3 Chimera 1-3 Ridean
+17/256  3-5 Sorcerer 0-3 Falcon 0-3 Ice Crab
+10/256  1-3 Ice Crab 1-3 Ten-Gu 1-3 Nymph
+8/256   3-5 Sorcerer 0-3 Falcon 0-3 Ice Crab
+
+
+Final Dungeon 6F				
+68/256	0-3 Ice Crab 3-6 Ten-Gu			
+68/256	0-3 Nymph 3-5 Cocatris 0-3 Falcon	
+34/256	0-3 Ice Crab 3-6 Ten-Gu			
+34/256	3-5 Sorcerer 0-3 Falcon 0-3 Ice Crab	
+17/256	0-3 Falcon 3-6 Ice Crab			
+17/256	3-5 Sorcerer 0-3 Falcon 0-3 Ice Crab	
+10/256	1-3 Dragon 1-3 Chimera 1-3 Ridean	
+8/256	3-6 Dragon 3-6 Chimera			
+
+
+Final Dungeon 7F
+68/256  0-3 Nymph 3-5 Cocatris 0-3 Falcon
+68/256  3-5 Sorcerer 0-3 Falcon 0-3 Ice Crab
+34/256  0-3 Nymph 3-5 Cocatris 0-3 Falcon
+34/256  3-5 Sorcerer 0-3 Falcon 0-3 Ice Crab
+17/256  0-3 Ice Crab 3-6 Ten-Gu
+17/256  3-6 Dragon 3-6 Chimera
+10/256  1-3 Dragon 1-3 Chimera 1-3 Ridean
+8/256   3-6 Dragon 3-6 Chimera
+
+
+Final Dungeon 8F			
+68/256	3-6 Dragon 3-6 Chimera			
+68/256	3-6 Cocatris 3-6 Watcher		
+34/256	3-6 Dragon 3-6 Chimera			
+34/256	3-6 Cocatris 3-6 Watcher		
+17/256	3-5 Sorcerer 0-3 Falcon 0-3 Ice Crab	
+17/256	3-5 Naga 0-3 Sorcerer 3-5 Chimera	
+10/256	3-5 Sorcerer 0-3 Falcon 0-3 Ice Crab	
+8/256	3-5 HugeToad 3-5 Watcher 3-5 Naga	
+
+
+Final Dungeon 9F
+68/256	3-6 Cocatris 3-6 Watcher		
+68/256	3-5 Ten-Gu 3-5 F-Flower 0-3 Dragon	
+34/256	3-6 Dragon 3-6 Chimera			
+34/256	3-5 Naga 0-3 Sorcerer 3-5 Chimera	
+17/256	3-6 Dragon 3-6 Chimera			
+17/256	3-5 Naga 0-3 Sorcerer 3-5 Chimera	
+10/256	3-5 Sorcerer 0-3 Falcon 0-3 Ice Crab	
+8/256	3-5 HugeToad 3-5 Watcher 3-5 Naga	
+
+
+Final Dungeon 10F				
+68/256	3-5 Ten-Gu 3-5 F-Flower 0-3 Dragon	
+68/256	3-5 Naga 0-3 Sorcerer 3-5 Chimera	
+34/256	3-5 Ten-Gu 3-5 F-Flower 0-3 Dragon	
+34/256	3-5 HugeToad 3-5 Watcher 3-5 Naga	
+17/256	3-6 Cocatris 3-6 Watcher		
+17/256	3-5 HugeToad 3-5 Watcher 3-5 Naga	
+10/256	3-6 Dragon 3-6 Chimera			
+8/256	3-5 F-Flower 3-5 Ridean 3-5 HugeToad	
+
+
+Final Dungeon 11F
+68/256	3-5 HugeToad 3-5 Watcher 3-5 Naga
+68/256	3-5 F-Flower 3-5 Ridean 3-5 HugeToad
+34/256	3-5 Naga 0-3 Sorcerer 3-5 Chimera
+34/256	3-5 F-Flower 3-5 Ridean 3-5 HugeToad
+17/256	3-6 Cocatris 3-6 Watcher
+17/256	3-5 F-Flower 3-5 Ridean 3-5 HugeToad
+10/256	3-6 Dragon 3-6 Chimera
+8/256	3-5 F-Flower 3-5 Ridean 3-5 HugeToad
+
+
+
+Central Shrine- Stairs 1		
+68/256	1-3 GunFish 1-3 Roc		
+68/256	1-3 SunPlant 1-3 Wight		
+34/256	4-8 GianToad		
+34/256	1 Musashi			
+17/256	4-8 Giant			
+17/256	1 SS				
+10/256	4-8 Giant			
+8/256	1 Intrcept			
+
+
+Central Shrine- Stairs 2
+68/256  4-8 GianToad
+68/256  1-3 Sandworm 1-3 Evil Eye
+34/256  4-8 DemoLoad
+34/256  1 Hydra 1 F-Spider 1 Plague
+17/256  1-3 BlackCat 1-3 MadCeder 1-3 Sylph
+17/256  1-4 Pudding
+10/256  0-3 DemoLoad 3-5 Rakshasa 3-5 Wizard
+8/256   1 Intrcept
+
+
+Central Shrine- Stairs 3			
+68/256	4-8 Giant				
+68/256	4-8 DemoLoad				
+34/256	1-3 BlackCat 1-3 MadCeder 1-3 Sylph	
+34/256	1 Salamand 1 C-Fisher 1 KingCrab	
+17/256	1-3 Gloom 1-3 Garuda 1-3 Great-D	
+17/256	1 Hydra 1 F-Spider 1 Plague		
+10/256	3-5 Bl. Belt 3-5 Paladin 0-3 Giant	
+8/256	1 Hydra 1 F-Spider 1 Plague		
+
+
+Central Shrine- Stairs 4
+68/256  1-3 Scylla 1-3 Moaner 1-3 BoneKing
+68/256  1-3 Gloom 1-3 Garuda 1-3 Great-D
+34/256  0-3 Rock 3-6 Squid
+34/256  1-3 BlackCat 1-3 MadCeder 1-3 Sylph
+17/256  3-6 Garuda 3-6 Great-D
+17/256  1 Salamand 1 C-Fisher 1 KingCrab
+10/256  0-3 Cicada 3-5 Shiitake 0-3 Musashi
+8/256   1-4 Pudding
+
+
+Central Shrine- Stairs 5			
+68/256	3-6 Salamand 0-3 KingCrab		
+68/256	0-3 Rock 3-6 Squid			
+34/256	0-3 Hydra 3-6 F-Spider			
+34/256	1-3 Scylla 1-3 Moaner 1-3 BoneKing	
+17/256	3-6 BlackCat 3-6 Sylph			
+17/256	1-3 Gloom 1-3 Garuda 1-3 Great-D	
+10/256	3-5 Spector 3-5 SS 3-5 T Rex		
+8/256	1-3 BlackCat 1-3 MadCeder 1-3 Sylph	
+
+
+Central Shrine- Stairs 6
+68/256  0-3 Sandworm 0-3 Evil Eye 3-5 G-7
+68/256  0-3 Hydra 3-6 F-Spider
+34/256  0-3 GunFish 0-3 Roc 3-5 Sleipnir
+34/256  3-6 Salamand 0-3 KingCrab
+17/256  3-5 Spector 3-5 SS 3-5 T Rex
+17/256  0-3 Rock 3-6 Squid
+10/256  3-5 D-Turtle 3-5 Sphinx 3-5 Intrcept
+8/256   1-3 BlackCat 1-3 MadCeder 1-3 Sylph
+
+
+Central Shrine- Stairs 7			
+68/256	0-3 SunPlant 0-3 Wight 3-5 Ironman	
+68/256	0-3 GunFish 0-3 Roc 3-5 Sleipnir	
+34/256	3-6 Garuda 3-6 Great-D			
+34/256	0-3 Sandworm 0-3 Evil Eye 3-5 G-7	
+17/256	3-5 D-Turtle 3-5 Sphinx 3-5 Intrcept	
+17/256	0-3 Hydra 3-6 F-Spider			
+10/256	3-5 Pudding 3-5 Cancer 3-5 Wyrm		
+8/256	3-6 Salamand 0-3 KingCrab		
+
+
+Central Shrine- Stairs 8
+68/256  3-6 Scylla 3-6 Moaner
+68/256  3-6 BlackCat 3-6 Sylph
+34/256  3-5 Spector 3-5 SS 3-5 T Rex
+34/256  3-6 Garuda 3-6 Great-D
+17/256  3-5 Pudding 3-5 Cancer 3-5 Wyrm
+17/256  0-3 SunPlant 0-3 Wight 3-5 Ironman
+10/256  3-5 Pudding 3-5 Cancer 3-5 Wyrm
+8/256   3-6 Salamand 0-3 KingCrab
+
+
+Central Shrine- Maze
+68/256	0-3 Cicada 3-5 Shiitake 0-3 Musashi
+68/256	3-5 Bl. Belt 3-5 Paladin 0-3 Giant
+34/256	3-5 D-Turtle 3-5 Sphinx 3-5 Intrcept
+34/256	0-3 DemoLoad 3-5 Rakshasa 3-5 Wizard
+17/256	3-5 Pudding 3-5 Cancer 3-5 Wyrm
+17/256	3-6 Scylla 3-6 Moaner
+10/256	1 Haniwa
+8/256	0-3 SunPlant 0-3 Wight 3-5 Ironman

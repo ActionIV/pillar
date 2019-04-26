@@ -1,6 +1,13 @@
 import random
 from collections import Counter
 
+def rollGroupSize(text):
+	roll_range = text.split("-")
+	if len(roll_range) > 1:
+		return random.randint(int(roll_range[0]), int(roll_range[1]))
+	else:
+		return 1
+
 def randomTarget(target_list, combatants):
 	target = ""
 	if not target_list:

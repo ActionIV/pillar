@@ -4,7 +4,7 @@ import operator
 import openpyxl
 from collections import Counter
 from classes import Player, Enemy, NPC, Actor, Command
-from combat import (randomTarget, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition, hitScore,
+from combat import (randomTarget, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition, hitScore, rollGroupSize,
 inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition, applyHeal, postBattle)
 
 path1 = r"FFL2 Data.xlsx"
@@ -20,6 +20,7 @@ commands = workbook.parse("Weapon", index_col = 'Index')
 ms_prob = workbook.parse("Move Probability")
 growth = workbook.parse("Growth Rates", index_col = 'RACE')
 m_skills = workbook.parse("Mutant Skills", index_col = 'DS')
+encounters = workbook.parse("Encounters")
 
 # Loop through each sheet of the battle log, appending each to the battles list
 battles = []
@@ -64,6 +65,7 @@ for each in range(len(battles)):
 print("1. Run simulator")
 print("2. Print character sheets")
 print("3. Monster transformation")
+print("4. Generate random encounter")
 operation = int(input("Enter a number: "))
 
 if operation == 1:
@@ -1016,8 +1018,11 @@ if operation == 1:
 				enemy_warning = False
 				player_surprise = False
 				player_warning = False
+
+				# Provide options to GM at the end of a round
 				post_round = "n"
 				while post_round != "y":
+					print("--------------------------")
 					print("1. Run another round")
 					print("2. Change commands/targets")
 					print("3. End this battle")
@@ -1164,3 +1169,35 @@ elif operation == 2:
 			print("")
 elif operation == 3:
 	pass
+elif operation == 4:
+	gen = "y"
+	while gen != "n":
+		zone = input("Generate encounter for which zone: ")
+		roll = random.randint(1,256)
+		group1 = ""
+		group2 = ""
+		group3 = ""
+		num1 = 0
+		num2 = 0
+		num3 = 0
+
+		zone_table = encounters.loc[encounters["ZONE"] == zone]
+		for row in range(8):
+			if zone_table.iloc[row, 2] >= roll:
+				range1 = str(zone_table.iloc[row, 4])
+				num1 = rollGroupSize(range1)
+				group1 = zone_table.iloc[row, 5]
+				print("{ %s - %d" % (group1, num1), end = " ")
+				if not pandas.isnull(zone_table.iloc[row, 6]):
+					range2 = str(zone_table.iloc[row, 6])
+					num2 = rollGroupSize(range2)
+					group2 = zone_table.iloc[row, 7]
+					print("| %s - %d" % (group2, num2), end = " ")
+					if not pandas.isnull(zone_table.iloc[row, 8]):				
+						range3 = str(zone_table.iloc[row, 8])
+						num3 = rollGroupSize(range3)
+						group3 = zone_table.iloc[row, 9]
+						print("| %s - %d" % (group3, num3), end = " ")
+				print("}")
+				break
+		gen = input("Generate another (y/n)?: ")
