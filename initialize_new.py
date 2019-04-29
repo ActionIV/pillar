@@ -1166,42 +1166,71 @@ elif operation == 2:
 			print("GOLD: %d" % players.iloc[count,42])
 			print("")
 elif operation == 3:
-	transformations = workbook.parse("Evolve")
-	not_monsters = ["Human", "Mutant", "Robot"]
-	monster_players = players[players["CLASS"].isin(not_monsters) == False]
-	mp = monster_players.loc[players["PLAYER"] != "NPC"]
-	print(mp["CHARACTER"])
-	who = input("Transform which character?: ")
-	meat = input("Meat from which monster?: ")
-	current_monster = mp.loc[who, "CLASS"]
+	more = "y"
+	while more != "n":
+		transformations = workbook.parse("Evolve")
+		not_monsters = ["Human", "Mutant", "Robot"]
+		monster_players = players[players["CLASS"].isin(not_monsters) == False]
+		mp = monster_players.loc[players["PLAYER"] != "NPC"]
+		print(mp["CHARACTER"])
+		who = input("Transform which character?: ")
+		meat = input("Meat from which monster?: ")
+		current_monster = mp.loc[who, "CLASS"]
 
-	meat_type = ""
-	meat_class = 0
-	meat_add = 0
-	meat_subtract = 0
-	current_ds = 0
-	current_class = 0
-	current_type = ""
+		meat_type = ""
+		meat_class = 0
+		meat_add = 0
+		meat_subtract = 0
+		current_ds = 0
+		current_class = 0
+		current_type = ""
+		new_monster = ""
+		type_diff = 0
 
-	for row in range(transformations.shape[0]):
-		for col in range(transformations.shape[1]):
-			if transformations.iloc[row,col] == meat:
-				meat_ds = transformations.iloc[row,col+1]
-				meat_class = transformations.loc[row,"FAMILY"]
-				meat_type = transformations.loc[row,"MEAT TYPE"]
-				mead_add = transformations.loc[row,"ADD"]
-				mead_subtract = transformations.loc[row,"SUBTRACT"]
-			elif transformation.iloc[row,col] == current_monster:
-				current_ds = transformations.iloc[row,col+1]
-				current_class = transformations.loc[row,"FAMILY"]
-				current_type = transformations.loc[row,"MEAT TYPE"]
+		for row in range(transformations.shape[0]):
+			for col in range(transformations.shape[1]):
+				if transformations.iloc[row,col] == meat:
+					meat_ds = transformations.iloc[row,col+1]
+					meat_class = transformations.loc[row,"FAMILY"]
+					meat_type = transformations.loc[row,"MEAT TYPE"]
+					meat_add = transformations.loc[row,"ADD"]
+					meat_subtract = transformations.loc[row,"SUBTRACT"]
+				elif transformations.iloc[row,col] == current_monster:
+					current_ds = transformations.iloc[row,col+1]
+					current_class = transformations.loc[row,"FAMILY"]
+					current_type = transformations.loc[row,"MEAT TYPE"]
 
-	next_class = current_class + meat_add
-	if next_class > 35:
-		next_class = current_class - meat_subtract
+		if current_type in ("A", "B") and meat_type == "C":
+			type_diff = 1
+		elif current_type in ("B", "C") and meat_type == "A":
+			type_diff = -1
 
-	max_ds = max(current_ds, meat_ds)
+		next_class = int(current_class + meat_add + type_diff)
+		if next_class > 35:
+			next_class = int(current_class + meat_subtract + type_diff)
 
+		max_ds = max(current_ds, meat_ds)
+
+		family_tree = []
+		col = 4
+		while col < transformations.shape[1]:
+			if not pandas.isnull(transformations.iloc[next_class,col]):
+				family_tree.append(tuple((transformations.iloc[next_class,col], transformations.iloc[next_class,col+1])))
+			col += 2
+
+		for member in range(len(family_tree)):
+			if member == 0 and max_ds <= family_tree[member][1]:
+				new_monster = family_tree[member][0]
+				break
+			elif max_ds < family_tree[member][1]:
+				new_monster = family_tree[member-1][0]
+				break
+			else:
+				new_monster = family_tree[member][0]
+		
+		print("%s changed from %s to %s." % (who, current_monster, new_monster))
+
+		more = input("Another transformation? (y/n): ")
 
 
 	#print("Current: %s | Meat Class: %d | Meat Type: %s" % (current_class, meat_class, meat_type))
