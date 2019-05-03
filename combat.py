@@ -552,13 +552,15 @@ def buildResistances(skills, resist_list, resist_table):
 			else:
 				resist_list.append(result)
 
-def checkResistance(resist_list, element, status, barriers):
+def checkResistance(target, element, status, barriers):
 	total_resists = barriers.copy()
-	total_resists.extend(resist_list)
+	total_resists.extend(target.resists)
 
 	# Check the total list for the resistance in question
 	for count in range(len(total_resists)):
 		if total_resists[count] in (status, element) and total_resists[count] != "None":
+			return True
+		elif element == "Light" and target.family != "Undead":
 			return True
 	
 	# If no resistance was found

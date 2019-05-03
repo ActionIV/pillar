@@ -2,10 +2,13 @@ import pandas
 import random
 import operator
 import openpyxl
+import sys
 from collections import Counter
 from classes import Player, Enemy, NPC, Actor, Command
 from combat import (randomTarget, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition, hitScore,
 inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition, applyHeal, postBattle)
+
+stdout = sys.stdout
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsm"
@@ -67,6 +70,8 @@ print("3. Monster transformation")
 operation = int(input("Enter a number: "))
 
 if operation == 1:
+	sys.stdout = open("battles.log", 'w')
+	sys.stdout = stdout
 	run_sim = "y"
 	while run_sim != "n":
 
@@ -238,6 +243,7 @@ if operation == 1:
 		# EXECUTE COMBAT ROUND
 		while another_round == "y":
 			rd += 1
+			sys.stdout = open("battles.log", 'a')
 			print("~~~ Round %d ~~~" % (rd))
 			# SET CURRENT STATS (in Round 1 only), ROLL INITIATIVE, AND SORT
 			if rd == 1:
@@ -658,7 +664,7 @@ if operation == 1:
 								else:
 									cut_check = attacker.getStrength() + command.percent
 									# Check for weapon resistance and whether the attack was blocked (then again, a blocked attack wouldn't get here...)
-									if checkResistance(target.resists, "Weapon", command.status, barriers):
+									if checkResistance(target, "Weapon", command.status, barriers):
 										cut_check = int(cut_check/2)
 									if blocked:
 										cut_check = int(cut_check/2)
@@ -687,7 +693,7 @@ if operation == 1:
 								buildResistances(player_barriers, barriers, commands)
 							
 							# Check total resists
-							if checkResistance(target.resists, command.element, command.status, barriers):
+							if checkResistance(target, command.element, command.status, barriers):
 								# Elemental resistance was found, but it's a melee attack so it can't be resisted
 								if command.element != "None" and command.att_type in ("Melee", "Ranged"):
 									dmg_reduction = True
@@ -719,7 +725,7 @@ if operation == 1:
 							if blocked == True:
 								damage = int(damage/2)
 							# If weapon resistance is found against a non-magical attack, damage is halved
-							if command.att_type in ("Melee", "Ranged") and checkResistance(target.resists, "Weapon", command.status, barriers):
+							if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", command.status, barriers):
 								damage = int(damage/2)
 							if critical_hit == True:
 								damage = int(damage*1.5)
@@ -856,7 +862,7 @@ if operation == 1:
 							buildResistances(enemy_barriers, barriers, commands)
 						else:
 							buildResistances(player_barriers, barriers, commands)
-						if checkResistance(target.resists, command.element, command.status, barriers):
+						if checkResistance(target, command.element, command.status, barriers):
 							print("%s is strong against %s." % (target.name, command.name))
 							continue
 						else:
@@ -893,7 +899,7 @@ if operation == 1:
 							# 	damage = int(damage/2)
 
 							# If weapon resistance is found against a non-magical attack, damage is halved
-							if command.att_type in ("Melee", "Ranged") and checkResistance(target.resists, "Weapon", command.status, barriers):
+							if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", command.status, barriers):
 								damage = int(damage/2)
 							if critical_hit == True:
 								damage = int(damage*1.5)
@@ -1028,11 +1034,27 @@ if operation == 1:
 
 				# Provide options to GM at the end of a round
 				post_round = "n"
+				sys.stdout = stdout
 				while post_round != "y":
-					print("--------------------------")
+					#for each in range(len(party_order)):
+					#	pos = party_order[each][2]
+					#	print("| %s: %d/%d %s" % (combatants[pos].name, combatants[pos].current_HP, combatants[pos].HP, combatants[pos].characterStatus()), end = " |")
+					#print("")
+					## Print enemy status line at the end of a simulation
+					#enemy_list = []
+					#for count in range(len(combatants)):
+					#	if (combatants[count].role == "Enemy" and combatants[count].isActive()):
+					#		enemy_list.append(combatants[count].name)
+					#remaining_enemies = Counter(enemy_list)
+					#remaining_enemies.keys()
+					#for key, number in remaining_enemies.items():
+					#	print("{ %s - %d" % (key, number), end = " }")
+					#print("")
+					print("----------------------------------------")
 					print("1. Run another round")
 					print("2. Change commands/targets")
 					print("3. End this battle")
+					print("----------------------------------------")
 					mid_bat = int(input("Enter a number: "))
 					if mid_bat == 1:
 						post_round = "y"
@@ -1054,6 +1076,7 @@ if operation == 1:
 						break
 
 		# Print party status line at the end of a simulation
+		sys.stdout = open("battles.log", 'a')
 		for each in range(len(party_order)):
 			pos = party_order[each][2]
 			print("| %s: %d/%d %s" % (combatants[pos].name, combatants[pos].current_HP, combatants[pos].HP, combatants[pos].characterStatus()), end = " |")
@@ -1081,6 +1104,8 @@ if operation == 1:
 			print("{ %s - %d" % (key, number), end = " }")
 		print("")
 
+		sys.stdout = stdout
+		print("Battle ended.")
 		write_to_excel = input("Save battle? (y/n): ")
 		if write_to_excel == "y":
 			for count in range(len(combatants)):
