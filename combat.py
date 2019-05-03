@@ -1,12 +1,12 @@
 import random
 from collections import Counter
 
-def rollGroupSize(text):
-	roll_range = text.split("-")
-	if len(roll_range) > 1:
-		return random.randint(int(roll_range[0]), int(roll_range[1]))
-	else:
-		return 1
+# def rollGroupSize(text):
+# 	roll_range = text.split("-")
+# 	if len(roll_range) > 1:
+# 		return random.randint(int(roll_range[0]), int(roll_range[1]))
+# 	else:
+# 		return 1
 
 def randomTarget(target_list, combatants):
 	target = ""
@@ -315,7 +315,7 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 			print("%s is strong against %s." % (attacker.name, command.name))
 		else:
 			if command.stat == "Status":
-				inflictCondition(command, avenger, attacker)
+				inflictCondition(command, avenger, attacker, True)
 			elif command.stat == "Mana":
 				counter_dmg = rollDamage(command, avenger)
 				defense = determineDefense(attacker, command, counter_dmg)
@@ -338,7 +338,7 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 def applyDamage(damage, target):
 	target.current_HP -= damage
 	if target.current_HP <= 0:
-		applyCondition("Stun", target)
+		applyCondition("Stun", target, False)
 		return 1
 	else:
 		return 0
@@ -441,16 +441,19 @@ def affectStat(target, command):
 ####### STATUS FUNCTIONS #######
 ################################
 
-def inflictCondition(command, attacker, target):
+def inflictCondition(command, attacker, target, output):
 	# Originally (target - attacker) * 2 + 50
 	hit_chance = target.getMana() - attacker.getMana() + 50
 	roll = random.randint(1,100)
 	if hit_chance < roll:
-		applyCondition(command.status, target)
+		applyCondition(command.status, target, output)
+		return 1
 	else:
-		print("%s resisted." % target.name, end = " ")
+		if output:
+			print("%s resisted." % target.name, end = " ")
+		return 0
 
-def applyCondition(status, target):
+def applyCondition(status, target, output):
 	if status == "Stone":
 		target.stoned = "y"
 		target.blinded = "n"
@@ -459,25 +462,32 @@ def applyCondition(status, target):
 		target.paralyzed = "n"
 		target.asleep = "n"
 		target.cursed = "n"
-		print("Turned %s to stone." % target.name, end = " ")
+		if output:
+			print("Turned %s to stone." % target.name, end = " ")
 	elif status == "Curse":
 		target.cursed = "y"
-		print("Cursed %s." % target.name, end = " ")
+		if output:
+			print("Cursed %s." % target.name, end = " ")
 	elif status == "Blind":
 		target.blinded = "y"
-		print("Blinded %s." % target.name, end = " ")
+		if output:
+			print("Blinded %s." % target.name, end = " ")
 	elif status == "Sleep":
 		target.asleep = "y"
-		print("Put %s to sleep." % target.name, end = " ")
+		if output:
+			print("Put %s to sleep." % target.name, end = " ")
 	elif status == "Paralyze":
 		target.paralyzed = "y"
-		print("Paralyzed %s." % target.name, end = " ")
+		if output:
+			print("Paralyzed %s." % target.name, end = " ")
 	elif status == "Poison":
 		target.poisoned = "y"
-		print("Poisoned %s." % target.name, end = " ")
+		if output:
+			print("Poisoned %s." % target.name, end = " ")
 	elif status == "Confuse":
 		target.confused = "y"
-		print("Confused %s." % target.name, end = " ")
+		if output:
+			print("Confused %s." % target.name, end = " ")
 	elif status == "Stun":
 		target.current_HP = 0
 		target.lives -= 1
@@ -487,6 +497,8 @@ def applyCondition(status, target):
 		target.paralyzed = "n"
 		target.asleep = "n"
 		target.cursed = "n"
+		if output:
+			print("%s fell." % target.name, end = " ")
 
 def removeCondition(status, target):
 	if status == "Stone" and target.isStoned():

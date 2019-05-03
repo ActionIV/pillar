@@ -663,7 +663,7 @@ if operation == 1:
 									if blocked:
 										cut_check = int(cut_check/2)
 									if cut_check > target.getDefense() and target.family != "God":
-										applyCondition("Stun", target)
+										applyCondition("Stun", target, False)
 										print("%s was cut." % target.name)
 										continue
 									else:
@@ -709,7 +709,7 @@ if operation == 1:
 											critical_hit = True
 
 							if command.status != "None":
-								inflictCondition(command, attacker, target)
+								inflictCondition(command, attacker, target, True)
 							# One pass for most attacks, but accumulates damage for multi-hit attacks
 							for hit in range(hit_count):
 								offense = rollDamage(command, attacker)
@@ -802,6 +802,7 @@ if operation == 1:
 
 						group_hits = 0
 						group_misses = 0
+						inflicted = 0
 
 						# Iterate through every enemy in a Group to allow for misses or nullifies to be tallied
 						for each in range(len(combatants)):
@@ -866,7 +867,10 @@ if operation == 1:
 							if command.status != "None":
 								for who in range(len(combatants)):
 									if combatants[who].name == target.name and combatants[who].isTargetable():
-										inflictCondition(command, attacker, combatants[who])
+										if target.role in ("Player", "NPC"):
+											inflictCondition(command, attacker, combatants[who], True)
+										else:
+											inflicted += inflictCondition(command, attacker, combatants[who], False)
 							offense = rollDamage(command, attacker)
 							defense = determineDefense(target, command, offense)
 
@@ -896,7 +900,12 @@ if operation == 1:
 
 						# No damage on pure Status attacks
 						if command.stat == "Status":
-							print("")
+							if inflicted == 1:
+								print("%s was afflicted with %s." % (target.name, command.status))
+							elif inflicted > 1:
+								print("%d of the %s group were afflicted with %s." % (inflicted, target.name, command.status))
+							else:
+								print("")
 						elif damage <= 0:
 							damage = 0
 							print("No damage.")
