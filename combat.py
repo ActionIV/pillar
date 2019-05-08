@@ -526,7 +526,7 @@ def removeCondition(status, target):
 		target.current_HP = 1
 		target.lives += 1
 		print("Revived %s." % target.name, end = " ")
-	elif status == "Full Restore":
+	elif status == "Full Restore" and target.characterStatus() != "GOOD":
 		target.stoned = "n"
 		target.blinded = "n"
 		target.poisoned = "n"
@@ -535,6 +535,8 @@ def removeCondition(status, target):
 		target.asleep = "n"
 		target.cursed = "n"
 		print("%s was restored." % target.name, end = " ")
+	else:
+		print("No effect on %s." % target.name, end = " ")
 
 ####################################
 ####### RESISTANCE FUNCTIONS #######
@@ -561,6 +563,8 @@ def checkResistance(target, element, status, barriers):
 		if total_resists[count] in (status, element) and total_resists[count] != "None":
 			return True
 		elif element == "Light" and target.family != "Undead":
+			return True
+		elif element == "Death" and target.family == "Undead":
 			return True
 	
 	# If no resistance was found

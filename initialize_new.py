@@ -401,6 +401,14 @@ if operation == 1:
 						else:
 							continue
 
+				# COMMAND CHECK - does the command exist?
+				try:
+					commands.loc[attacker.command]
+				except KeyError:
+					sys.stdout = stdout
+					attacker.command = input("Invalid command. Enter a new one: ")
+					sys.stdout = open("battles.log", 'a')
+
 				# Start of round triggers (shield barriers)
 				if (commands.loc[attacker.command, "Target Type"] == "Block" and commands.loc[attacker.command, "Effect"] != "None"):
 					if attacker.role == "Enemy":
@@ -587,7 +595,6 @@ if operation == 1:
 				else:
 					remaining_uses = int(commands.loc[attacker.command, "#Uses"] * 0.8)
 
-				# DO I WANT TO MAKE "USES LEFT" THE WAY MARTIAL ARTS DEAL DAMAGE?
 				# Construct the command class for this instance
 				command = Command(attacker.command, commands, remaining_uses)
 
