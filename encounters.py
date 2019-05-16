@@ -24,7 +24,7 @@ while gen != "n":
     num3 = 0
 
     zone_table = encounters.loc[encounters["ZONE"] == zone]
-    for row in range(8):
+    for row in range(encounters.shape[0]):
         if zone_table.iloc[row, 2] >= roll:
             range1 = str(zone_table.iloc[row, 4])
             num1 = rollGroupSize(range1)

@@ -1173,9 +1173,11 @@ if operation == 1:
 
 elif operation == 2:
 	# Print Character Snapshots
-	char_sheets = input("Print character sheets (y/n)?: ")
-	if char_sheets == "y":
-		for count in range(len(players.index)):
+	# char_sheets = input("Print character sheets (y/n)?: ")
+	for count in range(len(players.index)):
+		if players.iloc[count,0] == "blank":
+			pass
+		else:
 			print("CHARACTER: %s  PLAYER: %s" % (players.iloc[count, 0], players.iloc[count, 2]))
 			print("CLASS: %s" % players.iloc[count, 3])
 			print("HP: %d | STR: %d | DEF: %d | AGL: %d | MANA: %d" % (players.iloc[count, 5],players.iloc[count, 7],
@@ -1201,10 +1203,10 @@ elif operation == 2:
 						print(players.iloc[count,skill], end = " - ")
 						print(players.iloc[count,skill+1], end = "]\n")
 					break
-			print("MAGI: %s" % players.iloc[count, 39])
-			print("OTHER MAGI: %s" % players.iloc[count, 40])
-			print("INVENTORY: %s" % players.iloc[count,41])
-			print("GOLD: %d" % players.iloc[count,42])
+			print("MAGI: %s" % players.iloc[count, 38])
+			print("OTHER MAGI: %s" % players.iloc[count, 41])
+			print("INVENTORY: %s" % players.iloc[count,42])
+			print("GOLD: %d" % players.iloc[count,43])
 			print("")
 elif operation == 3:
 	more = "y"
