@@ -550,6 +550,17 @@ if operation == 1:
 
 				# PC TARGET SETTING
 				else:
+					################## REMOVE IF HAVING ISSUES #####################
+					# If the target doesn't exist
+					if attacker.target_type != "":
+						try:
+							monsters.loc[attacker.target_type]
+						except KeyError:
+							sys.stdout = stdout
+							attacker.target_type = input("Invalid target. Enter a new one: ")
+							sys.stdout = open("battles.log", 'a')
+					################## REMOVE IF HAVING ISSUES #####################
+
 					temp_target = commands.loc[attacker.command, "Target Type"]
 					if temp_target in ("Single", "Group", "Ally"):
 						attacker.add_target(attacker.target_type)
