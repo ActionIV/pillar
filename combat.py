@@ -361,9 +361,9 @@ def rollDamage(command, attacker):
 	elif stat == "Set":
 		# Need to add race_bonus eventually...or do I? Robots have enough power already
 		if isinstance(command.rand_dmg, int) and command.rand_dmg > 0:
-			damage = command.min_dmg + random.randint(1,command.rand_dmg)
+			damage = command.min_dmg + random.randint(0,command.rand_dmg)
 		elif command.rand_dmg == "Str":
-			damage = command.min_dmg + random.randint(1,attacker.getStrength())
+			damage = command.min_dmg + random.randint(0,attacker.getStrength())
 		else:
 			damage = command.min_dmg
 	# For Martial Arts, mostly. Reducing total uses while changing the starting point for damage calculation should make this more effective early
@@ -432,9 +432,9 @@ def affectStat(target, command):
 		if target.current_Def <= 0:
 			target.current_Def = 0
 	if "Debuff" in command.effect:
-		print("%s decreases by %d. Stat: %d" % (stat, amount, target.getAgility()))
+		print("%s decreases by %d." % (stat, amount))
 	else:
-		print("%s increases by %d. Stat: %d" % (stat, amount, target.getAgility()))
+		print("%s increases by %d." % (stat, amount))
 	return target
 
 ################################

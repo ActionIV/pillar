@@ -261,50 +261,51 @@ if operation == 1:
 				enemy_warning = False
 				player_surprise = False
 				player_warning = False
-				for comb in range(len(combatants)):
-					for skill in range(len(combatants[comb].skills)):
-						if combatants[comb].role == "Enemy":
-							if combatants[comb].skills[skill] == "Surprise":
-								enemy_surprise = True
-							elif combatants[comb].skills[skill] == "Warning":
-								enemy_warning = True
-						elif combatants[comb].role in ("Player", "NPC"):
-							if combatants[comb].skills[skill] == "Surprise":
-								player_surprise = True
-							elif combatants[comb].skills[skill] == "Warning":
-								player_warning = True
-				
-				# Warning overrides surprise
-				if player_warning:
-					enemy_surprise = False
-				if enemy_warning:
-					player_surprise = False
+				if active_battle["ACTIONS TAKEN"].empty:
+					for comb in range(len(combatants)):
+						for skill in range(len(combatants[comb].skills)):
+							if combatants[comb].role == "Enemy":
+								if combatants[comb].skills[skill] == "Surprise":
+									enemy_surprise = True
+								elif combatants[comb].skills[skill] == "Warning":
+									enemy_warning = True
+							elif combatants[comb].role in ("Player", "NPC"):
+								if combatants[comb].skills[skill] == "Surprise":
+									player_surprise = True
+								elif combatants[comb].skills[skill] == "Warning":
+									player_warning = True
+					
+					# Warning overrides surprise
+					if player_warning:
+						enemy_surprise = False
+					if enemy_warning:
+						player_surprise = False
 
-				p_surprise_roll = random.randint(1,100)
-				e_surprise_roll = random.randint(1,100)
-				# SURPRISE LOGIC - check rolls
-				# If both sides have surprise, lower roll wins
-				if player_surprise and enemy_surprise:
-					if p_surprise_roll < e_surprise_roll and p_surprise_roll <= 50:
-						enemy_surprise = False
-						print("Strike First!")
-					elif p_surprise_roll > e_surprise_roll and e_surprise_roll <= 25:
-						player_surprise = False
-						print("Unexpected Attack!")
-					# If the rolls are the same, neither side wins a surprise round
-					else:
-						player_surprise = False
-						enemy_surprise = False
-				elif player_surprise:
-					if p_surprise_roll > 50:
-						player_surprise = False
-					else:
-						print("Strike First!")
-				elif enemy_surprise:
-					if e_surprise_roll > 25:
-						enemy_surprise = False
-					else:
-						print("Unexpected Attack!")
+					p_surprise_roll = random.randint(1,100)
+					e_surprise_roll = random.randint(1,100)
+					# SURPRISE LOGIC - check rolls
+					# If both sides have surprise, lower roll wins
+					if player_surprise and enemy_surprise:
+						if p_surprise_roll < e_surprise_roll and p_surprise_roll <= 50:
+							enemy_surprise = False
+							print("Strike First!")
+						elif p_surprise_roll > e_surprise_roll and e_surprise_roll <= 25:
+							player_surprise = False
+							print("Unexpected Attack!")
+						# If the rolls are the same, neither side wins a surprise round
+						else:
+							player_surprise = False
+							enemy_surprise = False
+					elif player_surprise:
+						if p_surprise_roll > 50:
+							player_surprise = False
+						else:
+							print("Strike First!")
+					elif enemy_surprise:
+						if e_surprise_roll > 25:
+							enemy_surprise = False
+						else:
+							print("Unexpected Attack!")
 
 			# RUN CHECK - Currently lacks a random component for players. Might want to add one
 			run_attempt = False
@@ -355,7 +356,7 @@ if operation == 1:
 			for count in range(len(combatants)):
 				if combatants[count].role in ("Player", "NPC"):
 					party_order.append(tuple((combatants[count].name, combatants[count].position, count)))
-			party_order = sorted(party_order, key = operator.itemgetter(1), reverse=True)
+			party_order = sorted(party_order, key = operator.itemgetter(1), reverse=False)
 
 			# Create barrier lists anew each round
 			enemy_barriers = []
@@ -497,6 +498,7 @@ if operation == 1:
 							roll = random.randint(1,100)
 							if roll < 51 and combatants[party_order[choice][2]].isTargetable():
 								sel_target = party_order[choice][0]
+								break
 						# If a target isn't selected via the weighted method...
 						if sel_target == "":
 							sel_target = randomTarget(party_order, combatants)
@@ -550,16 +552,16 @@ if operation == 1:
 
 				# PC TARGET SETTING
 				else:
-					################## REMOVE IF HAVING ISSUES #####################
-					# If the target doesn't exist
-					if attacker.target_type != "":
-						try:
-							monsters.loc[attacker.target_type]
-						except KeyError:
-							sys.stdout = stdout
-							attacker.target_type = input("Invalid target. Enter a new one: ")
-							sys.stdout = open("battles.log", 'a')
-					################## REMOVE IF HAVING ISSUES #####################
+					# ################## REMOVE IF HAVING ISSUES #####################
+					# # If the target doesn't exist
+					# if attacker.target_type != "":
+					# 	try:
+					# 		monsters.loc[attacker.target_type]
+					# 	except KeyError:
+					# 		sys.stdout = stdout
+					# 		attacker.target_type = input("Invalid target. Enter a new one: ")
+					# 		sys.stdout = open("battles.log", 'a')
+					# ################## REMOVE IF HAVING ISSUES #####################
 
 					temp_target = commands.loc[attacker.command, "Target Type"]
 					if temp_target in ("Single", "Group", "Ally"):
@@ -620,12 +622,13 @@ if operation == 1:
 						if foe == 0 and command.targeting == "All Enemies":
 							print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
 						elif command.targeting not in ("All Enemies", "Allies", "All"):
-							print("%s uses %d on %s. Ineffective." % (attacker.name, attacker.command, command.name))
+							print("%s uses %s on %s. Ineffective." % (attacker.name, attacker.command, attacker.targets[foe]))
 						continue
 
 					# Combat parameters
 					barriers = []
 					target = combatants[defender]
+					tar_position = target.position
 					if target.command != "None":
 						def_target_type = commands.loc[target.command, "Target Type"]
 						def_command_effect = commands.loc[target.command, "Effect"]
@@ -676,8 +679,8 @@ if operation == 1:
 							if "Cut" in command.effect:
 								# Replace the normal attack roll, or just have both?
 								cut_roll = random.randint(1,100)
-								if cut_roll <= (50 + attacker.current_Str):
-									print("Failed to cut.")
+								if cut_roll > (50 + attacker.current_Str):
+									print("Missed!")
 									continue
 								else:
 									cut_check = attacker.getStrength() + command.percent
@@ -830,43 +833,44 @@ if operation == 1:
 
 						# Iterate through every enemy in a Group to allow for misses or nullifies to be tallied
 						for each in range(len(combatants)):
-							iter_target = combatants[each]
-							if iter_target.command != "None":
-								foe_target_type = commands.loc[iter_target.command, "Target Type"]
-								foe_command_effect = commands.loc[iter_target.command, "Effect"]
-							else:
-								foe_target_type = "None"
-								foe_command_effect = "None"
+							if combatants[each].name == target.name and combatants[each].isTargetable():
+								iter_target = combatants[each]
+								if iter_target.command != "None":
+									foe_target_type = commands.loc[iter_target.command, "Target Type"]
+									foe_command_effect = commands.loc[iter_target.command, "Effect"]
+								else:
+									foe_target_type = "None"
+									foe_command_effect = "None"
 
-							# Blockable logic - attack must be Melee or Ranged and not have the "Never miss" property
-							if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
-								blockable = True
-							if (foe_target_type == "Block" or "Block" in foe_command_effect) and blockable:
-								block_roll = random.randint(1,100)
-								if block_roll <= (commands.loc[iter_target.command, "Percent"] + iter_target.getAgility()):
-									blocked = True
+								# Blockable logic - attack must be Melee or Ranged and not have the "Never miss" property
+								if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
+									blockable = True
+								if (foe_target_type == "Block" or "Block" in foe_command_effect) and blockable:
+									block_roll = random.randint(1,100)
+									if block_roll <= (commands.loc[iter_target.command, "Percent"] + iter_target.getAgility()):
+										blocked = True
 
-							# SETTING HIT CHANCE
-							if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
-								hit_chance = hitScore(command, attacker, iter_target.evasion)
-							# Magic attacks always hit, as does a weapon with the Never miss property
-							else:
-								hit_chance = 100
-							# DETERMINE HIT
-							hit_roll = random.randint(1,100)
-							if hit_roll <= hit_chance:
-								group_hits += 1
+								# SETTING HIT CHANCE
+								if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
+									hit_chance = hitScore(command, attacker, iter_target.evasion)
+								# Magic attacks always hit, as does a weapon with the Never miss property
+								else:
+									hit_chance = 100
+								# DETERMINE HIT
+								hit_roll = random.randint(1,100)
+								if hit_roll <= hit_chance:
+									group_hits += 1
 
-							# Melee attacks get blocked fully (even status-based ones)
-							# Added Ranged to the list for Group and All Enemy attacks
-							if (blocked == True and command.att_type in ("Melee", "Ranged")):
-								group_misses += 1
+								# Melee attacks get blocked fully (even status-based ones)
+								# Added Ranged to the list for Group and All Enemy attacks
+								if (blocked == True and command.att_type in ("Melee", "Ranged")):
+									group_misses += 1
 
-							# Nullify - end the attack since it was nullified on target
-							if ("Nullify" in foe_command_effect or foe_target_type == "Nullify") and command.att_type == "Magic":
-								group_misses += 1
-							
-							group_hits = group_hits - group_misses
+								# Nullify - end the attack since it was nullified on target
+								if ("Nullify" in foe_command_effect or foe_target_type == "Nullify") and command.att_type == "Magic":
+									group_misses += 1
+								
+								group_hits = group_hits - group_misses
 
 						# Reflect - change target into the attacker
 						# Cannot be used by monsters that can appear in groups due to group issues. Would require calling all combat code below
@@ -938,18 +942,30 @@ if operation == 1:
 							num_hits = 0
 							body_count = 0
 							if group_hits > 0:
-								for who in range(len(combatants)):
-									# Only damage those matching the target name and that are not already dead or stoned
-									if combatants[who].name == target.name and combatants[who].isTargetable():
+								who = 0
+								while num_hits < group_hits and who < len(combatants):
+									if combatants[who].name == target.name and combatants[who].isTargetable() and combatants[who].position == tar_position:
 										body_count += applyDamage(damage, combatants[who])
 										num_hits += 1
-									if num_hits == group_hits:
-										break
+										tar_position += 1
+										who = 0
+									else:
+										who += 1
+
+								# for who in range(len(combatants)):
+								# 	# Only damage those matching the target name and that are not already dead or stoned
+								# 	if combatants[who].name == target.name and combatants[who].isTargetable() and combatants[who].position == tar_position:
+								# 		body_count += applyDamage(damage, combatants[who])
+								# 		num_hits += 1
+								# 		tar_position += 1
+								# 		who = 0
+								# 	if num_hits == group_hits:
+								# 		break
 
 								# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
-								print("%d damage to %s group." % (damage, target.name), end = " ")
-								if group_misses > 0:
-									print("Missed %d." % group_misses)
+								print("%d damage, hitting %d members of %s group." % (damage, group_hits, target.name), end = " ")
+								# if group_hits > 0:
+								# 	print("Hit %d." % group_hits)
 								if body_count > 0:
 									print("Defeated %d." % body_count)
 								else:
@@ -1120,6 +1136,7 @@ if operation == 1:
 		remaining_enemies.keys()
 		for key, number in remaining_enemies.items():
 			print("{ %s - %d" % (key, number), end = " }")
+		print("")
 		print("")
 
 		sys.stdout = stdout
