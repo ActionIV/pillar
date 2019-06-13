@@ -237,7 +237,7 @@ def endOfTurn(attacker, traits):
 			attacker.poisoned = "n"
 		else:
 			print("%s is poisoned." % attacker.name, end = " ")
-			poison_dmg = attacker.HP * 0.1
+			poison_dmg = int(attacker.HP * 0.1)
 			print("%d damage." % poison_dmg)
 			if applyDamage(poison_dmg, attacker) == 1:
 				print("%s succumbed to the poison." % attacker.name)
@@ -272,7 +272,7 @@ def hitScore(command, attacker, target_agl):
 				return attacker.getStrength() + command.percent
 		# Bows use 2x AGL and the item's hit chance
 		else:
-			return attacker.getAgility() * 2 + command.percent - target_agl
+			return attacker.getAgility() * 2 + command.percent # - target_agl
 	# Melee attacks just use AGL
 	else:
 		return 100 - (2 * (target_agl - attacker.getAgility()))

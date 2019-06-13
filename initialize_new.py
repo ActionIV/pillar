@@ -1050,9 +1050,9 @@ if operation == 1:
 					combatants[each] = endOfTurn(combatants[each], commands)
 					# Should only be needed for "Regained sanity" purposes...and should go away in Alpha
 					# Being used for Surprise rounds...which means the input approach is not a good solution
-					if combatants[each].role == "Player" and combatants[each].command == "None":
-						combatants[each].command = input("New command for %s: " % combatants[each].name)
-						combatants[each].target_type = input("New target for %s: " % combatants[each].name)
+					# if combatants[each].role == "Player" and combatants[each].isActive() and combatants[each].command == "None":
+					# 	combatants[each].command = input("New command for %s: " % combatants[each].name)
+					# 	combatants[each].target_type = input("New target for %s: " % combatants[each].name)
 		#				pc_row = 0
 		#				for pc in range(len(party_order)):
 		#					if combatants[each].name == party_order[pc][0]:
@@ -1104,7 +1104,7 @@ if operation == 1:
 						which_target = input("Enter the target: ")
 						change = party_order[which_pc][2]
 						combatants[change].command = which_command
-						combatants[change].target = which_target
+						combatants[change].target_type = which_target
 					else:
 						another_round = "n"
 						break
