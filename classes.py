@@ -79,8 +79,6 @@ class Actor(object):
 			status.append("POIS")
 		if self.isConfused():
 			status.append("CONF")
-		if not status:
-			return "GOOD"
 		
 		condition = ",".join(status)
 		return condition

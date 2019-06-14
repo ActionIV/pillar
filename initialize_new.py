@@ -695,6 +695,7 @@ if operation == 1:
 										continue
 									else:
 										print("Too hard to cut.")
+										continue
 
 							# Reflect - change target into the attacker
 							if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":

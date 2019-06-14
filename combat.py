@@ -352,6 +352,9 @@ def rollDamage(command, attacker):
 	# Currently, Blind status will also reduce AGL damage. Leave it or fix it?
 	elif stat == "Agl":
 		damage = calculateDamage(attacker.getAgility(), multiplier)
+		# Blind should not effect DMG, so double it if blinded
+		if attacker.isBlinded():
+			damage = damage * 2
 	elif stat == "Mana":
 		# If the MAGI equipped is of the same element as the magic attack, increase the damage
 		if attacker.role == "Player" and attacker.magi.startswith(element):
@@ -432,7 +435,7 @@ def affectStat(target, command):
 		if target.current_Def <= 0:
 			target.current_Def = 0
 	if "Debuff" in command.effect:
-		print("%s decreases by %d." % (stat, amount))
+		print("%s decreases by %d." % (stat, amount*-1))
 	else:
 		print("%s increases by %d." % (stat, amount))
 	return target
@@ -443,7 +446,7 @@ def affectStat(target, command):
 
 def inflictCondition(command, attacker, target, output):
 	# Originally (target - attacker) * 2 + 50
-	hit_chance = target.getMana() - attacker.getMana() + 50
+	hit_chance = (target.getMana() - attacker.getMana())*2 + 50
 	roll = random.randint(1,100)
 	if hit_chance < roll:
 		applyCondition(command.status, target, output)
@@ -526,7 +529,7 @@ def removeCondition(status, target):
 		target.current_HP = 1
 		target.lives += 1
 		print("Revived %s." % target.name, end = " ")
-	elif status == "Full Restore" and target.characterStatus() != "GOOD":
+	elif status == "Full Restore" and not target.characterStatus():
 		target.stoned = "n"
 		target.blinded = "n"
 		target.poisoned = "n"
