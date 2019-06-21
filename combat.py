@@ -529,7 +529,7 @@ def removeCondition(status, target):
 		target.current_HP = 1
 		target.lives += 1
 		print("Revived %s." % target.name, end = " ")
-	elif status == "Full Restore" and not target.characterStatus():
+	elif status == "Full Restore" and target.characterStatus():
 		target.stoned = "n"
 		target.blinded = "n"
 		target.poisoned = "n"
