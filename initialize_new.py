@@ -23,6 +23,7 @@ commands = workbook.parse("Weapon", index_col = 'Index')
 ms_prob = workbook.parse("Move Probability")
 growth = workbook.parse("Growth Rates", index_col = 'RACE')
 m_skills = workbook.parse("Mutant Skills", index_col = 'DS')
+transformations = workbook.parse("Evolve")
 
 # Loop through each sheet of the battle log, appending each to the battles list
 battles = []
@@ -32,6 +33,8 @@ save_players = []
 for count in range(len(log.sheet_names)):
 	if count == 0:
 		players = log.parse("Players", index_col = 'Index')
+	elif count == 1:
+		pass
 	else:
 		battles.append(log.parse(count))
 
@@ -1240,7 +1243,6 @@ elif operation == 2:
 elif operation == 3:
 	more = "y"
 	while more != "n":
-		transformations = workbook.parse("Evolve")
 		not_monsters = ["Human", "Mutant", "Robot"]
 		monster_players = players[players["CLASS"].isin(not_monsters) == False]
 		mp = monster_players.loc[players["PLAYER"] != "NPC"]
@@ -1301,6 +1303,14 @@ elif operation == 3:
 				new_monster = family_tree[member][0]
 		
 		print("%s changed from %s to %s." % (who, current_monster, new_monster))
+		print("HP: %d | STR: %d | AGL: %d | MANA: %d | DEF: %d" % (monsters.loc[new_monster, "HP"], monsters.loc[new_monster, "Str"],
+		monsters.loc[new_monster, "Agl"], monsters.loc[new_monster, "Mana"], monsters.loc[new_monster, "Def"]))
+		print("[", end = "")
+		for skill in range(8):
+			if skill < 7:
+				print(monsters.loc[new_monster, "S%d" % skill], end = ", ")
+			else:
+				print(monsters.loc[new_monster, "S%d" % skill], end = "]\n")
 
 		more = input("Another transformation? (y/n): ")
 
