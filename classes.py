@@ -50,7 +50,7 @@ class Actor(object):
 			return False
 
 	def isTargetable(self):
-		if self.isDead() or self.isStoned():
+		if self.isDead() or self.isStoned() or self.isSomethingElse():
 			return False
 		else:
 			return True
@@ -60,6 +60,10 @@ class Actor(object):
 			return False
 		else:
 			return True
+	
+	# This should be used for unending environment effects or second actions for bosses
+	def isSomethingElse(self):
+		return True if self.environment == "y" else False
 
 	def characterStatus(self):
 		status = []
@@ -103,6 +107,7 @@ class Actor(object):
 	paralyzed = "n"
 	poisoned = "n"
 	confused = "n"
+	environment = "n"
 	df_index = 0
 	natural_str = 0
 	natural_agl = 0

@@ -84,11 +84,11 @@ if operation == 1:
 		enemy_groups = []
 
 		for bat in range(len(battles)):
-			print("%d. %s" % (bat+1, log.sheet_names[bat+1]))
+			print("%d. %s" % (bat+1, log.sheet_names[bat+2]))
 		i = int(input("Which battle do you want to run? Enter a number: "))
 
 		# Setting to the list index of the number chosen
-		print("Executing Battle: %s" % log.sheet_names[i])
+		print("Executing Battle: %s" % log.sheet_names[i+1])
 		i=i-1
 
 		# Need to track the right spot in combatants, which conflicts with 'count' due to enemy "lives" inflating the list vs the Log
@@ -158,7 +158,8 @@ if operation == 1:
 			current_com.paralyzed = active_battle.iloc[current_com.group, 16]
 			current_com.poisoned = active_battle.iloc[current_com.group, 17]
 			current_com.confused = active_battle.iloc[current_com.group, 18]
-			current_com.addAction(active_battle.iloc[current_com.group, 19], active_battle.iloc[current_com.group, 20])
+			current_com.environment = active_battle.iloc[current_com.group, 19]
+			current_com.addAction(active_battle.iloc[current_com.group, 20], active_battle.iloc[current_com.group, 21])
 		
 			# Lookup the static Enemy data
 			if current_com.role == "Enemy":
@@ -1167,8 +1168,9 @@ if operation == 1:
 				active_battle.iloc[count,16] = combatants[count].paralyzed
 				active_battle.iloc[count,17] = combatants[count].poisoned
 				active_battle.iloc[count,18] = combatants[count].confused
-				active_battle.iloc[count,19] = combatants[count].actions_taken
-				active_battle.iloc[count,20] = combatants[count].stats_used
+				active_battle.iloc[count,19] = combatants[count].environment
+				active_battle.iloc[count,20] = combatants[count].actions_taken
+				active_battle.iloc[count,21] = combatants[count].stats_used
 				if combatants[count].role in ("Player", "NPC"):
 					save_players.append(combatants[count].name)
 			battles[i] = active_battle.copy()
