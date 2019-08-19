@@ -311,8 +311,9 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 
 	# For MANA or Status-based counters
 	else:
-		if checkResistance(attacker.resists, command.element, command.status, barriers):
+		if checkResistance(attacker, command.element, command.status, barriers):
 			print("%s is strong against %s." % (attacker.name, command.name))
+			return
 		else:
 			if command.stat == "Status":
 				inflictCondition(command, avenger, attacker, True)
@@ -435,9 +436,9 @@ def affectStat(target, command):
 		if target.current_Def <= 0:
 			target.current_Def = 0
 	if "Debuff" in command.effect:
-		print("%s decreases by %d." % (stat, amount*-1))
+		print("%s's %s decreases by %d." % (target.name, stat, amount*-1))
 	else:
-		print("%s increases by %d." % (stat, amount))
+		print("%s's %s increases by %d." % (target.name, stat, amount))
 	return target
 
 ################################

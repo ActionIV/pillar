@@ -416,7 +416,9 @@ if operation == 1:
 
 				# Start of round triggers (shield barriers)
 				if (commands.loc[attacker.command, "Target Type"] == "Block" and commands.loc[attacker.command, "Effect"] != "None"):
-					if attacker.role == "Enemy":
+					if commands.loc[attacker.command, "Effect"] in ("Nullify", "Reflect"):
+						pass
+					elif attacker.role == "Enemy":
 						enemy_barriers.append(commands.loc[attacker.command, "Effect"])
 					else:
 						player_barriers.append(commands.loc[attacker.command, "Effect"])
@@ -515,7 +517,7 @@ if operation == 1:
 
 					elif attacker.target_type == "Block":
 						print("%s is defending with %s." % (attacker.name, attacker.command), end = " ")
-						if commands.loc[attacker.command, "Effect"] != "None":
+						if commands.loc[attacker.command, "Effect"] != "None" and commands.loc[attacker.command, "Effect"] not in ("Nullify", "Reflect"):
 							print("A barrier covered the enemies.")
 						else:
 							print("")
@@ -574,7 +576,7 @@ if operation == 1:
 						attacker.add_target(attacker.name)
 					elif temp_target == "Block":
 						print("%s is defending with %s." % (attacker.name, attacker.command), end = " ")
-						if commands.loc[attacker.command, "Effect"] != "None":
+						if commands.loc[attacker.command, "Effect"] != "None" and commands.loc[attacker.command, "Effect"] not in ("Nullify", "Reflect"):
 							print("A barrier covered the party.")
 						else:
 							print("")
@@ -725,7 +727,10 @@ if operation == 1:
 									dmg_reduction = True
 								else:
 									print("%s is strong against %s." % (attacker.targets[foe], command.name))
-									continue
+									if command.status != "None" and command.stat != "Status":
+										pass
+									else:
+										continue
 							else:
 								# Check for elemental / species weakness
 								if command.element != "None":
@@ -835,6 +840,8 @@ if operation == 1:
 						group_hits = 0
 						group_misses = 0
 						inflicted = 0
+						nullify_count = 0
+						block_count = 0
 
 						# Iterate through every enemy in a Group to allow for misses or nullifies to be tallied
 						for each in range(len(combatants)):
@@ -870,10 +877,12 @@ if operation == 1:
 								# Added Ranged to the list for Group and All Enemy attacks
 								if (blocked == True and command.att_type in ("Melee", "Ranged")):
 									group_misses += 1
+									block_count += 1
 
 								# Nullify - end the attack since it was nullified on target
 								if ("Nullify" in foe_command_effect or foe_target_type == "Nullify") and command.att_type == "Magic":
 									group_misses += 1
+									nullify_count += 1
 								
 								group_hits = group_hits - group_misses
 
@@ -893,7 +902,7 @@ if operation == 1:
 							print("%s is strong against %s." % (target.name, command.name))
 							continue
 						else:
-							# Currently, no damage component with Debuff abilities
+							# Currently, no damage component with Debuff abilities. No resistance either...add it?
 							if "Debuff" in command.effect:
 								target = affectStat(target, command)
 								continue
@@ -932,14 +941,12 @@ if operation == 1:
 								damage = int(damage*1.5)
 
 						# No damage on pure Status attacks
+						if inflicted > 0:
+							print("%d of the %s group were afflicted with %s." % (inflicted, target.name, command.status), end = " ")
 						if command.stat == "Status":
-							if inflicted == 1:
-								print("%s was afflicted with %s." % (target.name, command.status))
-							elif inflicted > 1:
-								print("%d of the %s group were afflicted with %s." % (inflicted, target.name, command.status))
-							else:
-								print("")
-						elif damage <= 0:
+							print("")
+							continue
+						if damage <= 0:
 							damage = 0
 							print("No damage.")
 						else:
@@ -976,7 +983,12 @@ if operation == 1:
 								else:
 									print("")
 							else:
-								print("Missed!")
+								if block_count > 0:
+									print("Blocked by %s." % target.name)
+								elif nullify_count > 0:
+									print("%s repulsed the attack." % target.name)
+								else:
+									print("Missed!")
 
 					elif command.targeting == "Ally":
 						print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
@@ -1134,7 +1146,7 @@ if operation == 1:
 		# Print enemy status line at the end of a simulation
 		enemy_list = []
 		for count in range(len(combatants)):
-			if (combatants[count].role == "Enemy" and combatants[count].isActive()):
+			if (combatants[count].role == "Enemy" and combatants[count].isTargetable()):
 				enemy_list.append(combatants[count].name)
 
 		remaining_enemies = Counter(enemy_list)
@@ -1174,7 +1186,7 @@ if operation == 1:
 				if combatants[count].role in ("Player", "NPC"):
 					save_players.append(combatants[count].name)
 			battles[i] = active_battle.copy()
-			save_list.append(tuple((i, log.sheet_names[i+1])))
+			save_list.append(tuple((i, log.sheet_names[i+2])))
 
 		# print("1. Run another battle")
 		# print("2. Reload a battle")
