@@ -760,6 +760,8 @@ if operation == 1:
 								damage = int(damage/2)
 							if critical_hit == True:
 								damage = int(damage*1.5)
+							if def_target_type == "Counter":
+								damage = int(damage*0.75)
 
 							# DAMAGE OUTPUT
 							# No damage on pure Status attacks

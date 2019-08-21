@@ -216,6 +216,9 @@ def afterTurn(attacker, stat_used, table):
 	return attacker
 
 def endOfTurn(attacker, traits):
+	poison_dmg = 0
+	heal = 0
+
 	if attacker.isParalyzed():
 		roll = random.randint(1,100)
 		if roll <= 15:
@@ -251,6 +254,7 @@ def endOfTurn(attacker, traits):
 				heal = int(attacker.HP * (traits.loc[attacker.skills[skill], "Percent"] / 100))
 				heal = applyHeal(heal, attacker)
 				print("%s regenerates %d HP." % (attacker.name, heal))
+				break # end loop since Regen should only be applied once
 
 	if attacker.role == "Enemy":
 		attacker.command = "None"
@@ -416,7 +420,9 @@ def applyHeal(heal, target):
 
 def affectStat(target, command):
 	stat = command.stat
-	amount = command.min_dmg
+	rand = random.randint(0, command.rand_dmg)
+	amount = command.min_dmg + rand
+	
 	if "Debuff" in command.effect:
 		amount = amount * -1
 	if stat == "Str":
