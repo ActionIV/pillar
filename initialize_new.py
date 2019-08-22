@@ -496,6 +496,10 @@ if operation == 1:
 					if attacker.command == "None":
 						continue
 
+					if attacker.command == "Wait":
+						print("%s waits." % attacker.name)
+						continue
+
 					# Based on the Command, assign the Target Type to the Target line
 					attacker.target_type = commands.loc[attacker.command, "Target Type"]
 
