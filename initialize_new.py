@@ -387,11 +387,21 @@ if operation == 1:
 				# CONFUSION CHECK
 				if attacker.isConfused():
 					options = []
-					for skill in range(len(attacker.skills)):
-						if attacker.skills[skill] != "blank" and commands.loc[attacker.skills[skill],"Target Type"] != "None":
-							options.append(attacker.skills[skill])
-					confuse_command_roll = random.randint(0, len(options)-1)
-					attacker.command = options[confuse_command_roll]
+					conf_command = 0
+					remaining_uses = 100
+					while conf_command == 0:
+						conf_command = 1
+						for skill in range(len(attacker.skills)):
+							if attacker.skills[skill] != "blank" and commands.loc[attacker.skills[skill],"Target Type"] != "None":
+								options.append(attacker.skills[skill])
+						confuse_command_roll = random.randint(0, len(options)-1)
+						attacker.command = options[confuse_command_roll]
+
+						# Check PC in case ability was expired during combat
+						if attacker.role in ("Player", "NPC"):
+							remaining_uses = players.loc[attacker.name, "S%d Uses Left" % confuse_command_roll]
+							if remaining_uses <= 0:
+								conf_command = 0
 
 				# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
 				# Could also be used for random ability selection for players if an appropriate MS were assigned
@@ -438,6 +448,25 @@ if operation == 1:
 					continue
 
 				sel_target = ""
+
+				# CONFUSION CHECK
+				if attacker.isConfused():
+					options = []
+					conf_command = 0
+					remaining_uses = 100
+					while conf_command == 0:
+						conf_command = 1
+						for skill in range(len(attacker.skills)):
+							if attacker.skills[skill] != "blank" and commands.loc[attacker.skills[skill],"Target Type"] != "None":
+								options.append(attacker.skills[skill])
+						confuse_command_roll = random.randint(0, len(options)-1)
+						attacker.command = options[confuse_command_roll]
+
+						# Check PC in case ability was expired during combat
+						if attacker.role in ("Player", "NPC"):
+							remaining_uses = players.loc[attacker.name, "S%d Uses Left" % confuse_command_roll]
+							if remaining_uses <= 0:
+								conf_command = 0
 
 				# CONFUSED TARGETING
 				# Should confused targets flip a coin as to which side they attack as opposed to picking from the total pool?
@@ -760,7 +789,7 @@ if operation == 1:
 							if blocked == True:
 								damage = int(damage/2)
 							# If weapon resistance is found against a non-magical attack, damage is halved
-							if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", command.status, barriers):
+							if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", command.status, barriers) and "Pierce" not in command.effect:
 								damage = int(damage/2)
 							if critical_hit == True:
 								damage = int(damage*1.5)
@@ -941,7 +970,7 @@ if operation == 1:
 							# 	damage = int(damage/2)
 
 							# If weapon resistance is found against a non-magical attack, damage is halved
-							if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", command.status, barriers):
+							if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", command.status, barriers) and "Pierce" not in command.effect:
 								damage = int(damage/2)
 							if critical_hit == True:
 								damage = int(damage*1.5)
