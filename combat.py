@@ -316,7 +316,7 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 	# For MANA or Status-based counters
 	else:
 		if checkResistance(attacker, command.element, command.status, barriers):
-			print("%s is strong against %s." % (attacker.name, command.name))
+			print("%s is strong against %s." % (attacker.name, command.name), end = " ")
 			return
 		else:
 			if command.stat == "Status":
@@ -331,14 +331,15 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 
 	# No damage on pure Status attacks
 	if command.stat == "Status":
-		print("")
+		pass
+		# print("")
 	elif damage <= 0:
 		damage = 0
-		print("No damage.")
+		print("No damage.", end = " ")
 	else:
 		print("%d damage." % damage)
 		if applyDamage(damage, attacker) == 1:
-			print("%s fell." % attacker.name)
+			print("%s fell." % attacker.name, end = " ")
 
 def applyDamage(damage, target):
 	target.current_HP -= damage
@@ -395,6 +396,30 @@ def determineDefense(defender, attack, damage):
 #		return int((200 - defender.getMana()) * damage / 200)
 		return int(damage * defender.getMana() / 200)
 
+def actConfused(attacker, commands, players):
+	options = []
+	conf_command = 0
+	remaining_uses = 100
+
+	for skill in range(len(attacker.skills)):
+		if attacker.skills[skill] != "blank" and commands.loc[attacker.skills[skill],"Target Type"] != "None":
+			options.append(attacker.skills[skill])
+
+	while conf_command == 0:
+		conf_command = 1
+		confuse_command_roll = random.randint(0, len(options)-1)
+
+		# Check PC in case ability was expired during combat
+		if attacker.role in ("Player", "NPC"):
+			remaining_uses = players.loc[attacker.name, "S%d Uses Left" % confuse_command_roll]
+			if remaining_uses <= 0:
+				conf_command = 0
+			else:
+				return options[confuse_command_roll]
+		else:
+			return options[confuse_command_roll]
+
+
 #######################################
 ####### BUFF AND HEAL FUNCTIONS #######
 #######################################
@@ -442,9 +467,9 @@ def affectStat(target, command):
 		if target.current_Def <= 0:
 			target.current_Def = 0
 	if "Debuff" in command.effect:
-		print("%s's %s decreases by %d." % (target.name, stat, amount*-1))
+		print("%s's %s decreases by %d." % (target.name, stat, amount*-1), end = " ")
 	else:
-		print("%s's %s increases by %d." % (target.name, stat, amount))
+		print("%s's %s increases by %d." % (target.name, stat, amount), end = " ")
 	return target
 
 ################################

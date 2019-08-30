@@ -5,7 +5,7 @@ import openpyxl
 import sys
 from collections import Counter
 from classes import Player, Enemy, NPC, Actor, Command
-from combat import (randomTarget, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition, hitScore,
+from combat import (randomTarget, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition, hitScore, actConfused,
 inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition, applyHeal, postBattle)
 
 stdout = sys.stdout
@@ -384,24 +384,25 @@ if operation == 1:
 					print("%s did nothing." % attacker.name)
 					continue
 
-				# CONFUSION CHECK
+				# CONFUSION CHECK - for those confused at the start of a round
 				if attacker.isConfused():
-					options = []
-					conf_command = 0
-					remaining_uses = 100
-					while conf_command == 0:
-						conf_command = 1
-						for skill in range(len(attacker.skills)):
-							if attacker.skills[skill] != "blank" and commands.loc[attacker.skills[skill],"Target Type"] != "None":
-								options.append(attacker.skills[skill])
-						confuse_command_roll = random.randint(0, len(options)-1)
-						attacker.command = options[confuse_command_roll]
+					attacker.command = actConfused(attacker, commands, players)
+					# options = []
+					# conf_command = 0
+					# remaining_uses = 100
+					# while conf_command == 0:
+					# 	conf_command = 1
+					# 	for skill in range(len(attacker.skills)):
+					# 		if attacker.skills[skill] != "blank" and commands.loc[attacker.skills[skill],"Target Type"] != "None":
+					# 			options.append(attacker.skills[skill])
+					# 	confuse_command_roll = random.randint(0, len(options)-1)
+					# 	attacker.command = options[confuse_command_roll]
 
-						# Check PC in case ability was expired during combat
-						if attacker.role in ("Player", "NPC"):
-							remaining_uses = players.loc[attacker.name, "S%d Uses Left" % confuse_command_roll]
-							if remaining_uses <= 0:
-								conf_command = 0
+					# 	# Check PC in case ability was expired during combat
+					# 	if attacker.role in ("Player", "NPC"):
+					# 		remaining_uses = players.loc[attacker.name, "S%d Uses Left" % confuse_command_roll]
+					# 		if remaining_uses <= 0:
+					# 			conf_command = 0
 
 				# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
 				# Could also be used for random ability selection for players if an appropriate MS were assigned
@@ -449,24 +450,26 @@ if operation == 1:
 
 				sel_target = ""
 
-				# CONFUSION CHECK
+				# CONFUSION CHECK - for those that became confused during a round
 				if attacker.isConfused():
-					options = []
-					conf_command = 0
-					remaining_uses = 100
-					while conf_command == 0:
-						conf_command = 1
-						for skill in range(len(attacker.skills)):
-							if attacker.skills[skill] != "blank" and commands.loc[attacker.skills[skill],"Target Type"] != "None":
-								options.append(attacker.skills[skill])
-						confuse_command_roll = random.randint(0, len(options)-1)
-						attacker.command = options[confuse_command_roll]
+					attacker.command = actConfused(attacker, commands, players)
+				# if attacker.isConfused():
+				# 	options = []
+				# 	conf_command = 0
+				# 	remaining_uses = 100
+				# 	while conf_command == 0:
+				# 		conf_command = 1
+				# 		for skill in range(len(attacker.skills)):
+				# 			if attacker.skills[skill] != "blank" and commands.loc[attacker.skills[skill],"Target Type"] != "None":
+				# 				options.append(attacker.skills[skill])
+				# 		confuse_command_roll = random.randint(0, len(options)-1)
+				# 		attacker.command = options[confuse_command_roll]
 
-						# Check PC in case ability was expired during combat
-						if attacker.role in ("Player", "NPC"):
-							remaining_uses = players.loc[attacker.name, "S%d Uses Left" % confuse_command_roll]
-							if remaining_uses <= 0:
-								conf_command = 0
+				# 		# Check PC in case ability was expired during combat
+				# 		if attacker.role in ("Player", "NPC"):
+				# 			remaining_uses = players.loc[attacker.name, "S%d Uses Left" % confuse_command_roll]
+				# 			if remaining_uses <= 0:
+				# 				conf_command = 0
 
 				# CONFUSED TARGETING
 				# Should confused targets flip a coin as to which side they attack as opposed to picking from the total pool?
@@ -660,6 +663,8 @@ if operation == 1:
 					if defender == 100:
 						if foe == 0 and command.targeting == "All Enemies":
 							print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
+						elif foe == 0 and command.targeting == "Allies":
+							print("%s uses %s." % (attacker.name, attacker.command))
 						elif command.targeting not in ("All Enemies", "Allies", "All"):
 							print("%s uses %s on %s. Ineffective." % (attacker.name, attacker.command, attacker.targets[foe]))
 						continue
@@ -738,13 +743,13 @@ if operation == 1:
 
 							# Reflect - change target into the attacker
 							if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
-								print("%s reflected the attack." % target.command)
+								print("%s reflected the spell with %s." % (target.name, target.command), end = " ")
 								# Makes the attacker into the target of its own spell
 								target = attacker
 
 							# Nullify - end the attack since it was nullified on target
 							if ("Nullify" in def_command_effect or def_target_type == "Nullify") and command.att_type == "Magic":
-								print("%s repulsed the attack." % target.command)
+								print("%s repulsed the spell with %s." % (target.name, target.command))
 								continue
 
 							# Check for barriers and their effects
@@ -889,6 +894,9 @@ if operation == 1:
 									foe_target_type = "None"
 									foe_command_effect = "None"
 
+								if len(attacker.targets) > 1:
+									print("--", end = "")
+
 								# Blockable logic - attack must be Melee or Ranged and not have the "Never miss" property
 								if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
 									blockable = True
@@ -925,7 +933,7 @@ if operation == 1:
 						# Cannot be used by monsters that can appear in groups due to group issues. Would require calling all combat code below
 						# inside the Reflect check
 						if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
-							print("%s reflected the attack." % target.command)
+							print("%s reflected the spell with %s." % (target.name, target.command), end = " ")
 							target = attacker
 
 						# Check resistances
@@ -1010,18 +1018,23 @@ if operation == 1:
 								# 		break
 
 								# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
-								print("%d damage, hitting %d members of %s group." % (damage, group_hits, target.name), end = " ")
+								if target.role == "Enemy":
+									print("%d damage, hitting %d members of %s group." % (damage, group_hits, target.name), end = " ")
+								else:
+									print("%d damage to %s." % (damage, target.name) , end = " ")
 								# if group_hits > 0:
 								# 	print("Hit %d." % group_hits)
-								if body_count > 0:
+								if body_count > 0 and target.role == "Enemy":
 									print("Defeated %d." % body_count)
+								elif body_count == 1 and target.role in ("Player", "NPC"):
+									print("%s fell." % target.name)
 								else:
 									print("")
 							else:
 								if block_count > 0:
 									print("Blocked by %s." % target.name)
 								elif nullify_count > 0:
-									print("%s repulsed the attack." % target.name)
+									print("%s repulsed the spell." % target.name)
 								else:
 									print("Missed!")
 
@@ -1029,11 +1042,11 @@ if operation == 1:
 						print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
 						# Reflect - change target into the caster
 						if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
-							print("%s reflected the attack." % target.command, end = " ")
+							print("%s reflected the spell with %s." % (target.name, target.command), end = " ")
 							target = attacker
 						# Nullify - end the effect since it was nullified on target
 						elif ("Nullify" in def_command_effect or def_target_type == "Nullify") and command.att_type == "Magic":
-							print("%s repulsed the attack." % target.command)
+							print("%s repulsed the spell with %s." % (target.name, target.command))
 							continue
 						if command.status != "None":
 							removeCondition(command.status, target)
@@ -1051,15 +1064,18 @@ if operation == 1:
 					elif command.targeting == "Allies":
 						if foe == 0:
 							print("%s uses %s." % (attacker.name, attacker.command))
+
 						for who in range(len(combatants)):
 							if combatants[who].name == attacker.targets[foe]:
+								if len(attacker.targets) > 1:
+									print("--", end = "")
 								# Reflect - change target into the caster
 								if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
-									print("%s reflected the attack." % target.command, end = " ")
+									print("%s reflected the spell with %s." % (target.name, target.command), end = " ")
 									target = attacker
 								# Nullify - end the effect since it was nullified on target
 								elif ("Nullify" in def_command_effect or def_target_type == "Nullify") and command.att_type == "Magic":
-									print("%s repulsed the attack." % target.command)
+									print("%s repulsed the spell with %s." % (target.name, target.command), end = " ")
 									continue
 								if command.status != "None":
 									removeCondition(command.status, combatants[who])
