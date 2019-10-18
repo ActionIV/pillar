@@ -478,7 +478,8 @@ def affectStat(target, command):
 
 def inflictCondition(command, attacker, target, output):
 	# Originally (target - attacker) * 2 + 50
-	hit_chance = (target.getMana() - attacker.getMana())*2 + 50
+	base_chance = 50
+	hit_chance = (target.getMana() - attacker.getMana())*2 + base_chance
 	roll = random.randint(1,100)
 	if hit_chance < roll:
 		applyCondition(command.status, target, output)

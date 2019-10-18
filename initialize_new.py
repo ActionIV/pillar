@@ -25,6 +25,22 @@ growth = workbook.parse("Growth Rates", index_col = 'RACE')
 m_skills = workbook.parse("Mutant Skills", index_col = 'DS')
 transformations = workbook.parse("Evolve")
 
+# GLOBAL CONSTANTS
+player_surprise_chance = 50
+enemy_surprise_chance = 25
+initiative_var = 25
+break_confuse = 10
+single_target_odds = 50
+remaining_uses_for_enemies_mult = 0.8
+blocked_ranged_mult = 0.5
+critical_mult = 1.5
+counter_protection_mult = 0.75
+cut_base = 50
+cut_chance = 0.5
+crit_chance = 30
+weapon_res_mult = 0.5
+monster_race_cap = 35
+
 # Loop through each sheet of the battle log, appending each to the battles list
 battles = []
 save_list = []
@@ -290,10 +306,10 @@ if operation == 1:
 					# SURPRISE LOGIC - check rolls
 					# If both sides have surprise, lower roll wins
 					if player_surprise and enemy_surprise:
-						if p_surprise_roll < e_surprise_roll and p_surprise_roll <= 50:
+						if p_surprise_roll < e_surprise_roll and p_surprise_roll <= player_surprise_chance:
 							enemy_surprise = False
 							print("Strike First!")
-						elif p_surprise_roll > e_surprise_roll and e_surprise_roll <= 25:
+						elif p_surprise_roll > e_surprise_roll and e_surprise_roll <= enemy_surprise_chance:
 							player_surprise = False
 							print("Unexpected Attack!")
 						# If the rolls are the same, neither side wins a surprise round
@@ -301,12 +317,12 @@ if operation == 1:
 							player_surprise = False
 							enemy_surprise = False
 					elif player_surprise:
-						if p_surprise_roll > 50:
+						if p_surprise_roll > player_surprise_chance:
 							player_surprise = False
 						else:
 							print("Strike First!")
 					elif enemy_surprise:
-						if e_surprise_roll > 25:
+						if e_surprise_roll > enemy_surprise_chance:
 							enemy_surprise = False
 						else:
 							print("Unexpected Attack!")
@@ -349,7 +365,7 @@ if operation == 1:
 					combatants[count].evasion = combatants[count].current_Agl
 				else:
 					combatants[count].evasion = combatants[count].current_Agl + combatants[count].current_Str - combatants[count].current_Def
-				variable = 1+(random.randint(1,25)/100)
+				variable = 1+(random.randint(1, initiative_var)/100)
 				combatants[count].initiative = combatants[count].evasion * variable
 
 			# Sort actors based on initiative score
@@ -475,7 +491,7 @@ if operation == 1:
 				# Should confused targets flip a coin as to which side they attack as opposed to picking from the total pool?
 				if attacker.isConfused():
 					confuse_roll = random.randint(1,100)
-					if confuse_roll > 10:
+					if confuse_roll > break_confuse:
 						print("%s is confused." % attacker.name, end = " ")
 						attacker.target_type = commands.loc[attacker.command, "Target Type"]
 						confuse_targets = []
@@ -538,7 +554,7 @@ if operation == 1:
 					if attacker.target_type == "Single":
 						for choice in range(len(party_order)):
 							roll = random.randint(1,100)
-							if roll < 51 and combatants[party_order[choice][2]].isTargetable():
+							if roll <= single_target_odds and combatants[party_order[choice][2]].isTargetable():
 								sel_target = party_order[choice][0]
 								break
 						# If a target isn't selected via the weighted method...
@@ -648,7 +664,7 @@ if operation == 1:
 					else:
 						remaining_uses = players.loc[attacker.name, "MAGI Uses Left"]
 				else:
-					remaining_uses = int(commands.loc[attacker.command, "#Uses"] * 0.8)
+					remaining_uses = int(commands.loc[attacker.command, "#Uses"] * remaining_uses_for_enemies_mult)
 
 				# Construct the command class for this instance
 				command = Command(attacker.command, commands, remaining_uses)
@@ -723,16 +739,16 @@ if operation == 1:
 							if "Cut" in command.effect:
 								# Replace the normal attack roll, or just have both?
 								cut_roll = random.randint(1,100)
-								if cut_roll > (50 + attacker.current_Str):
+								if cut_roll > (cut_base + attacker.current_Str):
 									print("Missed!")
 									continue
 								else:
 									cut_check = attacker.getStrength() + command.percent
 									# Check for weapon resistance and whether the attack was blocked (then again, a blocked attack wouldn't get here...)
 									if checkResistance(target, "Weapon", command.status, barriers):
-										cut_check = int(cut_check/2)
+										cut_check = int(cut_check * cut_chance)
 									if blocked:
-										cut_check = int(cut_check/2)
+										cut_check = int(cut_check * cut_chance)
 									if cut_check > target.getDefense() and target.family != "God":
 										applyCondition("Stun", target, False)
 										print("%s was cut." % target.name)
@@ -775,7 +791,7 @@ if operation == 1:
 									if checkWeakness(command.element, target):
 										print("Hits weakness.", end = " ")
 										crit_roll = random.randint(1,100)
-										if crit_roll <= 30:
+										if crit_roll <= crit_chance:
 											target.current_HP = 0
 											target.lives -= 1
 											print("Mighty blow! %s fell." % target.name)
@@ -792,14 +808,14 @@ if operation == 1:
 								damage += offense - defense
 							# Ranged attacks get blocked for 50% damage
 							if blocked == True:
-								damage = int(damage/2)
+								damage = int(damage * blocked_ranged_mult)
 							# If weapon resistance is found against a non-magical attack, damage is halved
 							if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", command.status, barriers) and "Pierce" not in command.effect:
-								damage = int(damage/2)
+								damage = int(damage * weapon_res_mult)
 							if critical_hit == True:
-								damage = int(damage*1.5)
+								damage = int(damage * critical_mult)
 							if def_target_type == "Counter":
-								damage = int(damage*0.75)
+								damage = int(damage * counter_protection_mult)
 
 							# DAMAGE OUTPUT
 							# No damage on pure Status attacks
@@ -859,7 +875,7 @@ if operation == 1:
 									skill_slot = target.skillSlot()
 									r_uses = players.loc[target.name, "S%d Uses Left" % skill_slot]
 								else:
-									r_uses = int(commands.loc[target.command, "#Uses"] * 0.8)
+									r_uses = int(commands.loc[target.command, "#Uses"] * remaining_uses_for_enemies_mult)
 								counter_command = Command(target.command, commands, r_uses)
 								if target.role == "Enemy":
 									buildResistances(player_barriers, barriers, commands)
@@ -979,9 +995,9 @@ if operation == 1:
 
 							# If weapon resistance is found against a non-magical attack, damage is halved
 							if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", command.status, barriers) and "Pierce" not in command.effect:
-								damage = int(damage/2)
+								damage = int(damage * weapon_res_mult)
 							if critical_hit == True:
-								damage = int(damage*1.5)
+								damage = int(damage * critical_mult)
 
 						# No damage on pure Status attacks
 						if inflicted > 0:
@@ -1345,7 +1361,7 @@ elif operation == 3:
 			type_diff = -1
 
 		next_class = int(current_class + meat_add + type_diff)
-		if next_class > 35:
+		if next_class > monster_race_cap:
 			next_class = int(current_class + meat_subtract + type_diff)
 
 		max_ds = max(current_ds, meat_ds)
