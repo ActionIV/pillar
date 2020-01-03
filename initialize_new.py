@@ -665,7 +665,7 @@ if operation == 1:
 					else:
 						remaining_uses = players.loc[attacker.name, "MAGI Uses Left"]
 				else:
-					remaining_uses = int(commands.loc[attacker.command, "#Uses"] * remaining_uses_for_enemies_mult)
+					remaining_uses = int(commands.loc[attacker.command, "#Uses"] * (remaining_uses_for_enemies_mult + random.uniform(-.05,.05)))
 
 				# Construct the command class for this instance
 				command = Command(attacker.command, commands, remaining_uses)
