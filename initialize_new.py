@@ -6,7 +6,8 @@ import sys
 from collections import Counter
 from classes import Player, Enemy, NPC, Actor, Command
 from combat import (randomTarget, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition, hitScore, actConfused,
-inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition, applyHeal, postBattle)
+inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition, applyHeal, postBattle,
+equivalentLevel)
 
 stdout = sys.stdout
 
@@ -31,7 +32,7 @@ enemy_surprise_chance = 25
 initiative_var = 25
 break_confuse = 10
 single_target_odds = 50
-remaining_uses_for_enemies_mult = 0.8
+remaining_uses_for_enemies_mult = 1.0
 blocked_ranged_mult = 0.5
 critical_mult = 1.5
 counter_protection_mult = 0.75
@@ -264,7 +265,7 @@ if operation == 1:
 		while another_round == "y":
 			rd += 1
 			sys.stdout = open("battles.log", 'a')
-			print("~~~ Round %d ~~~" % (rd))
+			print("~~~ %s: Round %d ~~~" % (log.sheet_names[i+2], rd))
 			# SET CURRENT STATS (in Round 1 only), ROLL INITIATIVE, AND SORT
 			if rd == 1:
 				for count in range(len(combatants)):
@@ -669,6 +670,24 @@ if operation == 1:
 				# Construct the command class for this instance
 				command = Command(attacker.command, commands, remaining_uses)
 
+				# Human Spirit Chance - Low chance, but unlocks new ability
+				if attacker.role == "Player" and attacker.Class == "Human":
+					biggest_foe = 1
+					human_spirit = equivalentLevel(attacker.HP, 26, 50)  # Get DS equivalent for human PC
+					for tar in range(len(attacker.targets)):
+						biggest_foe = int(monsters.loc[attacker.targets[tar], "DS"])
+					spirit_diff = biggest_foe - human_spirit
+					# Reward melee attacks against greater opponents with 5 bonus points
+					if command.att_type == "Melee" and spirit_diff > 1:
+						spirit_diff += 5
+					spirit_chance = random.randint(1,200)
+					# If command has a spirit flare ability, use it
+					# NEED TO REMAP IF RACE_BONUS == "ROBOT"
+					# attacker.command STILL HAS OLD NAME IN IT. CHANGE OR LEAVE IT?
+					if spirit_chance < spirit_diff and command.human_spirit != "":
+						print("The human spirit shines bright!", end = " ")
+						command = Command(command.human_spirit, commands, remaining_uses)
+
 				# Cycle through targets for attacks
 				for foe in range(len(attacker.targets)):
 					# Select the front-most member of a group with the same name (i.e. attack the front-most enemy of a group)
@@ -881,7 +900,8 @@ if operation == 1:
 									buildResistances(player_barriers, barriers, commands)
 								else:
 									buildResistances(enemy_barriers, barriers, commands)
-								counterAttack(target, attacker, counter_command, damage, barriers)
+								counterAttack(target, attacker, counter_command, damage / counter_protection_mult, barriers)
+								print("")
 
 					elif command.targeting in ("Group", "All Enemies"):
 						if command.targeting == "Group" and target.role == "Enemy":
@@ -980,6 +1000,7 @@ if operation == 1:
 								if checkWeakness(command.element, target):
 									print("Hits weakness.", end = " ")
 									if command.att_type == "Magic":
+										offense = offense + 5 * command.multiplier # Add 5 mana to magic attack against weakness
 										defense = 0
 									else:
 										critical_hit = True
@@ -1035,7 +1056,10 @@ if operation == 1:
 
 								# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
 								if target.role == "Enemy":
-									print("%d damage, hitting %d members of %s group." % (damage, group_hits, target.name), end = " ")
+									if group_hits > 1:
+										print("%d damage to %d %ss." % (damage, group_hits, target.name), end = " ")
+									else:
+										print("%d damage to %d %s." % (damage, group_hits, target.name), end = " ")
 								else:
 									print("%d damage to %s." % (damage, target.name) , end = " ")
 								# if group_hits > 0:
@@ -1326,8 +1350,8 @@ elif operation == 3:
 	while more != "n":
 		not_monsters = ["Human", "Mutant", "Robot"]
 		monster_players = players[players["CLASS"].isin(not_monsters) == False]
-		mp = monster_players.loc[players["PLAYER"] != "NPC"]
-		print(mp["CHARACTER"])
+		mp = monster_players.loc[players["PLAYER"].isin(["NPC"]) == False]
+		print(mp["CLASS"])
 		who = input("Transform which character?: ")
 		meat = input("Meat from which monster?: ")
 		current_monster = mp.loc[who, "CLASS"]

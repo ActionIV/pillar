@@ -295,3 +295,4 @@ class Command:
 		self.hits = commands.loc[name,"Hits"]
 		self.percent = commands.loc[name,"Percent"]
 		self.race_bonus = commands.loc[name,"Race Bonus"]
+		self.human_spirit = commands.loc[name, "Human Spirit"]

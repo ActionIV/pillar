@@ -46,6 +46,7 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 	highest_ds = 1
 	total_gold = 0
 
+	print('''REWARDS''')
 	for key, number in defeated.items():
 		drop_roll = random.randint(1,100)
 		drop_chance = 20 + number
@@ -65,14 +66,14 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 							if combatants[enemy].skills[item_roll] != "blank" and commands.loc[combatants[enemy].skills[item_roll], "Price"] >= 0:
 								drop = combatants[enemy].skills[item_roll]
 								print("%s dropped %s." % (combatants[enemy].name, drop))
-					break
+					#break
 				# Otherwise, drop gold
-				else:
-					enemy_level = combatants[enemy].DS
-					if enemy_level > highest_ds:
-						highest_ds = enemy_level
-					total_gold = total_gold + (33 + (3*(number-1))) * enemy_level * number
-					break
+				#else:
+				enemy_level = combatants[enemy].DS
+				if enemy_level > highest_ds:
+					highest_ds = enemy_level
+				total_gold = total_gold + (33 + (3*(number-1))) * enemy_level * number
+				break
 	indy_gold = round(total_gold / len(players))
 	print("Each party member receives %d GP." % indy_gold)
 
