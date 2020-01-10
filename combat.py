@@ -46,7 +46,7 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 	highest_ds = 1
 	total_gold = 0
 
-	print('''REWARDS''')
+	print("REWARDS")
 	for key, number in defeated.items():
 		drop_roll = random.randint(1,100)
 		drop_chance = 20 + number
@@ -185,6 +185,11 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 				players[pc].natural_def += 1
 				print("%s's DEF increased by 1." % (players[pc].name))
 				player_table.loc[players[pc].name, "Natural DEF"] = players[pc].natural_def
+
+	print("")
+	for pc in range(len(players)):
+		print("%s used: %s" % (players[pc].name, players[pc].actions_taken))
+	print("")
 
 # Used for all non-HP stats
 def statGrowth(stat, stat_count, stat_base, stat_bonus, highest_ds):
@@ -341,6 +346,17 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 		print("%d damage." % damage)
 		if applyDamage(damage, attacker) == 1:
 			print("%s fell." % attacker.name, end = " ")
+
+# NOT PLACED IN COMBAT CODE YET
+def mightyBlow(target, crit_chance):
+	crit_roll = random.randint(1,100)
+	if crit_roll <= crit_chance:
+		target.current_HP = 0
+		target.lives -= 1
+		print("Mighty blow! %s fell." % target.name)
+		return True
+	else:
+		return False
 
 def applyDamage(damage, target):
 	target.current_HP -= damage

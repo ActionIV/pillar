@@ -7,13 +7,14 @@ from collections import Counter
 from classes import Player, Enemy, NPC, Actor, Command
 from combat import (randomTarget, afterTurn, frontOfGroup, rollDamage, determineDefense, affectStat, rollHeal, applyCondition, hitScore, actConfused,
 inflictCondition, checkResistance, endOfTurn, buildResistances, checkWeakness, applyDamage, counterAttack, removeCondition, applyHeal, postBattle,
-equivalentLevel)
+equivalentLevel, mightyBlow)
 
 stdout = sys.stdout
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsm"
 path3 = r"Battle Results.xlsx"
+text_path = "battles.log"
 
 workbook = pandas.ExcelFile(path1)
 log = pandas.ExcelFile(path2)
@@ -90,7 +91,7 @@ print("3. Monster transformation")
 operation = int(input("Enter a number: "))
 
 if operation == 1:
-	sys.stdout = open("battles.log", 'w')
+	sys.stdout = open(text_path, 'w')
 	sys.stdout = stdout
 	run_sim = "y"
 	while run_sim != "n":
@@ -264,7 +265,7 @@ if operation == 1:
 		# EXECUTE COMBAT ROUND
 		while another_round == "y":
 			rd += 1
-			sys.stdout = open("battles.log", 'a')
+			sys.stdout = open(text_path, 'a')
 			print("~~~ %s: Round %d ~~~" % (log.sheet_names[i+2], rd))
 			# SET CURRENT STATS (in Round 1 only), ROLL INITIATIVE, AND SORT
 			if rd == 1:
@@ -362,8 +363,10 @@ if operation == 1:
 
 			# INITIATIVE AND EVASION
 			for count in range(len(combatants)):
+				# If STR >= DEF, then apply no penalty
 				if combatants[count].current_Str >= combatants[count].current_Def:
 					combatants[count].evasion = combatants[count].current_Agl
+				# If DEF > STR, apply a penalty equal to the difference
 				else:
 					combatants[count].evasion = combatants[count].current_Agl + combatants[count].current_Str - combatants[count].current_Def
 				variable = 1+(random.randint(1, initiative_var)/100)
@@ -440,7 +443,7 @@ if operation == 1:
 				except KeyError:
 					sys.stdout = stdout
 					attacker.command = input("Invalid command. Enter a new one: ")
-					sys.stdout = open("battles.log", 'a')
+					sys.stdout = open(text_path, 'a')
 
 				# Start of round triggers (shield barriers)
 				if (commands.loc[attacker.command, "Target Type"] == "Block" and commands.loc[attacker.command, "Effect"] != "None"):
@@ -809,14 +812,16 @@ if operation == 1:
 								if command.element != "None":
 									if checkWeakness(command.element, target):
 										print("Hits weakness.", end = " ")
-										crit_roll = random.randint(1,100)
-										if crit_roll <= crit_chance:
-											target.current_HP = 0
-											target.lives -= 1
-											print("Mighty blow! %s fell." % target.name)
+										if mightyBlow(target, crit_chance):
 											continue
 										else:
 											critical_hit = True
+
+							if "Critical" in command.effect:
+								if mightyBlow(target, crit_chance):
+									continue
+								else:
+									critical_hit = True
 
 							if command.status != "None":
 								inflictCondition(command, attacker, target, True)
@@ -1148,6 +1153,7 @@ if operation == 1:
 					break
 				elif enemies == 0:
 					print("Right on!")
+					print("")
 					postBattle(combatants, m_skills, growth, commands, players)
 					another_round = "n"
 					break
@@ -1156,18 +1162,7 @@ if operation == 1:
 			if another_round != "n":
 				for each in range(len(combatants)):
 					combatants[each] = endOfTurn(combatants[each], commands)
-					# Should only be needed for "Regained sanity" purposes...and should go away in Alpha
-					# Being used for Surprise rounds...which means the input approach is not a good solution
-					# if combatants[each].role == "Player" and combatants[each].isActive() and combatants[each].command == "None":
-					# 	combatants[each].command = input("New command for %s: " % combatants[each].name)
-					# 	combatants[each].target_type = input("New target for %s: " % combatants[each].name)
-		#				pc_row = 0
-		#				for pc in range(len(party_order)):
-		#					if combatants[each].name == party_order[pc][0]:
-		#						pc_row = party_order[pc][2]
-		#						break
-		#				combatants[each].command = active_battle.iloc[pc_row, 10]
-		#				combatants[each].target_type = active_battle.iloc[pc_row, 11]
+
 				# Reset surprise flags
 				enemy_surprise = False
 				enemy_warning = False
@@ -1178,20 +1173,22 @@ if operation == 1:
 				post_round = "n"
 				sys.stdout = stdout
 				while post_round != "y":
-					#for each in range(len(party_order)):
-					#	pos = party_order[each][2]
-					#	print("| %s: %d/%d %s" % (combatants[pos].name, combatants[pos].current_HP, combatants[pos].HP, combatants[pos].characterStatus()), end = " |")
-					#print("")
-					## Print enemy status line at the end of a simulation
-					#enemy_list = []
-					#for count in range(len(combatants)):
-					#	if (combatants[count].role == "Enemy" and combatants[count].isActive()):
-					#		enemy_list.append(combatants[count].name)
-					#remaining_enemies = Counter(enemy_list)
-					#remaining_enemies.keys()
-					#for key, number in remaining_enemies.items():
-					#	print("{ %s - %d" % (key, number), end = " }")
-					#print("")
+					# GM SUMMARY - Print block to show status between rounds to determine if battle should continue
+					for each in range(len(party_order)):
+						pos = party_order[each][2]
+						print("| %s: %d/%d %s" % (combatants[pos].name, combatants[pos].current_HP, combatants[pos].HP, combatants[pos].characterStatus()), end = " |")
+					print("")
+					# Print enemy status line at the end of a simulation
+					enemy_list = []
+					for count in range(len(combatants)):
+						if (combatants[count].role == "Enemy" and combatants[count].isActive()):
+							enemy_list.append(combatants[count].name)
+					remaining_enemies = Counter(enemy_list)
+					remaining_enemies.keys()
+					for key, number in remaining_enemies.items():
+						print("{ %s - %d" % (key, number), end = " }")
+					# END SUMMARY BLOCK
+					print("")
 					print("----------------------------------------")
 					print("1. Run another round")
 					print("2. Change commands/targets")
@@ -1207,7 +1204,15 @@ if operation == 1:
 								print("%d. %s: %s" % (each+1, party_order[each][0], combatants[pos].skills))
 							else:
 								print("%d. %s: %s" % (each+1, party_order[each][0], combatants[pos].characterStatus()))
-						which_pc = int(input("Which character? Enter a number: "))-1
+						while True:
+							which_pc = int(input("Which character? Enter a number: "))-1
+							try:
+								which_pc = int(which_pc)
+							except ValueError:
+								which_pc = input("Invalid entry.", end = " ")
+								continue
+							break
+
 						which_command = input("Enter the command: ")
 						which_target = input("Enter the target: ")
 						change = party_order[which_pc][2]
@@ -1218,7 +1223,7 @@ if operation == 1:
 						break
 
 		# Print party status line at the end of a simulation
-		sys.stdout = open("battles.log", 'a')
+		sys.stdout = open(text_path, 'a')
 		for each in range(len(party_order)):
 			pos = party_order[each][2]
 			print("| %s: %d/%d %s" % (combatants[pos].name, combatants[pos].current_HP, combatants[pos].HP, combatants[pos].characterStatus()), end = " |")

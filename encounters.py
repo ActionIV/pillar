@@ -53,7 +53,7 @@ while gen != "n":
     while steps_to_battle == 0:
         battle_roll = random.randint(1,100)
         if battle_roll < current_chance:
-            steps_to_battle = steps_taken
+            steps_to_battle = steps_taken + 1
         else:
             current_chance += INCREASE_RATE
             steps_taken += 1
