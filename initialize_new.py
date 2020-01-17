@@ -47,6 +47,7 @@ monster_race_cap = 35
 battles = []
 save_list = []
 save_players = []
+player_actions = []
 
 for count in range(len(log.sheet_names)):
 	if count == 0:
@@ -509,11 +510,11 @@ if operation == 1:
 								print("A barrier covered...someone?")
 							else:
 								print("")
-							combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
+							combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players, player_actions)
 							continue
 						elif attacker.target_type in ("Counter", "Reflect"):
 							print("%s is waiting for the attack." % attacker.name)
-							combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
+							combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players, player_actions)
 							continue
 						elif attacker.target_type == "All":
 							for each in range(len(enemy_groups)):
@@ -1313,7 +1314,7 @@ if operation == 1:
 	# Write the PCs and NPCs that acted to the Battle Results file "Players" tab
 	if len(save_list) > 0:
 		# SEE SAVED LINK IN PYTHON FOLDER ON HOW TO WRITE DIRECTLY TO A SPECIFIED COLUMN IN A SHEET
-		players[players.index.isin(save_players)].to_excel(writer, sheet_name = "Players")
+		players.to_excel(writer, sheet_name = "Player Updates")
 		#players.to_excel(writer, sheet_name = "Players")
 		writer.save()
 
