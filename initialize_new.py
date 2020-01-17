@@ -558,6 +558,10 @@ if operation == 1:
 					if attacker.target_type == "Single":
 						for choice in range(len(party_order)):
 							roll = random.randint(1,100)
+							# if commands.loc[combatants[party_order[choice][2]].command, "Type"] == "Shield":
+							# 	target_odds = single_target_odds + commands.loc[combatants[party_order[choice][2]].command, "Percent"] / 5
+							# else:
+							# 	target_odds = single_target_odds
 							if roll <= single_target_odds and combatants[party_order[choice][2]].isTargetable():
 								sel_target = party_order[choice][0]
 								break
@@ -727,7 +731,7 @@ if operation == 1:
 						print("%s attacks %s with %s." % (attacker.name, target.name, attacker.command), end = " ")
 
 						# Blockable logic
-						if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
+						if "Never miss" not in command.effect:
 							blockable = True
 						if (def_target_type == "Block" or "Block" in def_command_effect) and blockable:
 							block_roll = random.randint(1,100)
@@ -735,7 +739,7 @@ if operation == 1:
 								blocked = True
 
 						# SETTING HIT CHANCE
-						if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
+						if "Never miss" not in command.effect:
 							hit_chance = hitScore(command, attacker, target.evasion)
 						# Magic attacks always hit, as does a weapon with the Never miss property
 						else:
@@ -802,7 +806,7 @@ if operation == 1:
 								if command.element != "None" and command.att_type in ("Melee", "Ranged"):
 									dmg_reduction = True
 								else:
-									print("%s is strong against %s." % (attacker.targets[foe], command.name))
+									print("%s is strong against %s." % (attacker.targets[foe], command.name), end = " ")
 									if command.status != "None" and command.stat != "Status":
 										pass
 									else:
@@ -884,7 +888,7 @@ if operation == 1:
 								elif "WindUp" in command.effect:
 									wind_roll = random.randint(1, 100)
 									if wind_roll <= command.percent:
-										print("Winded the whip.")
+										print("Constricted.")
 										target.command = "None"
 									else:
 										print("")
@@ -983,7 +987,7 @@ if operation == 1:
 						else:
 							buildResistances(player_barriers, barriers, commands)
 						if checkResistance(target, command.element, command.status, barriers):
-							print("%s is strong against %s." % (target.name, command.name))
+							print("%s is strong against %s." % (target.name, command.name), end = " ")
 							continue
 						else:
 							# Currently, no damage component with Debuff abilities. No resistance either...add it?
