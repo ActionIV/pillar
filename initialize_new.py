@@ -284,7 +284,14 @@ if operation == 1:
 				enemy_warning = False
 				player_surprise = False
 				player_warning = False
-				if active_battle["ACTIONS TAKEN"].empty:
+				its_round_one = False
+
+				for actions in range(len(combatants)):
+					if combatants[actions].actions_taken == "":
+						its_round_one = True
+					else:
+						its_round_one = False
+				if its_round_one:
 					for comb in range(len(combatants)):
 						for skill in range(len(combatants[comb].skills)):
 							if combatants[comb].role == "Enemy":
@@ -709,7 +716,7 @@ if operation == 1:
 						elif foe == 0 and command.targeting == "Allies":
 							print("%s uses %s." % (attacker.name, attacker.command))
 						elif command.targeting not in ("All Enemies", "Allies", "All"):
-							attacker.command = "None"
+							attacker.command = "Ineffective"
 							print("%s did nothing." % attacker.name)
 						continue
 
@@ -1138,7 +1145,9 @@ if operation == 1:
 				if "Sacrifice" in command.effect:
 					applyDamage(attacker.HP, attacker)
 					print("%s sacrificed their life." % attacker.name)
-				combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
+				# If attacker did nothing due to no surviving target, count no action as having been taken
+				if attacker.command != "Ineffective":
+					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
 				
 				# Check survivors
 				party_members = 0
