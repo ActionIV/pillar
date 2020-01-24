@@ -510,11 +510,11 @@ if operation == 1:
 								print("A barrier covered...someone?")
 							else:
 								print("")
-							combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players, player_actions)
+							combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
 							continue
 						elif attacker.target_type in ("Counter", "Reflect"):
 							print("%s is waiting for the attack." % attacker.name)
-							combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players, player_actions)
+							combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
 							continue
 						elif attacker.target_type == "All":
 							for each in range(len(enemy_groups)):
@@ -709,7 +709,8 @@ if operation == 1:
 						elif foe == 0 and command.targeting == "Allies":
 							print("%s uses %s." % (attacker.name, attacker.command))
 						elif command.targeting not in ("All Enemies", "Allies", "All"):
-							print("%s uses %s on %s. Ineffective." % (attacker.name, attacker.command, attacker.targets[foe]))
+							attacker.command = "None"
+							print("%s did nothing." % attacker.name)
 						continue
 
 					# Combat parameters
@@ -922,6 +923,7 @@ if operation == 1:
 							# Only print the command text the first time through
 							if foe == 0:
 								print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
+							print("--", end = "")
 
 						group_hits = 0
 						group_misses = 0
@@ -939,9 +941,6 @@ if operation == 1:
 								else:
 									foe_target_type = "None"
 									foe_command_effect = "None"
-
-								if len(attacker.targets) > 1:
-									print("--", end = "")
 
 								# Blockable logic - attack must be Melee or Ranged and not have the "Never miss" property
 								if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
@@ -1032,7 +1031,7 @@ if operation == 1:
 
 						# No damage on pure Status attacks
 						if inflicted > 0:
-							print("%d of the %s group were afflicted with %s." % (inflicted, target.name, command.status), end = " ")
+							print("%d %ss were afflicted with %s." % (inflicted, target.name, command.status), end = " ")
 						if command.stat == "Status":
 							print("")
 							continue
@@ -1117,8 +1116,7 @@ if operation == 1:
 
 						for who in range(len(combatants)):
 							if combatants[who].name == attacker.targets[foe]:
-								if len(attacker.targets) > 1:
-									print("--", end = "")
+								print("--", end = "")
 								# Reflect - change target into the caster
 								if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
 									print("%s reflected the spell with %s." % (target.name, target.command), end = " ")

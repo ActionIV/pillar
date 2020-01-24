@@ -385,9 +385,12 @@ def rollDamage(command, attacker):
 		else:
 			damage = calculateDamage(attacker.getMana(), multiplier)
 	elif stat == "Set":
-		# Need to add race_bonus eventually...or do I? Robots have enough power already
 		if isinstance(command.rand_dmg, int) and command.rand_dmg > 0:
-			damage = command.min_dmg + random.randint(0,command.rand_dmg)
+			# Robot race bonus to random damage with guns
+			if command.race_bonus == attacker.family:
+				damage = command.min_dmg + random.randint(0,command.rand_dmg)*2
+			else:
+				damage = command.min_dmg + random.randint(0,command.rand_dmg)
 		elif command.rand_dmg == "Str":
 			damage = command.min_dmg + random.randint(0,attacker.getStrength())
 		else:
@@ -395,7 +398,15 @@ def rollDamage(command, attacker):
 	# For Martial Arts, mostly. Reducing total uses while changing the starting point for damage calculation should make this more effective early
 	# but less powerful late in the weapon's existence
 	elif stat == "Uses":
-	  	damage = (command.min_dmg - command.remaining) * multiplier
+		if command.remaining > int(command.uses / 2):
+	  		damage = (command.min_dmg - command.remaining) * multiplier
+		else:
+			damage = int(command.uses / 2) * multiplier
+			mastery_roll = random.randint(1,100)
+			mastery_chance = int(command.uses / 2) - command.uses
+			if mastery_roll <= mastery_chance:
+				print("Mastery unlocked!")
+				damage = int(damage * 1.5)
 	else:
 		damage = 0
 	return damage
