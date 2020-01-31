@@ -371,14 +371,26 @@ if operation == 1:
 
 			# INITIATIVE AND EVASION
 			for count in range(len(combatants)):
+				# Evasion sets the base for initiative
 				# If STR >= DEF, then apply no penalty
 				if combatants[count].current_Str >= combatants[count].current_Def:
 					combatants[count].evasion = combatants[count].current_Agl
 				# If DEF > STR, apply a penalty equal to the difference
 				else:
 					combatants[count].evasion = combatants[count].current_Agl + combatants[count].current_Str - combatants[count].current_Def
+
+				# Initiative
+				init_boost = 0
+				if "Warning" in combatants[count].skills:
+					init_boost += 5
+				if "Surprise" in combatants[count].skills:
+					init_boost += 10
+				if "Boots" in combatants[count].skills:
+					init_boost += 10
+				#if "Quick" in commands.loc[combatants[count].command, "Effect"]:
+				#	init_boost += 20
 				variable = 1+(random.randint(1, initiative_var)/100)
-				combatants[count].initiative = combatants[count].evasion * variable
+				combatants[count].initiative = combatants[count].evasion * variable + init_boost
 
 			# Sort actors based on initiative score
 			combatants = sorted(combatants, key = operator.attrgetter("initiative"), reverse=True)
@@ -481,23 +493,6 @@ if operation == 1:
 				# CONFUSION CHECK - for those that became confused during a round
 				if attacker.isConfused():
 					attacker.command = actConfused(attacker, commands, players)
-				# if attacker.isConfused():
-				# 	options = []
-				# 	conf_command = 0
-				# 	remaining_uses = 100
-				# 	while conf_command == 0:
-				# 		conf_command = 1
-				# 		for skill in range(len(attacker.skills)):
-				# 			if attacker.skills[skill] != "blank" and commands.loc[attacker.skills[skill],"Target Type"] != "None":
-				# 				options.append(attacker.skills[skill])
-				# 		confuse_command_roll = random.randint(0, len(options)-1)
-				# 		attacker.command = options[confuse_command_roll]
-
-				# 		# Check PC in case ability was expired during combat
-				# 		if attacker.role in ("Player", "NPC"):
-				# 			remaining_uses = players.loc[attacker.name, "S%d Uses Left" % confuse_command_roll]
-				# 			if remaining_uses <= 0:
-				# 				conf_command = 0
 
 				# CONFUSED TARGETING
 				# Should confused targets flip a coin as to which side they attack as opposed to picking from the total pool?
@@ -712,9 +707,17 @@ if operation == 1:
 					# Defender == 100 means that group is gone. Go to the next foe
 					if defender == 100:
 						if foe == 0 and command.targeting == "All Enemies":
-							print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
+							print("%s attacks all enemies with %s." % (attacker.name, attacker.command), end = " ")
+							if command.remaining <= 3:
+								print("**%d uses left!**", command.remaining)
+							else:
+								print("")
 						elif foe == 0 and command.targeting == "Allies":
-							print("%s uses %s." % (attacker.name, attacker.command))
+							print("%s uses %s." % (attacker.name, attacker.command), end = " ")
+							if command.remaining <= 3:
+								print("**%d uses left!**" % command.remaining)
+							else:
+								print("")
 						elif command.targeting not in ("All Enemies", "Allies", "All"):
 							attacker.command = "Ineffective"
 							print("%s did nothing." % attacker.name)
@@ -738,6 +741,8 @@ if operation == 1:
 
 					if command.targeting == "Single":
 						print("%s attacks %s with %s." % (attacker.name, target.name, attacker.command), end = " ")
+						if command.remaining <= 3:
+							print("**%d uses left!**" % command.remaining, end = " ")
 
 						# Blockable logic
 						if "Never miss" not in command.effect:
@@ -825,7 +830,7 @@ if operation == 1:
 								if command.element != "None":
 									if checkWeakness(command.element, target):
 										print("Hits weakness.", end = " ")
-										if mightyBlow(target, crit_chance):
+										if command.att_type != "Magic" and mightyBlow(target, crit_chance):
 											continue
 										else:
 											critical_hit = True
@@ -850,7 +855,11 @@ if operation == 1:
 							if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", command.status, barriers) and "Pierce" not in command.effect:
 								damage = int(damage * weapon_res_mult)
 							if critical_hit == True:
-								damage = int(damage * critical_mult)
+								if command.att_type in ("Melee", "Ranged"):
+									damage = int(damage * critical_mult)
+								# Reset damage for a single-target magic critical
+								else:
+									damage = offense + 5 * command.multiplier # Add 5 mana to magic attack against weakness
 							if def_target_type == "Counter":
 								damage = int(damage * counter_protection_mult)
 
@@ -924,12 +933,18 @@ if operation == 1:
 					elif command.targeting in ("Group", "All Enemies"):
 						if command.targeting == "Group" and target.role == "Enemy":
 							print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
+							if command.remaining <= 3:
+								print("**%d uses left!**" % command.remaining, end = " ")
 						elif command.targeting == "Group" and target.role in ("Player", "NPC"):
 							print("%s attacks %s with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
 						else:
 							# Only print the command text the first time through
 							if foe == 0:
-								print("%s attacks all enemies with %s." % (attacker.name, attacker.command))
+								print("%s attacks all enemies with %s." % (attacker.name, attacker.command), end = " ")
+								if command.remaining <= 3:
+									print("**%d uses left!**" % command.remaining)
+								else:
+									print("")
 							print("--", end = "")
 
 						group_hits = 0
@@ -1060,16 +1075,6 @@ if operation == 1:
 									else:
 										who += 1
 
-								# for who in range(len(combatants)):
-								# 	# Only damage those matching the target name and that are not already dead or stoned
-								# 	if combatants[who].name == target.name and combatants[who].isTargetable() and combatants[who].position == tar_position:
-								# 		body_count += applyDamage(damage, combatants[who])
-								# 		num_hits += 1
-								# 		tar_position += 1
-								# 		who = 0
-								# 	if num_hits == group_hits:
-								# 		break
-
 								# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
 								if target.role == "Enemy":
 									if group_hits > 1:
@@ -1096,6 +1101,8 @@ if operation == 1:
 
 					elif command.targeting == "Ally":
 						print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
+						if command.remaining <= 3:
+							print("**%d uses left!**" % command.remaining, end = " ")
 						# Reflect - change target into the caster
 						if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
 							print("%s reflected the spell with %s." % (target.name, target.command), end = " ")
@@ -1114,12 +1121,18 @@ if operation == 1:
 				
 					elif command.targeting == "Self":
 						print("%s uses %s." % (attacker.name, attacker.command), end = " ")
+						if command.remaining <= 3:
+							print("**%d uses left!**" % command.remaining, end = " ")
 						if "Buff" in command.effect:
 							attacker = affectStat(attacker, command)
 
 					elif command.targeting == "Allies":
 						if foe == 0:
-							print("%s uses %s." % (attacker.name, attacker.command))
+							print("%s uses %s." % (attacker.name, attacker.command), end = " ")
+							if command.remaining <= 3:
+								print("**%d uses left!**" % command.remaining, end = " ")
+							else:
+								print("")
 
 						for who in range(len(combatants)):
 							if combatants[who].name == attacker.targets[foe]:
@@ -1382,6 +1395,8 @@ elif operation == 3:
 		current_type = ""
 		new_monster = ""
 		type_diff = 0
+		variant = False
+		variation = ""
 
 		for row in range(transformations.shape[0]):
 			for col in range(transformations.shape[1]):
@@ -1423,10 +1438,43 @@ elif operation == 3:
 				break
 			else:
 				new_monster = family_tree[member][0]
+
+		new_HP = monsters.loc[new_monster, "HP"]
+		new_Str = monsters.loc[new_monster, "Str"]
+		new_Agl = monsters.loc[new_monster, "Agl"]
+		new_Mana = monsters.loc[new_monster, "Mana"]
+		new_Def = monsters.loc[new_monster, "Def"]
+		ds_diff = current_ds - monsters.loc[new_monster, "DS"]
+		stat_increase = 0
+
+		if monsters.loc[new_monster, "DS"] <= current_ds and current_ds < 11 and random.randint(1,2) == 2:
+			variant = True
+			variant_roll = random.randint(1,11)
+			if variant_roll < 6:
+				variation = "Increased stats."
+				stat_increase = 1 + max((5*ds_diff)/100,0.1)
+				new_HP = int(new_HP * stat_increase)
+				new_Str = max(new_Str + 1, int(new_Str * stat_increase))
+				new_Agl = max(new_Agl + 1, int(new_Agl * stat_increase))
+				new_Mana = max(new_Mana + 1, int(new_Mana * stat_increase))
+				new_Def = max(new_Def + 1, int(new_Def * stat_increase))
+			elif variant_roll < 11:
+				variation = "Evolved skill."
+			else:
+				variation = "Increased stats and evolved skill."
+				stat_increase = 1 + max((5*ds_diff)/100,0.1)
+				new_HP = int(new_HP * stat_increase)
+				new_Str = int(new_Str * stat_increase)
+				new_Agl = int(new_Agl * stat_increase)
+				new_Mana = int(new_Mana * stat_increase)
+				new_Def = int(new_Def * stat_increase)
 		
-		print("%s changed from %s to %s." % (who, current_monster, new_monster))
-		print("HP: %d | STR: %d | AGL: %d | MANA: %d | DEF: %d" % (monsters.loc[new_monster, "HP"], monsters.loc[new_monster, "Str"],
-		monsters.loc[new_monster, "Agl"], monsters.loc[new_monster, "Mana"], monsters.loc[new_monster, "Def"]))
+		print("%s changed from %s to %s." % (who, current_monster, new_monster), end = " ")
+		if variant == True:
+			print("VARIANT: %s" % variation)
+		else:
+			print('\n')
+		print("HP: %d | STR: %d | AGL: %d | MANA: %d | DEF: %d" % (new_HP, new_Str, new_Agl, new_Mana, new_Def))
 		print("[", end = "")
 		for skill in range(8):
 			if skill < 7:

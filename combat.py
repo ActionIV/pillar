@@ -187,9 +187,6 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 				player_table.loc[players[pc].name, "Natural DEF"] = players[pc].natural_def
 
 	print("")
-	for pc in range(len(players)):
-		print("%s used: %s" % (players[pc].name, players[pc].actions_taken))
-	print("")
 
 # Used for all non-HP stats
 def statGrowth(stat, stat_count, stat_base, stat_bonus, highest_ds):
@@ -386,9 +383,9 @@ def rollDamage(command, attacker):
 			damage = calculateDamage(attacker.getMana(), multiplier)
 	elif stat == "Set":
 		if isinstance(command.rand_dmg, int) and command.rand_dmg > 0:
-			# Robot race bonus to random damage with guns
+			# Robot race bonus to random damage with guns - TURNED OFF FOR NOW
 			if command.race_bonus == attacker.family:
-				damage = command.min_dmg + random.randint(0,command.rand_dmg)*2
+				damage = command.min_dmg + random.randint(0,command.rand_dmg) #*2
 			else:
 				damage = command.min_dmg + random.randint(0,command.rand_dmg)
 		elif command.rand_dmg == "Str":
@@ -506,15 +503,19 @@ def affectStat(target, command):
 
 def inflictCondition(command, attacker, target, output):
 	# Originally (target - attacker) * 2 + 50
-	base_chance = 50
-	hit_chance = (target.getMana() - attacker.getMana())*2 + base_chance
+	# Bonus chance to land Status if the attack has no damage component
+	if command.stat == "Status":
+		base_chance = 65
+	else:
+		base_chance = 50
+	hit_chance = (attacker.getMana() - target.getMana())*2 + base_chance
 	roll = random.randint(1,100)
-	if hit_chance < roll:
+	if roll <= hit_chance:
 		applyCondition(command.status, target, output)
 		return 1
 	else:
 		if output:
-			print("%s resisted." % target.name, end = " ")
+			print("%s resisted %s." % (target.name, command.status), end = " ")
 		return 0
 
 def applyCondition(status, target, output):

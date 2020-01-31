@@ -126,7 +126,11 @@ class Enemy(Actor):
 	def getStrength(self):
 		strength = self.current_Str
 		if self.isCursed():
-			strength = int(strength/2)
+			# Undead gain a 20% boost from being Cursed
+			if self.family == "Undead":
+				strength = int(strength * 1.2)
+			else:
+				strength = int(strength/2)
 		return strength
 
 	def getAgility(self):
@@ -143,7 +147,11 @@ class Enemy(Actor):
 	def getDefense(self):
 		defense = self.current_Def
 		if self.isCursed():
-			defense = int(defense/2)
+			# Undead gain a 20% boost from being Cursed
+			if self.family == "Undead":
+				defense = int(defense * 1.2)
+			else:
+				defense = int(defense/2)
 		return defense
 
 	role = "Enemy"
