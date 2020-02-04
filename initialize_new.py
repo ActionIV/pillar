@@ -1219,7 +1219,14 @@ if operation == 1:
 					print("2. Change commands/targets")
 					print("3. End this battle")
 					print("----------------------------------------")
-					mid_bat = int(input("Enter a number: "))
+					while True:
+						mid_bat = int(input("Enter a number: "))
+						try:
+							mid_bat = int(mid_bat)
+						except ValueError:
+							mid_bat = input("Invalid entry.", end = " ")
+							continue
+						break
 					if mid_bat == 1:
 						post_round = "y"
 					elif mid_bat == 2:
@@ -1345,7 +1352,7 @@ elif operation == 2:
 		if players.iloc[count,0] == "blank":
 			pass
 		else:
-			print("CHARACTER: %s  PLAYER: %s" % (players.iloc[count, 0], players.iloc[count, 2]))
+			print("%s\n%s" % (players.iloc[count, 0], players.iloc[count, 2]))
 			print("CLASS: %s" % players.iloc[count, 3])
 			print("HP: %d | STR: %d | DEF: %d | AGL: %d | MANA: %d" % (players.iloc[count, 5],players.iloc[count, 7],
 			players.iloc[count, 9],players.iloc[count, 11],players.iloc[count, 13]))
