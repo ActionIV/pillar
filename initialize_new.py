@@ -561,11 +561,15 @@ if operation == 1:
 					if attacker.target_type == "Single":
 						for choice in range(len(party_order)):
 							roll = random.randint(1,100)
-							# if commands.loc[combatants[party_order[choice][2]].command, "Type"] == "Shield":
-							# 	target_odds = single_target_odds + commands.loc[combatants[party_order[choice][2]].command, "Percent"] / 5
-							# else:
-							# 	target_odds = single_target_odds
-							if roll <= single_target_odds and combatants[party_order[choice][2]].isTargetable():
+							# Increase a player's chance to be targeted if using a shield
+							if commands.loc[combatants[party_order[choice][2]].command, "Type"] == "Shield":
+								target_odds = single_target_odds + commands.loc[combatants[party_order[choice][2]].command, "Percent"] / 5
+							else:
+								target_odds = single_target_odds
+							# If the PC party is larger than 5, reduce the target chances by 5% for each one over 5
+							if len(party_order) > 5:
+								target_odds -= (len(party_order)-5)*5
+							if roll <= target_odds and combatants[party_order[choice][2]].isTargetable():
 								sel_target = party_order[choice][0]
 								break
 						# If a target isn't selected via the weighted method...
@@ -1256,20 +1260,18 @@ if operation == 1:
 
 		# Print party status line at the end of a simulation
 		sys.stdout = open(text_path, 'a')
+		print("")
 		for each in range(len(party_order)):
 			pos = party_order[each][2]
 			print("| %s: %d/%d %s" % (combatants[pos].name, combatants[pos].current_HP, combatants[pos].HP, combatants[pos].characterStatus()), end = " |")
+			# Print skill counts at the end of a battle
+			for skill in range(len(combatants[pos].skills)):
+		 		if combatants[pos].uses[skill] < 1:
+		 			pass
+		 		else:
+		 			print("%s-%d" % (combatants[pos].skills[skill], combatants[pos].uses[skill]), end = ", ")
+			print("]")
 		print("")
-		# BLOCK FOR PRINTING SKILLS COUNTS AT THE END OF A BATTLE
-		# for each in range(len(party_order)):
-		# 	pos = party_order[each][2]
-		# 	print(combatants[pos].name, end = ": [")
-		# 	for skill in range(len(combatants[pos].skills)):
-		# 		if combatants[pos].uses[skill] == -1:
-		# 			pass
-		# 		else:
-		# 			print("%s - %d" % (combatants[pos].skills[skill], combatants[pos].uses[skill]), end = ", ")
-		# 	print("]\n")
 
 		# Print enemy status line at the end of a simulation
 		enemy_list = []

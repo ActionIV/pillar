@@ -214,6 +214,7 @@ def afterTurn(attacker, stat_used, table):
 		skill_slot = attacker.skillSlot()
 		if skill_slot < 8:
 			table.loc[attacker.name, "S%d Uses Left" % skill_slot] -= 1
+			attacker.uses[skill_slot] -= 1
 		else:
 			table.loc[attacker.name, "MAGI Uses Left"] -= 1
 	return attacker
