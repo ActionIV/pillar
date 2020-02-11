@@ -1263,7 +1263,7 @@ if operation == 1:
 		print("")
 		for each in range(len(party_order)):
 			pos = party_order[each][2]
-			print("| %s: %d/%d %s" % (combatants[pos].name, combatants[pos].current_HP, combatants[pos].HP, combatants[pos].characterStatus()), end = " |")
+			print("| %s: %d/%d %s" % (combatants[pos].name, combatants[pos].current_HP, combatants[pos].HP, combatants[pos].characterStatus()), end = " [")
 			# Print skill counts at the end of a battle
 			for skill in range(len(combatants[pos].skills)):
 		 		if combatants[pos].uses[skill] < 1:
@@ -1271,7 +1271,7 @@ if operation == 1:
 		 		else:
 		 			print("%s-%d" % (combatants[pos].skills[skill], combatants[pos].uses[skill]), end = ", ")
 			print("]")
-		print("")
+		#print("")
 
 		# Print enemy status line at the end of a simulation
 		enemy_list = []
