@@ -1241,7 +1241,8 @@ if operation == 1:
 							else:
 								print("%d. %s: %s" % (each+1, party_order[each][0], combatants[pos].characterStatus()))
 						while True:
-							which_pc = int(input("Which character? Enter a number: "))-1
+							which_pc = int(input("Which character? Enter a number: "))
+							which_pc -= 1
 							try:
 								which_pc = int(which_pc)
 							except ValueError:
