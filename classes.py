@@ -123,6 +123,16 @@ class Enemy(Actor):
 	def getRole(self):
 	 	return self.role
 
+	def getRace(self):
+		if self.Type == 0:
+			return "Human"
+		elif self.Type == 1:
+			return "Mutant"
+		elif self.Type == 2:
+			return "Monster"
+		elif self.Type == 3:
+			return "Robot"
+
 	def getStrength(self):
 		strength = self.current_Str
 		if self.isCursed():
@@ -186,6 +196,12 @@ class Player(Actor):
 	def getRole(self):
 	 	return self.role
 
+	def getRace(self):
+		if self.Class in ("Human", "Mutant", "Robot"):
+			return self.Class
+		else:
+			return "Monster"
+
 	def getStrength(self):
 		strength = self.current_Str
 		if self.isCursed():
@@ -241,6 +257,12 @@ class NPC(Actor):
 	
 	def getRole(self):
 	 	return self.role
+
+	def getRace(self):
+		if self.Class in ("Human", "Mutant", "Robot"):
+			return self.Class
+		else:
+			return "Monster"
 
 	def getStrength(self):
 		strength = self.current_Str

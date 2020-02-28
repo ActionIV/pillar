@@ -81,23 +81,8 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 	for pc in range(len(players)):
 		# Add gold
 		player_table.loc[players[pc].name, "GOLD"] += indy_gold
-		# Set Current HP
-		if players[pc].current_HP > 0:
-			player_table.loc[players[pc].name, "Current HP"] = players[pc].current_HP
-		else:
-			player_table.loc[players[pc].name, "Current HP"] = 1
-		# Status Conditions
-		condition = ""
-		if players[pc].isBlinded():
-			condition.join("BLND")
-		if players[pc].isStoned():
-			condition.join("STON")
-		if players[pc].isCursed():
-			condition.join("CURS")
-		if condition == "":
-			condition = "GOOD"
-		player_table.loc[players[pc].name, "CONDITION"] = condition
 
+		# STAT GROWTHS
 		if players[pc].family in ("Human", "Mutant") and players[pc].isTargetable():
 			# VARIABLES
 			skill_base = growth_rates.loc[players[pc].family, "SKILL"]
@@ -142,7 +127,8 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 							player_table.loc[players[pc].name, "S%d" % skill] = gained_skill
 							break
 						elif skill == 3 and players[pc].skills[skill] != 'blank':
-							print("%s lost %s and acquired %s." % (players[pc].name, players[pc].skills[skill], gained_skill))
+							print("%s acquired %s. Choose what gets replaced: [%s, %s, %s, %s]" % (players[pc].name, gained_skill,
+								players[pc].skills[0], players[pc].skills[1], players[pc].skills[2], players[pc].skills[3],))
 							players[pc].skills[skill] = gained_skill
 							player_table.loc[players[pc].name, "S%d" % skill] = gained_skill
 
@@ -186,6 +172,24 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 				print("%s's DEF increased by 1." % (players[pc].name))
 				player_table.loc[players[pc].name, "Natural DEF"] = players[pc].natural_def
 
+		# Set Current HP
+		if players[pc].current_HP > 0:
+			player_table.loc[players[pc].name, "Current HP"] = players[pc].current_HP
+		else:
+			player_table.loc[players[pc].name, "Current HP"] = 1
+			players[pc].current_HP = 1
+			players[pc].lives += 1
+		# Status Conditions
+		condition = ""
+		if players[pc].isBlinded():
+			condition.join("BLND")
+		if players[pc].isStoned():
+			condition.join("STON")
+		if players[pc].isCursed():
+			condition.join("CURS")
+		if condition == "":
+			condition = "GOOD"
+		player_table.loc[players[pc].name, "CONDITION"] = condition
 	print("")
 
 # Used for all non-HP stats
@@ -202,7 +206,7 @@ def equivalentLevel(stat, const1, const2):
 	return level
 
 def growthChance(base, bonus, enemy_ds, player_ds):
-	growthChance = base + bonus * (enemy_ds - player_ds)
+	growthChance = base + bonus * (1 + enemy_ds - player_ds) # Added 1 to the parenthetical equation, giving a bonus for enemies of equal strength
 	return growthChance
 
 # DEFECT: If the ability used is not in the skill list, the first slot is decremented (skill_slot = 0)

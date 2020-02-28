@@ -372,8 +372,8 @@ if operation == 1:
 			# INITIATIVE AND EVASION
 			for count in range(len(combatants)):
 				# Evasion sets the base for initiative
-				# If STR >= DEF, then apply no penalty
-				if combatants[count].current_Str >= combatants[count].current_Def:
+				# If STR >= DEF, then apply no penalty. Monsters use this since they're naturally balanced
+				if combatants[count].current_Str >= combatants[count].current_Def or combatants[count].getRace() == "Monster":
 					combatants[count].evasion = combatants[count].current_Agl
 				# If DEF > STR, apply a penalty equal to the difference
 				else:
@@ -382,11 +382,11 @@ if operation == 1:
 				# Initiative
 				init_boost = 0
 				if "Warning" in combatants[count].skills:
-					init_boost += 5
+					init_boost += 3
 				if "Surprise" in combatants[count].skills:
-					init_boost += 10
+					init_boost += 5
 				if "Boots" in combatants[count].skills:
-					init_boost += 10
+					init_boost += 5
 				#if "Quick" in commands.loc[combatants[count].command, "Effect"]:
 				#	init_boost += 20
 				variable = 1+(random.randint(1, initiative_var)/100)
