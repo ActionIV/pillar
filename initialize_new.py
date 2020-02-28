@@ -358,7 +358,7 @@ if operation == 1:
 							if combatants[runner].isDead():
 								party_AGL += 100
 							else:
-								party_AGL += combatants[runner].current_Agl		
+								party_AGL += combatants[runner].current_Agl
 					#enemies_AGL += random.randint(1,50)
 					if party_AGL > enemies_AGL:
 						run_success = True
@@ -654,7 +654,7 @@ if operation == 1:
 						print("%s is waiting for the attack." % attacker.name)
 						combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
 						continue
-					elif temp_target == "All Enemies":
+					elif temp_target in ("All Enemies", "Sweep"):
 						for each in range(len(enemy_groups)):
 							attacker.targets.append(enemy_groups[each][0])
 					elif temp_target == "Allies":
@@ -667,7 +667,7 @@ if operation == 1:
 							attacker.targets.append(party_order[each][0])
 					else:
 						print("Invalid target!")
-						break
+						continue
 
 				# Logic for finding remaining uses on a command for Players and NPCs
 				skill_slot = 0
@@ -722,6 +722,8 @@ if operation == 1:
 								print("**%d uses left!**" % command.remaining)
 							else:
 								print("")
+						elif foe == 0 and command.targeting == "Sweep":
+							print("%s attacks the front line with %s." % (attacker.name, attacker.command), end = " ")
 						elif command.targeting not in ("All Enemies", "Allies", "All"):
 							attacker.command = "Ineffective"
 							print("%s did nothing." % attacker.name)
@@ -743,8 +745,11 @@ if operation == 1:
 					critical_hit = False
 					damage = 0
 
-					if command.targeting == "Single":
-						print("%s attacks %s with %s." % (attacker.name, target.name, attacker.command), end = " ")
+					if command.targeting in ("Single", "Sweep"):
+						if command.targeting == "Single":
+							print("%s attacks %s with %s." % (attacker.name, target.name, attacker.command), end = " ")
+						if foe == 0 and command.targeting == "Sweep":
+							print("%s attacks the front line with %s." % (attacker.name, attacker.command))
 						if command.remaining <= 3:
 							print("**%d uses left!**" % command.remaining, end = " ")
 
@@ -769,8 +774,12 @@ if operation == 1:
 							hit_roll = random.randint(1,100)
 							if hit_roll <= hit_chance:
 								hit_count += 1
+								hit_chance -= 2*hit_count   # Modification: hit chance drops after a successful hit? Should this happen differently based on command?
 						if hit_count == 0:
-							print("Missed!")
+							if command.targeting == "Single":
+								print("Missed!")
+							else:
+								print("--Missed %s!" % target.name)
 						# Melee attacks get blocked fully (even status-based ones)
 						elif (blocked == True and command.att_type == "Melee"):
 							print("%s defended against %s with %s." % (target.name, attacker.command, target.command))
@@ -904,7 +913,10 @@ if operation == 1:
 									else:
 										absorb = applyHeal(absorb, attacker)
 										print("Absorbed %d HP." % absorb, end = " ")
-								print("%d damage." % damage, end = " ")
+								if command.targeting == "Single":
+									print("%d damage." % damage, end = " ")
+								else:
+									print("--%d damage to %s." % (damage, target.name), end = " ")
 								if applyDamage(damage, target) == 1:
 									print("%s fell." % target.name)
 								elif "WindUp" in command.effect:
@@ -1315,6 +1327,9 @@ if operation == 1:
 				active_battle.iloc[count,20] = combatants[count].actions_taken
 				active_battle.iloc[count,21] = combatants[count].stats_used
 				if combatants[count].role in ("Player", "NPC"):
+					# Logic to set uses in Players table equal to those tracked during combat
+					for slot in range(len(combatants[count].skills)):
+						players.loc[combatants[count].name, "S%d Uses Left" % slot] = combatants[count].uses[slot]
 					save_players.append(combatants[count].name)
 			battles[i] = active_battle.copy()
 			save_list.append(tuple((i, log.sheet_names[i+2])))
