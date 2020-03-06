@@ -1253,13 +1253,15 @@ if operation == 1:
 							else:
 								print("%d. %s: %s" % (each+1, party_order[each][0], combatants[pos].characterStatus()))
 						while True:
-							which_pc = int(input("Which character? Enter a number: "))
-							which_pc -= 1
+							which_pc = input("Which character? Enter a number: ")
+							#which_pc -= 1
 							try:
 								which_pc = int(which_pc)
 							except ValueError:
-								which_pc = input("Invalid entry.", end = " ")
+								which_pc = input("Invalid entry. Try again: ")
 								continue
+							else:
+								which_pc -= 1
 							break
 
 						which_command = input("Enter the command: ")
