@@ -174,6 +174,7 @@ class Enemy(Actor):
 	Mana = 0
 	Def = 0
 	family = ""
+	enemy_group_num = 0
 		
 class Player(Actor):
 	role = "Player"
@@ -259,8 +260,8 @@ class NPC(Actor):
 	 	return self.role
 
 	def getRace(self):
-		if self.Class in ("Human", "Mutant", "Robot"):
-			return self.Class
+		if self.family in ("Human", "Mutant", "Robot"):
+			return self.family
 		else:
 			return "Monster"
 

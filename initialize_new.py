@@ -118,6 +118,8 @@ if operation == 1:
 		# Populate the Combatants list
 		# I would prefer to be doing label lookups with Pandas loc instead of iloc, but I can't get the indexing right (at load time)
 		actor_count = len(active_battle.index)
+		seen = set()
+		# Seen watches for unique enemy group names to build a unique list in enemy_groups
 		for count in range(actor_count):
 			# Enemy groups require a for loop to create individual Actors for tracking initiative, deaths, etc.
 			if active_battle.iloc[count,1] == "Enemy":
@@ -127,17 +129,21 @@ if operation == 1:
 						combatants[place].position = pos + 1
 						combatants[place].lives = 1
 						combatants[place].group = count
-						enemy_groups.append(tuple((combatants[place].name, 0, 0)))
+						#enemy_groups.append(tuple((combatants[place].name, 0, 0)))
 						copy_row = active_battle.iloc[count]
 						active_battle.loc[len(active_battle.index)] = copy_row
 						place += 1
+					seen.add(combatants[place-1].name) # -1 because place was incremented at the end of the above for loop, which would exceed range
+					enemy_groups.append(tuple((combatants[place-1].name, 0, 0)))
 					active_battle.drop(active_battle.tail(1).index,inplace=True)
 				else:
 					combatants.append(Enemy(active_battle.iloc[count,0]))
 					combatants[place].position = active_battle.iloc[count,3]
 					combatants[place].lives = active_battle.iloc[count,2]
 					combatants[place].group = count
-					enemy_groups.append(tuple((combatants[count].name, 0, 0)))
+					if combatants[place].name not in seen:
+						enemy_groups.append(tuple((combatants[count].name, 0, 0)))
+					seen.add(combatants[place].name)
 					place += 1
 
 			elif active_battle.iloc[count,1] == "Player":
@@ -154,9 +160,12 @@ if operation == 1:
 				combatants[place].group = count
 				place += 1
 
-		# Create a unique list of enemy groups
-		enemy_groups = set(enemy_groups)
-		enemy_groups = list(enemy_groups)
+		# Create a unique list of enemy groups in order of entry
+#		enemy_groups = set(enemy_groups)
+#		enemy_groups = list(enemy_groups)
+		#seen = set()
+		#seen_add = seen.add
+		#enemy_groups = [x for x in enemy_groups if not (x in seen or seen_add(x))]
 
 		# DATA ASSIGNMENT LOOP
 		# Ridiculously big loop to go through combatants list, assign static values
@@ -1219,13 +1228,15 @@ if operation == 1:
 						pos = party_order[each][2]
 						print("| %s: %d/%d %s" % (combatants[pos].name, combatants[pos].current_HP, combatants[pos].HP, combatants[pos].characterStatus()), end = " |")
 					print("")
-					# Print enemy status line at the end of a simulation
+					# Print enemy status line at the end of a simulation - TURN INTO A FUNCTION
 					enemy_list = []
-					for count in range(len(combatants)):
-						if (combatants[count].role == "Enemy" and combatants[count].isActive()):
-							enemy_list.append(combatants[count].name)
+					for enemy in range(len(enemy_groups)):
+						for count in range(len(combatants)):
+							if combatants[count].role == "Enemy" and combatants[count].isTargetable() and combatants[count].name == enemy_groups[enemy][0]:
+								enemy_list.append(combatants[count].name)
 					remaining_enemies = Counter(enemy_list)
 					remaining_enemies.keys()
+
 					for key, number in remaining_enemies.items():
 						print("{ %s - %d" % (key, number), end = " }")
 					# END SUMMARY BLOCK
@@ -1290,9 +1301,10 @@ if operation == 1:
 
 		# Print enemy status line at the end of a simulation
 		enemy_list = []
-		for count in range(len(combatants)):
-			if (combatants[count].role == "Enemy" and combatants[count].isTargetable()):
-				enemy_list.append(combatants[count].name)
+		for enemy in range(len(enemy_groups)):
+			for count in range(len(combatants)):
+				if combatants[count].role == "Enemy" and combatants[count].isTargetable() and combatants[count].name == enemy_groups[enemy][0]:
+					enemy_list.append(combatants[count].name)
 
 		remaining_enemies = Counter(enemy_list)
 		remaining_enemies.keys()
