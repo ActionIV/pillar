@@ -694,7 +694,7 @@ if operation == 1:
 				command = Command(attacker.command, commands, remaining_uses)
 
 				# Human Spirit Chance - Low chance, but unlocks new ability
-				if attacker.role == "Player" and attacker.Class == "Human":
+				if attacker.role == "Player" and attacker.Class == "Human" and command.targeting in ("Single", "Group", "All Enemies", "Sweep", "All"):
 					biggest_foe = 1
 					human_spirit = equivalentLevel(attacker.HP, 26, 50)  # Get DS equivalent for human PC
 					for tar in range(len(attacker.targets)):
@@ -733,7 +733,7 @@ if operation == 1:
 								print("")
 						elif foe == 0 and command.targeting == "Sweep":
 							print("%s attacks the front line with %s." % (attacker.name, attacker.command), end = " ")
-						elif command.targeting not in ("All Enemies", "Allies", "All"):
+						elif command.targeting not in ("All Enemies", "Allies", "All", "Sweep"):
 							attacker.command = "Ineffective"
 							print("%s did nothing." % attacker.name)
 						continue
@@ -948,12 +948,13 @@ if operation == 1:
 								else:
 									r_uses = int(commands.loc[target.command, "#Uses"] * remaining_uses_for_enemies_mult)
 								counter_command = Command(target.command, commands, r_uses)
-								if target.role == "Enemy":
-									buildResistances(player_barriers, barriers, commands)
-								else:
-									buildResistances(enemy_barriers, barriers, commands)
-								counterAttack(target, attacker, counter_command, damage / counter_protection_mult, barriers)
-								print("")
+								if counter_command.att_type == command.att_type:
+									if target.role == "Enemy":
+										buildResistances(player_barriers, barriers, commands)
+									else:
+										buildResistances(enemy_barriers, barriers, commands)
+									counterAttack(target, attacker, counter_command, damage / counter_protection_mult, barriers)
+									print("")
 
 					elif command.targeting in ("Group", "All Enemies"):
 						if command.targeting == "Group" and target.role == "Enemy":
@@ -1040,7 +1041,7 @@ if operation == 1:
 							# Currently, no damage component with Debuff abilities. No resistance either...add it?
 							if "Debuff" in command.effect:
 								target = affectStat(target, command)
-								continue
+								
 							if command.status != "None":
 								for who in range(len(combatants)):
 									if combatants[who].name == target.name and combatants[who].isTargetable():
@@ -1103,7 +1104,7 @@ if operation == 1:
 								# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
 								if target.role == "Enemy":
 									if group_hits > 1:
-										print("%d damage to %d %ss." % (damage, group_hits, target.name), end = " ")
+										print("%d damage to %d %s group." % (damage, group_hits, target.name), end = " ")
 									else:
 										print("%d damage to %d %s." % (damage, group_hits, target.name), end = " ")
 								else:
@@ -1116,6 +1117,25 @@ if operation == 1:
 									print("%s fell." % target.name)
 								else:
 									print("")
+
+								# Counter-attacks if any exist and the target survived - COPIED FROM SINGLE, MAY NOT WORK YET
+								if target.isActive() and (def_target_type == "Counter" or "Counter" in def_command_effect):
+									r_uses = 0
+									skill_slot = 0
+									if target.role in ("Player", "NPC"):
+										skill_slot = target.skillSlot()
+										r_uses = players.loc[target.name, "S%d Uses Left" % skill_slot]
+									else:
+										r_uses = int(commands.loc[target.command, "#Uses"] * remaining_uses_for_enemies_mult)
+									counter_command = Command(target.command, commands, r_uses)
+									if counter_command.att_type == command.att_type:
+										if target.role == "Enemy":
+											buildResistances(player_barriers, barriers, commands)
+										else:
+											buildResistances(enemy_barriers, barriers, commands)
+										counterAttack(target, attacker, counter_command, damage / counter_protection_mult, barriers)
+										print("")
+
 							else:
 								if block_count > 0:
 									print("Blocked by %s." % target.name)

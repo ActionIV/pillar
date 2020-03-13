@@ -330,7 +330,10 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 				inflictCondition(command, avenger, attacker, True)
 			elif command.stat == "Mana":
 				counter_dmg = rollDamage(command, avenger)
+				save_command_att_type = command.att_type # Change attack type to Magic so the defense calculation gets done correctly
+				command.att_type = "Magic"
 				defense = determineDefense(attacker, command, counter_dmg)
+				command.att_type = save_command_att_type
 				if checkWeakness(command.element, attacker):
 					print("Hits weakness.", end = " ")
 					defense = 0
@@ -473,7 +476,7 @@ def applyHeal(heal, target):
 	return heal
 
 def affectStat(target, command):
-	stat = command.stat
+	type, stat = command.effect.split()
 	rand = random.randint(0, command.rand_dmg)
 	amount = command.min_dmg + rand
 	
