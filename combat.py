@@ -80,7 +80,8 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 	# PLAYER TABLE UPDATES
 	for pc in range(len(players)):
 		# Add gold
-		player_table.loc[players[pc].name, "GOLD"] += indy_gold
+		players[pc].gold += indy_gold
+		#player_table.loc[players[pc].name, "GOLD"] += indy_gold
 
 		# STAT GROWTHS
 		if players[pc].family in ("Human", "Mutant") and players[pc].isTargetable():
@@ -109,7 +110,7 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 				hp_gain = int(players[pc].HP / 50) + random.randint(6,11)
 				players[pc].HP = players[pc].HP + hp_gain
 				print("%s's Max HP increased by %d." % (players[pc].name, hp_gain))
-				player_table.loc[players[pc].name, "HP"] = players[pc].HP
+				#player_table.loc[players[pc].name, "HP"] = players[pc].HP
 
 			# MUTANT SKILLS
 			if players[pc].family == "Mutant":
@@ -129,8 +130,8 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 						elif skill == 3 and players[pc].skills[skill] != 'blank':
 							print("%s acquired %s. Choose what gets replaced: [%s, %s, %s, %s]" % (players[pc].name, gained_skill,
 								players[pc].skills[0], players[pc].skills[1], players[pc].skills[2], players[pc].skills[3],))
-							players[pc].skills[skill] = gained_skill
-							player_table.loc[players[pc].name, "S%d" % skill] = gained_skill
+							#players[pc].skills[skill] = gained_skill
+							#player_table.loc[players[pc].name, "S%d" % skill] = gained_skill
 
 			# OTHER STATS
 			str_count = players[pc].stats_used.count("Str")
@@ -158,19 +159,19 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 			if statGrowth(players[pc].natural_str, str_count, str_base, str_bonus, highest_ds):
 				players[pc].natural_str += 1
 				print("%s's STR increased by 1." % (players[pc].name))
-				player_table.loc[players[pc].name, "Natural STR"] = players[pc].natural_str
+				#player_table.loc[players[pc].name, "Natural STR"] = players[pc].natural_str
 			if statGrowth(players[pc].natural_agl, agl_count, agl_base, agl_bonus, highest_ds):
 				players[pc].natural_agl += 1
 				print("%s's AGL increased by 1." % (players[pc].name))
-				player_table.loc[players[pc].name, "Natural AGL"] = players[pc].natural_agl
+				#player_table.loc[players[pc].name, "Natural AGL"] = players[pc].natural_agl
 			if statGrowth(players[pc].natural_mana, mana_count, mana_base, mana_bonus, highest_ds):
 				players[pc].natural_mana += 1
 				print("%s's MANA increased by 1." % (players[pc].name))
-				player_table.loc[players[pc].name, "Natural MANA"] = players[pc].natural_mana
+				#player_table.loc[players[pc].name, "Natural MANA"] = players[pc].natural_mana
 			if statGrowth(players[pc].natural_def, def_count, def_base, def_bonus, highest_ds):
 				players[pc].natural_def += 1
 				print("%s's DEF increased by 1." % (players[pc].name))
-				player_table.loc[players[pc].name, "Natural DEF"] = players[pc].natural_def
+				#player_table.loc[players[pc].name, "Natural DEF"] = players[pc].natural_def
 
 		# Set Current HP
 		if players[pc].current_HP > 0:
@@ -206,7 +207,7 @@ def equivalentLevel(stat, const1, const2):
 	return level
 
 def growthChance(base, bonus, enemy_ds, player_ds):
-	growthChance = base + bonus * (1 + enemy_ds - player_ds) # Added 1 to the parenthetical equation, giving a bonus for enemies of equal strength
+	growthChance = base + bonus * (enemy_ds - player_ds) # REMOVED: Added 1 to the parenthetical equation, giving a bonus for enemies of equal strength
 	return growthChance
 
 # DEFECT: If the ability used is not in the skill list, the first slot is decremented (skill_slot = 0)
@@ -225,6 +226,8 @@ def afterTurn(attacker, stat_used, table):
 def endOfTurn(attacker, traits):
 	poison_dmg = 0
 	heal = 0
+
+	attacker.stopped = "n"  # Always remove Stop at the end of a turn
 
 	if attacker.isParalyzed():
 		roll = random.randint(1,100)
@@ -322,7 +325,7 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 
 	# For MANA or Status-based counters
 	else:
-		if checkResistance(attacker, command.element, command.status, barriers):
+		if checkResistance(attacker, command.element + " " + command.status, barriers):
 			print("%s is strong against %s." % (attacker.name, command.name), end = " ")
 			return
 		else:
@@ -330,10 +333,8 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 				inflictCondition(command, avenger, attacker, True)
 			elif command.stat == "Mana":
 				counter_dmg = rollDamage(command, avenger)
-				save_command_att_type = command.att_type # Change attack type to Magic so the defense calculation gets done correctly
 				command.att_type = "Magic"
 				defense = determineDefense(attacker, command, counter_dmg)
-				command.att_type = save_command_att_type
 				if checkWeakness(command.element, attacker):
 					print("Hits weakness.", end = " ")
 					defense = 0
@@ -402,12 +403,14 @@ def rollDamage(command, attacker):
 	# For Martial Arts, mostly. Reducing total uses while changing the starting point for damage calculation should make this more effective early
 	# but less powerful late in the weapon's existence
 	elif stat == "Uses":
-		if command.remaining > int(command.uses / 2):
+		uses_cap = 30
+		mastery_threshold = int(command.uses - uses_cap)
+		if command.remaining > mastery_threshold:
 	  		damage = (command.min_dmg - command.remaining) * multiplier
 		else:
-			damage = int(command.uses / 2) * multiplier
+			damage = mastery_threshold * multiplier
 			mastery_roll = random.randint(1,100)
-			mastery_chance = int(command.uses / 2) - command.uses
+			mastery_chance = mastery_threshold - command.uses
 			if mastery_roll <= mastery_chance:
 				print("Mastery unlocked!")
 				damage = int(damage * 1.5)
@@ -460,7 +463,7 @@ def rollHeal(command, healer, ally):
 	if command.att_type == "Magic":
 		heal = (healer.getMana() + ally.getMana()) * command.multiplier + random.randint(1, healer.getMana())
 	else:
-		heal = command.min_dmg
+		heal = command.min_dmg + random.randint(1,command.rand_dmg)
 	if ally.isTargetable():
 		heal = applyHeal(heal, ally)
 		print("%s recovers %d HP." % (ally.name, heal), end = " ")
@@ -476,7 +479,8 @@ def applyHeal(heal, target):
 	return heal
 
 def affectStat(target, command):
-	type, stat = command.effect.split()
+	# Change stat to use last three chars of Effect string
+	stat = command.stat
 	rand = random.randint(0, command.rand_dmg)
 	amount = command.min_dmg + rand
 	
@@ -509,6 +513,14 @@ def affectStat(target, command):
 ################################
 
 def inflictCondition(command, attacker, target, output):
+	if command.status == "Stop":
+		stop_roll = random.randint(1, 100) - attacker.current_Str + target.current_Str
+		if stop_roll <= command.percent:
+			applyCondition(command.status, target, output)
+			return 1
+		else:
+			return 0
+	
 	# Originally (target - attacker) * 2 + 50
 	# Bonus chance to land Status if the attack has no damage component
 	if command.stat == "Status":
@@ -571,6 +583,10 @@ def applyCondition(status, target, output):
 		target.cursed = "n"
 		if output:
 			print("%s fell." % target.name, end = " ")
+	elif status == "Stop":
+		#target.command = "None"
+		target.stopped = "y"
+		print("Stopped %s." % target.name, end = " ")
 
 def removeCondition(status, target):
 	if status == "Stone" and target.isStoned():
@@ -626,13 +642,13 @@ def buildResistances(skills, resist_list, resist_table):
 			else:
 				resist_list.append(result)
 
-def checkResistance(target, element, status, barriers):
+def checkResistance(target, element, barriers):
 	total_resists = barriers.copy()
 	total_resists.extend(target.resists)
 
 	# Check the total list for the resistance in question
 	for count in range(len(total_resists)):
-		if total_resists[count] in (status, element) and total_resists[count] != "None":
+		if total_resists[count] in element and total_resists[count] != "None":
 			return True
 		elif element == "Light" and target.family != "Undead":
 			return True

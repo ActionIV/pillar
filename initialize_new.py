@@ -263,6 +263,7 @@ if operation == 1:
 					current_com.skills.append(current_com.magi)
 					current_com.uses.append(players.loc[current_com.name,"MAGI Uses Left"])
 
+				current_com.gold = players.loc[current_com.name,"GOLD"]
 			# Should be NPC code, but no separate sheet for that yet
 			else:
 				break
@@ -425,11 +426,13 @@ if operation == 1:
 
 				# SURPRISE CHECK
 				if enemy_surprise and attacker.role in ("Player", "NPC"):
-					attacker.command = "None"
+					attacker.stopped = "y"
+					#attacker.command = "None"
 					print("%s did nothing." % attacker.name)
 					continue
 				elif player_surprise and attacker.role == "Enemy":
-					attacker.command = "None"
+					attacker.stopped = "y"
+					#attacker.command = "None"
 					print("%s did nothing." % attacker.name)
 					continue
 
@@ -489,6 +492,8 @@ if operation == 1:
 
 				# STATUS CHECK
 				if not attacker.isActive():
+					if attacker.isStopped():
+						print("%s is stopped." % attacker.name)
 					continue
 
 				# SURPRISE CHECK
@@ -549,7 +554,8 @@ if operation == 1:
 									attacker.targets.append(enemy_groups[each][0])
 					else:
 						print("%s regained sanity." % attacker.name)
-						attacker.command = "None"
+						attacker.stopped = "y"
+						#attacker.command = "None"
 						attacker.confused = "n"
 						continue
 					
@@ -694,7 +700,7 @@ if operation == 1:
 				command = Command(attacker.command, commands, remaining_uses)
 
 				# Human Spirit Chance - Low chance, but unlocks new ability
-				if attacker.role == "Player" and attacker.Class == "Human" and command.targeting in ("Single", "Group", "All Enemies", "Sweep", "All"):
+				if attacker.role == "Player" and attacker.Class == "Human" and not attacker.isConfused():
 					biggest_foe = 1
 					human_spirit = equivalentLevel(attacker.HP, 26, 50)  # Get DS equivalent for human PC
 					for tar in range(len(attacker.targets)):
@@ -733,8 +739,8 @@ if operation == 1:
 								print("")
 						elif foe == 0 and command.targeting == "Sweep":
 							print("%s attacks the front line with %s." % (attacker.name, attacker.command), end = " ")
-						elif command.targeting not in ("All Enemies", "Allies", "All", "Sweep"):
-							attacker.command = "Ineffective"
+						elif command.targeting not in ("All Enemies", "Allies", "All"):
+							attacker.command = "None"  # Is there a way to remove this?
 							print("%s did nothing." % attacker.name)
 						continue
 
@@ -765,7 +771,7 @@ if operation == 1:
 						# Blockable logic
 						if "Never miss" not in command.effect:
 							blockable = True
-						if (def_target_type == "Block" or "Block" in def_command_effect) and blockable:
+						if (def_target_type == "Block" or "Block" in def_command_effect) and blockable and target.isActive():
 							block_roll = random.randint(1,100)
 							if block_roll <= (commands.loc[target.command, "Percent"] + target.getAgility()):
 								blocked = True
@@ -807,7 +813,7 @@ if operation == 1:
 								else:
 									cut_check = attacker.getStrength() + command.percent
 									# Check for weapon resistance and whether the attack was blocked (then again, a blocked attack wouldn't get here...)
-									if checkResistance(target, "Weapon", command.status, barriers):
+									if checkResistance(target, "Weapon", barriers):
 										cut_check = int(cut_check * cut_chance)
 									if blocked:
 										cut_check = int(cut_check * cut_chance)
@@ -836,17 +842,17 @@ if operation == 1:
 							else:
 								buildResistances(player_barriers, barriers, commands)
 							
-							# Check total resists
-							if checkResistance(target, command.element, command.status, barriers):
+							# Check total resists against Element
+							if checkResistance(target, command.element, barriers):
 								# Elemental resistance was found, but it's a melee attack so it can't be resisted
 								if command.element != "None" and command.att_type in ("Melee", "Ranged"):
 									dmg_reduction = True
 								else:
 									print("%s is strong against %s." % (attacker.targets[foe], command.name), end = " ")
-									if command.status != "None" and command.stat != "Status":
-										pass
-									else:
-										continue
+									# if command.status != "None" and command.stat != "Status":
+									# 	pass
+									# else:
+									continue
 							else:
 								# Check for elemental / species weakness
 								if command.element != "None":
@@ -856,6 +862,14 @@ if operation == 1:
 											continue
 										else:
 											critical_hit = True
+							
+							# Check total resists against Status
+							if checkResistance(target, command.status, barriers):
+								print("%s is strong against %s." % (attacker.targets[foe], command.name), end = " ")
+								if command.stat != "Status":
+									pass
+								else:
+									continue
 
 							if "Critical" in command.effect:
 								if mightyBlow(target, crit_chance):
@@ -874,7 +888,7 @@ if operation == 1:
 							if blocked == True:
 								damage = int(damage * blocked_ranged_mult)
 							# If weapon resistance is found against a non-magical attack, damage is halved
-							if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", command.status, barriers) and "Pierce" not in command.effect:
+							if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", barriers) and "Pierce" not in command.effect:
 								damage = int(damage * weapon_res_mult)
 							if critical_hit == True:
 								if command.att_type in ("Melee", "Ranged"):
@@ -928,13 +942,14 @@ if operation == 1:
 									print("--%d damage to %s." % (damage, target.name), end = " ")
 								if applyDamage(damage, target) == 1:
 									print("%s fell." % target.name)
-								elif "WindUp" in command.effect:
-									wind_roll = random.randint(1, 100)
-									if wind_roll <= command.percent:
-										print("Constricted.")
-										target.command = "None"
-									else:
-										print("")
+								# elif "Stop" in command.effect:
+								# 	stop_roll = random.randint(1, 100)
+								# 	if stop_roll <= command.percent:
+								# 		print("Stopped.")
+								# 		target.command = "None"
+								# 		target.
+								# 	else:
+								# 		print("")
 								else:
 									print("")
 
@@ -948,13 +963,12 @@ if operation == 1:
 								else:
 									r_uses = int(commands.loc[target.command, "#Uses"] * remaining_uses_for_enemies_mult)
 								counter_command = Command(target.command, commands, r_uses)
-								if counter_command.att_type == command.att_type:
-									if target.role == "Enemy":
-										buildResistances(player_barriers, barriers, commands)
-									else:
-										buildResistances(enemy_barriers, barriers, commands)
-									counterAttack(target, attacker, counter_command, damage / counter_protection_mult, barriers)
-									print("")
+								if target.role == "Enemy":
+									buildResistances(player_barriers, barriers, commands)
+								else:
+									buildResistances(enemy_barriers, barriers, commands)
+								counterAttack(target, attacker, counter_command, damage / counter_protection_mult, barriers)
+								print("")
 
 					elif command.targeting in ("Group", "All Enemies"):
 						if command.targeting == "Group" and target.role == "Enemy":
@@ -993,7 +1007,7 @@ if operation == 1:
 								# Blockable logic - attack must be Melee or Ranged and not have the "Never miss" property
 								if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
 									blockable = True
-								if (foe_target_type == "Block" or "Block" in foe_command_effect) and blockable:
+								if (foe_target_type == "Block" or "Block" in foe_command_effect) and blockable and iter_target.isActive():
 									block_roll = random.randint(1,100)
 									if block_roll <= (commands.loc[iter_target.command, "Percent"] + iter_target.getAgility()):
 										blocked = True
@@ -1034,14 +1048,15 @@ if operation == 1:
 							buildResistances(enemy_barriers, barriers, commands)
 						else:
 							buildResistances(player_barriers, barriers, commands)
-						if checkResistance(target, command.element, command.status, barriers):
+						if checkResistance(target, command.element + " " + command.status, barriers):
 							print("%s is strong against %s." % (target.name, command.name), end = " ")
 							continue
 						else:
 							# Currently, no damage component with Debuff abilities. No resistance either...add it?
 							if "Debuff" in command.effect:
 								target = affectStat(target, command)
-								
+								print("") # REMOVE THIS ONCE STAT GETS CHANGED IN affectStat FUNCTION
+								continue
 							if command.status != "None":
 								for who in range(len(combatants)):
 									if combatants[who].name == target.name and combatants[who].isTargetable():
@@ -1072,7 +1087,7 @@ if operation == 1:
 							# 	damage = int(damage/2)
 
 							# If weapon resistance is found against a non-magical attack, damage is halved
-							if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", command.status, barriers) and "Pierce" not in command.effect:
+							if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", barriers) and "Pierce" not in command.effect:
 								damage = int(damage * weapon_res_mult)
 							if critical_hit == True:
 								damage = int(damage * critical_mult)
@@ -1104,7 +1119,7 @@ if operation == 1:
 								# REVISIT TO MAKE PRINTING MORE FLEXIBLE BASED ON RESULTS (deaths, no deaths, single character group, etc)
 								if target.role == "Enemy":
 									if group_hits > 1:
-										print("%d damage to %d %s group." % (damage, group_hits, target.name), end = " ")
+										print("%d damage to %d %ss." % (damage, group_hits, target.name), end = " ")
 									else:
 										print("%d damage to %d %s." % (damage, group_hits, target.name), end = " ")
 								else:
@@ -1117,25 +1132,6 @@ if operation == 1:
 									print("%s fell." % target.name)
 								else:
 									print("")
-
-								# Counter-attacks if any exist and the target survived - COPIED FROM SINGLE, MAY NOT WORK YET
-								if target.isActive() and (def_target_type == "Counter" or "Counter" in def_command_effect):
-									r_uses = 0
-									skill_slot = 0
-									if target.role in ("Player", "NPC"):
-										skill_slot = target.skillSlot()
-										r_uses = players.loc[target.name, "S%d Uses Left" % skill_slot]
-									else:
-										r_uses = int(commands.loc[target.command, "#Uses"] * remaining_uses_for_enemies_mult)
-									counter_command = Command(target.command, commands, r_uses)
-									if counter_command.att_type == command.att_type:
-										if target.role == "Enemy":
-											buildResistances(player_barriers, barriers, commands)
-										else:
-											buildResistances(enemy_barriers, barriers, commands)
-										counterAttack(target, attacker, counter_command, damage / counter_protection_mult, barriers)
-										print("")
-
 							else:
 								if block_count > 0:
 									print("Blocked by %s." % target.name)
@@ -1204,7 +1200,7 @@ if operation == 1:
 					applyDamage(attacker.HP, attacker)
 					print("%s sacrificed their life." % attacker.name)
 				# If attacker did nothing due to no surviving target, count no action as having been taken
-				if attacker.command != "Ineffective":
+				if attacker.command != "None":
 					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
 				
 				# Check survivors
@@ -1364,6 +1360,14 @@ if operation == 1:
 					# Logic to set uses in Players table equal to those tracked during combat
 					for slot in range(len(combatants[count].skills)):
 						players.loc[combatants[count].name, "S%d Uses Left" % slot] = combatants[count].uses[slot]
+					# Update all adjustable stats
+					players.loc[combatants[count].name, "HP"] = combatants[count].HP
+					players.loc[combatants[count].name, "Current HP"] = combatants[count].current_HP
+					players.loc[combatants[count].name, "Natural STR"] = combatants[count].natural_str
+					players.loc[combatants[count].name, "Natural AGL"] = combatants[count].natural_agl
+					players.loc[combatants[count].name, "Natural MANA"] = combatants[count].natural_mana
+					players.loc[combatants[count].name, "Natural DEF"] = combatants[count].natural_def
+					players.loc[combatants[count].name, "GOLD"] = combatants[count].gold
 					save_players.append(combatants[count].name)
 			battles[i] = active_battle.copy()
 			save_list.append(tuple((i, log.sheet_names[i+2])))
@@ -1401,10 +1405,10 @@ elif operation == 2:
 	# Print Character Snapshots
 	# char_sheets = input("Print character sheets (y/n)?: ")
 	for count in range(len(players.index)):
-		if players.iloc[count,0] == "blank":
+		if players.iloc[count,0] == "blank" or players.iloc[count,2] == "NPC":
 			pass
 		else:
-			print("%s\n%s" % (players.iloc[count, 0], players.iloc[count, 2]))
+			print("%s || %s" % (players.iloc[count, 0], players.iloc[count, 2]))
 			print("CLASS: %s" % players.iloc[count, 3])
 			print("HP: %d | STR: %d | DEF: %d | AGL: %d | MANA: %d" % (players.iloc[count, 5],players.iloc[count, 7],
 			players.iloc[count, 9],players.iloc[count, 11],players.iloc[count, 13]))

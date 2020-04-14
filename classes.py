@@ -41,6 +41,8 @@ class Actor(object):
 		return True if self.poisoned == "y" else False
 	def isConfused(self):
 		return True if self.confused == "y" else False
+	def isStopped(self):
+		return True if self.stopped == "y" else False
 
 	# Decrement lives upon death. Shouldn't need a dead flag that way
 	def isDead(self):
@@ -56,7 +58,7 @@ class Actor(object):
 			return True
 
 	def isActive(self):
-		if (self.isDead() or self.isStoned() or self.isParalyzed() or self.isAsleep()):
+		if (self.isDead() or self.isStoned() or self.isParalyzed() or self.isAsleep() or self.isStopped()):
 			return False
 		else:
 			return True
@@ -107,6 +109,7 @@ class Actor(object):
 	paralyzed = "n"
 	poisoned = "n"
 	confused = "n"
+	stopped = "n"
 	environment = "n"
 	df_index = 0
 	natural_str = 0
@@ -188,6 +191,7 @@ class Player(Actor):
 	Def = 0
 	magi = ""
 	magi_count = 0
+	gold = 0
 
 	def __init__(self, name):
 		Actor.__init__(self, name)
