@@ -503,6 +503,8 @@ def affectStat(target, command):
 		if target.current_Def <= 0:
 			target.current_Def = 0
 	if "Debuff" in command.effect:
+		split_str = command.effect.split()
+		stat = split_str[1]
 		print("%s's %s decreases by %d." % (target.name, stat, amount*-1), end = " ")
 	else:
 		print("%s's %s increases by %d." % (target.name, stat, amount), end = " ")

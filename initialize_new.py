@@ -490,16 +490,16 @@ if operation == 1:
 			for count in range(len(combatants)):
 				attacker = combatants[count]
 
-				# STATUS CHECK
-				if not attacker.isActive():
-					if attacker.isStopped():
-						print("%s is stopped." % attacker.name)
-					continue
-
 				# SURPRISE CHECK
 				if enemy_surprise and attacker.role in ("Player", "NPC"):
 					continue
 				elif player_surprise and attacker.role == "Enemy":
+					continue
+
+				# STATUS CHECK
+				if not attacker.isActive():
+					if attacker.isStopped():
+						print("%s is stopped." % attacker.name)
 					continue
 
 				sel_target = ""
@@ -1532,7 +1532,7 @@ elif operation == 3:
 				new_Mana = int(new_Mana * stat_increase)
 				new_Def = int(new_Def * stat_increase)
 		
-		print("%s changed from %s to %s." % (who, current_monster, new_monster), end = " ")
+		print("%s eats %s meat. Changed from %s to %s." % (who, meat, current_monster, new_monster), end = " ")
 		if variant == True:
 			print("VARIANT: %s" % variation)
 		else:

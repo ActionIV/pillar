@@ -17,10 +17,11 @@ class Actor(object):
 			self.actions_taken = command
 		else:
 			self.actions_taken = self.actions_taken + ", " + command
-		if not self.stats_used:
-			self.stats_used = stat_used
-		else:
-			self.stats_used = self.stats_used + ", " + stat_used
+		if self.role != "Enemy":
+			if not self.stats_used:
+				self.stats_used = stat_used
+			else:
+				self.stats_used = self.stats_used + ", " + stat_used
 
 	def add_target(self, target):
 		self.targets.append(target)
