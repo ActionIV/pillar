@@ -383,7 +383,7 @@ if operation == 1:
 			for count in range(len(combatants)):
 				# Evasion sets the base for initiative
 				# If STR >= DEF, then apply no penalty. Monsters use this since they're naturally balanced
-				if combatants[count].current_Str >= combatants[count].current_Def or combatants[count].getRace() == "Monster":
+				if combatants[count].current_Str >= combatants[count].current_Def or combatants[count].getRace() == "Monster" or combatants[count].getRole() == "Enemy":
 					combatants[count].evasion = combatants[count].current_Agl
 				# If DEF > STR, apply a penalty equal to the difference
 				else:
@@ -848,7 +848,7 @@ if operation == 1:
 								if command.element != "None" and command.att_type in ("Melee", "Ranged"):
 									dmg_reduction = True
 								else:
-									print("%s is strong against %s." % (attacker.targets[foe], command.name), end = " ")
+									print("%s is strong against %s." % (attacker.targets[foe], command.element), end = " ")
 									# if command.status != "None" and command.stat != "Status":
 									# 	pass
 									# else:
@@ -865,11 +865,14 @@ if operation == 1:
 							
 							# Check total resists against Status
 							if checkResistance(target, command.status, barriers):
-								print("%s is strong against %s." % (attacker.targets[foe], command.name), end = " ")
+								print("%s is strong against %s." % (attacker.targets[foe], command.status), end = " ")
 								if command.stat != "Status":
 									pass
 								else:
 									continue
+							else:
+								if command.status != "None":
+									inflictCondition(command, attacker, target, True)
 
 							if "Critical" in command.effect:
 								if mightyBlow(target, crit_chance):
@@ -877,8 +880,8 @@ if operation == 1:
 								else:
 									critical_hit = True
 
-							if command.status != "None":
-								inflictCondition(command, attacker, target, True)
+						#	if command.status != "None":
+						#		inflictCondition(command, attacker, target, True)
 							# One pass for most attacks, but accumulates damage for multi-hit attacks
 							for hit in range(hit_count):
 								offense = rollDamage(command, attacker)
