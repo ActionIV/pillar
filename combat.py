@@ -104,7 +104,10 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 			hp_level = equivalentLevel(players[pc].HP, 26, 50)
 			
 			# HP and SKILL CHANCE
-			hp_chance = growthChance(hp_base, hp_bonus, highest_ds, hp_level)
+			if players[pc].stats_used.count("God") > 0:
+				hp_chance = 200
+			else:
+				hp_chance = growthChance(hp_base, hp_bonus, highest_ds, hp_level)
 			hp_roll = random.randint(1,200)
 			if hp_roll <= hp_chance:
 				hp_gain = int(players[pc].HP / 50) + random.randint(6,11)
@@ -155,6 +158,11 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 					agl_count += 1
 				else:
 					mana_count += 1
+
+			if players[pc].stats_used.count("God") > 0:
+				str_count = 200
+				agl_count = 200
+				mana_count = 200
 
 			if statGrowth(players[pc].natural_str, str_count, str_base, str_bonus, highest_ds):
 				players[pc].natural_str += 1
@@ -274,7 +282,7 @@ def endOfTurn(attacker, traits):
 ####### ATTACK FUNCTIONS #######
 ################################
 
-def hitScore(command, attacker, target_agl):
+def hitScore(command, attacker, target_stat):
 	# Ranged attacks are based on Percent chance unless using a Gun
 	if command.att_type == "Ranged":
 		# All guns and cannons have Robot Race Bonus and use STR as a calculation
@@ -287,9 +295,13 @@ def hitScore(command, attacker, target_agl):
 		# Bows use 2x AGL and the item's hit chance
 		else:
 			return attacker.getAgility() * 2 + command.percent # - target_agl
+	# Spell resist formula
+	elif command.att_type == "Magic":
+		return min(95, 100 - (2 * (target_stat - attacker.getMana())))
+
 	# Melee attacks just use AGL
 	else:
-		return min(97, 100 - (2 * (target_agl - attacker.getAgility())))
+		return min(97, 100 - (2 * (target_stat - attacker.getAgility())))
 
 def frontOfGroup(combatants, attacker, foe, command):
 	priority = 100
@@ -306,16 +318,16 @@ def frontOfGroup(combatants, attacker, foe, command):
 	return defender
 
 def counterAttack(avenger, attacker, command, damage_received, barriers):
-	print("%s counter-attacks with %s." % (avenger.name, command.name), end = " ")
+	print("-%s counter-attacks with %s." % (avenger.name, command.name), end = " ")
 	if command.stat == "Str":
 		avenger_str = avenger.getStrength()
-		if attacker.isPoisoned():
+		if avenger.isPoisoned():
 			avenger_str = int(avenger_str/2)
 		if damage_received < (avenger_str * 2):
 			counter_dmg = avenger_str * 2
 		else:
 			counter_dmg = damage_received
-		damage = int(counter_dmg * command.multiplier / 10 + avenger_str)
+		damage = int(counter_dmg * command.multiplier / 10 + random.randint(1,avenger_str))
 	elif command.stat == "Uses":
 		counter_dmg = (command.min_dmg - command.remaining) * command.multiplier
 		if damage_received < counter_dmg:
@@ -425,6 +437,9 @@ def calculateDamage(stat, multiplier):
 def determineDefense(defender, attack, damage):
 	if "Pierce" in attack.effect:
 		return 0
+	# Workaround to avoid having to pass target into rollDamage function just for the HP attacks
+	elif attack.stat == "HP":
+		return int(defender.HP * attack.percent/100) * -1
 	elif attack.att_type in ("Melee", "Ranged"):
 		return defender.getDefense() * 5
 	elif attack.att_type == "Magic":
@@ -483,6 +498,12 @@ def affectStat(target, command):
 	stat = command.stat
 	rand = random.randint(0, command.rand_dmg)
 	amount = command.min_dmg + rand
+
+#	debuff_chance = random.randint(1,100)
+
+#	if debuff_chance > 80:
+#		print("Resisted.", end = " ")
+#		return
 	
 	if "Debuff" in command.effect:
 		amount = amount * -1
@@ -521,6 +542,8 @@ def inflictCondition(command, attacker, target, output):
 			applyCondition(command.status, target, output)
 			return 1
 		else:
+			if output:
+				print("%s resisted %s." % (target.name, command.status), end = " ")
 			return 0
 	
 	# Originally (target - attacker) * 2 + 50

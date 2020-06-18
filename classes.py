@@ -332,3 +332,7 @@ class Command:
 		self.percent = commands.loc[name,"Percent"]
 		self.race_bonus = commands.loc[name,"Race Bonus"]
 		self.human_spirit = commands.loc[name, "Human Spirit"]
+
+	def remainingUses(self):
+		if self.remaining <= 4:
+			print("**%d uses left!**" % (self.remaining-1), end = " ")

@@ -28,7 +28,7 @@ m_skills = workbook.parse("Mutant Skills", index_col = 'DS')
 transformations = workbook.parse("Evolve")
 
 # GLOBAL CONSTANTS
-player_surprise_chance = 50
+player_surprise_chance = 25
 enemy_surprise_chance = 25
 initiative_var = 25
 break_confuse = 10
@@ -301,6 +301,7 @@ if operation == 1:
 						its_round_one = True
 					else:
 						its_round_one = False
+						break
 				if its_round_one:
 					for comb in range(len(combatants)):
 						for skill in range(len(combatants[comb].skills)):
@@ -379,39 +380,6 @@ if operation == 1:
 					print("Failed to run!")
 					enemy_surprise = True
 
-			# INITIATIVE AND EVASION
-			for count in range(len(combatants)):
-				# Evasion sets the base for initiative
-				# If STR >= DEF, then apply no penalty. Monsters use this since they're naturally balanced
-				if combatants[count].current_Str >= combatants[count].current_Def or combatants[count].getRace() == "Monster" or combatants[count].getRole() == "Enemy":
-					combatants[count].evasion = combatants[count].current_Agl
-				# If DEF > STR, apply a penalty equal to the difference
-				else:
-					combatants[count].evasion = combatants[count].current_Agl + combatants[count].current_Str - combatants[count].current_Def
-
-				# Initiative
-				init_boost = 0
-				if "Warning" in combatants[count].skills:
-					init_boost += 3
-				if "Surprise" in combatants[count].skills:
-					init_boost += 5
-				if "Boots" in combatants[count].skills:
-					init_boost += 5
-				#if "Quick" in commands.loc[combatants[count].command, "Effect"]:
-				#	init_boost += 20
-				variable = 1+(random.randint(1, initiative_var)/100)
-				combatants[count].initiative = combatants[count].evasion * variable + init_boost
-
-			# Sort actors based on initiative score
-			combatants = sorted(combatants, key = operator.attrgetter("initiative"), reverse=True)
-
-			# Create party formation
-			party_order = []
-			for count in range(len(combatants)):
-				if combatants[count].role in ("Player", "NPC"):
-					party_order.append(tuple((combatants[count].name, combatants[count].position, count)))
-			party_order = sorted(party_order, key = operator.itemgetter(1), reverse=False)
-
 			# Create barrier lists anew each round
 			enemy_barriers = []
 			player_barriers = []
@@ -485,6 +453,44 @@ if operation == 1:
 						enemy_barriers.append(commands.loc[attacker.command, "Effect"])
 					else:
 						player_barriers.append(commands.loc[attacker.command, "Effect"])
+
+			# INITIATIVE AND EVASION
+			for count in range(len(combatants)):
+				# Evasion sets the base for initiative
+				# If STR >= DEF, then apply no penalty. Monsters use this since they're naturally balanced
+				if combatants[count].current_Str >= combatants[count].current_Def or combatants[count].getRace() == "Monster" or combatants[count].getRole() == "Enemy":
+					combatants[count].evasion = combatants[count].current_Agl
+				# If DEF > STR, apply a penalty equal to the difference
+				else:
+					combatants[count].evasion = combatants[count].current_Agl + combatants[count].current_Str - combatants[count].current_Def
+
+				# Initiative
+				if not combatants[count].isDead():
+					init_boost = 0
+					if "Warning" in combatants[count].skills:
+						init_boost += 3
+					if "Surprise" in combatants[count].skills:
+						init_boost += 5
+					if "Boots" in combatants[count].skills:
+						init_boost += 5
+					if "Quick" in commands.loc[combatants[count].command, "Effect"]:
+						init_boost += commands.loc[combatants[count].command, "Min DMG"]
+					variable = 1+(random.randint(1, initiative_var)/100)
+					combatants[count].initiative = combatants[count].evasion * variable + init_boost
+
+				# Evasion modifiers - must be done after Initiative since evasion is used as a base for initiative
+				if "Evasive" in commands.loc[combatants[count].command, "Effect"]:
+					combatants[count].evasion += commands.loc[combatants[count].command, "Percent"]
+
+			# Sort actors based on initiative score
+			combatants = sorted(combatants, key = operator.attrgetter("initiative"), reverse=True)
+
+			# Create party formation
+			party_order = []
+			for count in range(len(combatants)):
+				if combatants[count].role in ("Player", "NPC"):
+					party_order.append(tuple((combatants[count].name, combatants[count].position, count)))
+			party_order = sorted(party_order, key = operator.itemgetter(1), reverse=False)
 
 			# TARGETING AND COMMAND EXECUTION
 			for count in range(len(combatants)):
@@ -690,7 +696,8 @@ if operation == 1:
 				if attacker.role in ("Player", "NPC"):
 					skill_slot = attacker.skillSlot()
 					if skill_slot < 8:
-						remaining_uses = players.loc[attacker.name, "S%d Uses Left" % skill_slot]
+						remaining_uses = attacker.uses[skill_slot]
+						#remaining_uses = players.loc[attacker.name, "S%d Uses Left" % skill_slot]
 					else:
 						remaining_uses = players.loc[attacker.name, "MAGI Uses Left"]
 				else:
@@ -704,7 +711,11 @@ if operation == 1:
 					biggest_foe = 1
 					human_spirit = equivalentLevel(attacker.HP, 26, 50)  # Get DS equivalent for human PC
 					for tar in range(len(attacker.targets)):
-						biggest_foe = int(monsters.loc[attacker.targets[tar], "DS"])
+						if attacker.targets[tar] in seen:
+							biggest_foe = int(monsters.loc[attacker.targets[tar], "DS"])
+						else:
+							spirit_target_HP = int(players.loc[attacker.targets[tar], "HP"])
+							biggest_foe = equivalentLevel(spirit_target_HP, 26, 50)
 					spirit_diff = biggest_foe - human_spirit
 					# Reward melee attacks against greater opponents with 5 bonus points
 					if command.att_type == "Melee" and spirit_diff > 1:
@@ -727,14 +738,14 @@ if operation == 1:
 					if defender == 100:
 						if foe == 0 and command.targeting == "All Enemies":
 							print("%s attacks all enemies with %s." % (attacker.name, attacker.command), end = " ")
-							if command.remaining <= 3:
-								print("**%d uses left!**", command.remaining)
+							if command.remaining <= 4:
+								print("**%d uses left!**", (command.remaining-1))
 							else:
 								print("")
 						elif foe == 0 and command.targeting == "Allies":
 							print("%s uses %s." % (attacker.name, attacker.command), end = " ")
-							if command.remaining <= 3:
-								print("**%d uses left!**" % command.remaining)
+							if command.remaining <= 4:
+								print("**%d uses left!**" % (command.remaining-1))
 							else:
 								print("")
 						elif foe == 0 and command.targeting == "Sweep":
@@ -765,8 +776,8 @@ if operation == 1:
 							print("%s attacks %s with %s." % (attacker.name, target.name, attacker.command), end = " ")
 						if foe == 0 and command.targeting == "Sweep":
 							print("%s attacks the front line with %s." % (attacker.name, attacker.command))
-						if command.remaining <= 3:
-							print("**%d uses left!**" % command.remaining, end = " ")
+						if command.remaining <= 4:
+							print("**%d uses left!**" % (command.remaining-1), end = " ")
 
 						# Blockable logic
 						if "Never miss" not in command.effect:
@@ -777,11 +788,15 @@ if operation == 1:
 								blocked = True
 
 						# SETTING HIT CHANCE
-						if "Never miss" not in command.effect:
+						if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
 							hit_chance = hitScore(command, attacker, target.evasion)
-						# Magic attacks always hit, as does a weapon with the Never miss property
+						# Magic attacks no longer always hit. Status magic gets to pass
+						elif command.att_type in ("Magic") and command.stat != "Status" and "Never miss" not in command.effect:
+							hit_chance = hitScore(command, attacker, target.getMana())
+						# Never miss property
 						else:
 							hit_chance = 100
+
 						# DETERMINE HIT
 						hit_count = 0
 						# For Multi-hit attacks, this will loop more than once
@@ -962,7 +977,8 @@ if operation == 1:
 								skill_slot = 0
 								if target.role in ("Player", "NPC"):
 									skill_slot = target.skillSlot()
-									r_uses = players.loc[target.name, "S%d Uses Left" % skill_slot]
+									r_uses = target.uses[skill_slot]
+									#r_uses = players.loc[target.name, "S%d Uses Left" % skill_slot]
 								else:
 									r_uses = int(commands.loc[target.command, "#Uses"] * remaining_uses_for_enemies_mult)
 								counter_command = Command(target.command, commands, r_uses)
@@ -970,22 +986,22 @@ if operation == 1:
 									buildResistances(player_barriers, barriers, commands)
 								else:
 									buildResistances(enemy_barriers, barriers, commands)
-								counterAttack(target, attacker, counter_command, damage / counter_protection_mult, barriers)
+								counterAttack(target, attacker, counter_command, damage, barriers)  # removed damage / counter_protection_mult since it was resulting in high dmg
 								print("")
 
 					elif command.targeting in ("Group", "All Enemies"):
 						if command.targeting == "Group" and target.role == "Enemy":
 							print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
-							if command.remaining <= 3:
-								print("**%d uses left!**" % command.remaining, end = " ")
+							if command.remaining <= 4:
+								print("**%d uses left!**" % (command.remaining-1), end = " ")
 						elif command.targeting == "Group" and target.role in ("Player", "NPC"):
 							print("%s attacks %s with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
 						else:
 							# Only print the command text the first time through
 							if foe == 0:
 								print("%s attacks all enemies with %s." % (attacker.name, attacker.command), end = " ")
-								if command.remaining <= 3:
-									print("**%d uses left!**" % command.remaining)
+								if command.remaining <= 4:
+									print("**%d uses left!**" % (command.remaining-1))
 								else:
 									print("")
 							print("--", end = "")
@@ -1018,7 +1034,10 @@ if operation == 1:
 								# SETTING HIT CHANCE
 								if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
 									hit_chance = hitScore(command, attacker, iter_target.evasion)
-								# Magic attacks always hit, as does a weapon with the Never miss property
+								# Magic attacks no longer always hit. Status magic gets a pass
+								elif command.att_type in ("Magic") and command.stat != "Status" and "Never miss" not in command.effect:
+									hit_chance = hitScore(command, attacker, target.getMana())
+								# Never miss property
 								else:
 									hit_chance = 100
 								# DETERMINE HIT
@@ -1051,8 +1070,11 @@ if operation == 1:
 							buildResistances(enemy_barriers, barriers, commands)
 						else:
 							buildResistances(player_barriers, barriers, commands)
-						if checkResistance(target, command.element + " " + command.status, barriers):
-							print("%s is strong against %s." % (target.name, command.name), end = " ")
+						if checkResistance(target, command.element, barriers):
+							print("%s is strong against %s." % (target.name, command.element))
+							continue
+						if checkResistance(target, command.status, barriers):
+							print("%s is strong against %s." % (target.name, command.status))
 							continue
 						else:
 							# Currently, no damage component with Debuff abilities. No resistance either...add it?
@@ -1145,8 +1167,8 @@ if operation == 1:
 
 					elif command.targeting == "Ally":
 						print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
-						if command.remaining <= 3:
-							print("**%d uses left!**" % command.remaining, end = " ")
+						if command.remaining <= 4:
+							print("**%d uses left!**" % (command.remaining-1), end = " ")
 						# Reflect - change target into the caster
 						if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
 							print("%s reflected the spell with %s." % (target.name, target.command), end = " ")
@@ -1165,16 +1187,16 @@ if operation == 1:
 				
 					elif command.targeting == "Self":
 						print("%s uses %s." % (attacker.name, attacker.command), end = " ")
-						if command.remaining <= 3:
-							print("**%d uses left!**" % command.remaining, end = " ")
+						if command.remaining <= 4:
+							print("**%d uses left!**" % (command.remaining-1), end = " ")
 						if "Buff" in command.effect:
 							attacker = affectStat(attacker, command)
 
 					elif command.targeting == "Allies":
 						if foe == 0:
 							print("%s uses %s." % (attacker.name, attacker.command), end = " ")
-							if command.remaining <= 3:
-								print("**%d uses left!**" % command.remaining, end = " ")
+							if command.remaining <= 4:
+								print("**%d uses left!**" % (command.remaining-1), end = " ")
 							else:
 								print("")
 
@@ -1311,10 +1333,10 @@ if operation == 1:
 			print("| %s: %d/%d %s" % (combatants[pos].name, combatants[pos].current_HP, combatants[pos].HP, combatants[pos].characterStatus()), end = " [")
 			# Print skill counts at the end of a battle
 			for skill in range(len(combatants[pos].skills)):
-		 		if combatants[pos].uses[skill] < 1:
-		 			pass
-		 		else:
-		 			print("%s-%d" % (combatants[pos].skills[skill], combatants[pos].uses[skill]), end = ", ")
+				if combatants[pos].uses[skill] < 1:
+					pass
+				else:
+					print("%s-%d" % (combatants[pos].skills[skill], combatants[pos].uses[skill]), end = ", ")
 			print("]")
 		#print("")
 
@@ -1449,8 +1471,12 @@ elif operation == 3:
 		mp = monster_players.loc[players["PLAYER"].isin(["NPC"]) == False]
 		print(mp["CLASS"])
 		who = input("Transform which character?: ")
+		if who == "Test":
+			current_monster = input("Starter class?: ")
+		else:
+			current_monster = mp.loc[who, "CLASS"]
 		meat = input("Meat from which monster?: ")
-		current_monster = mp.loc[who, "CLASS"]
+
 
 		meat_type = ""
 		meat_class = 0
@@ -1500,7 +1526,12 @@ elif operation == 3:
 				new_monster = family_tree[member][0]
 				break
 			elif max_ds < family_tree[member][1]:
-				new_monster = family_tree[member-1][0]
+				gap_up = family_tree[member][1] - meat_ds
+				gap_down = meat_ds - family_tree[member-1][1]
+				if gap_up < gap_down:
+					new_monster = family_tree[member][0]
+				else:
+					new_monster = family_tree[member-1][0]
 				break
 			else:
 				new_monster = family_tree[member][0]
