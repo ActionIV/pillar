@@ -220,6 +220,12 @@ def growthChance(base, bonus, enemy_ds, player_ds):
 
 # DEFECT: If the ability used is not in the skill list, the first slot is decremented (skill_slot = 0)
 def afterTurn(attacker, stat_used, table):
+	# Checks to see if the skill has been documented and deducted yet this turn. If not, set the flag to say it has
+	if attacker.has_used_skill_this_turn == True:
+		return attacker
+	else:
+		attacker.has_used_skill_this_turn = True
+
 	attacker.addAction(attacker.command, stat_used)
 	attacker.targets.clear()
 	skill_slot = 0
@@ -236,6 +242,7 @@ def endOfTurn(attacker, traits):
 	heal = 0
 
 	attacker.stopped = "n"  # Always remove Stop at the end of a turn
+	attacker.has_used_skill_this_turn = False  # Reset the "acted" flag at end of turn
 
 	if attacker.isParalyzed():
 		roll = random.randint(1,100)

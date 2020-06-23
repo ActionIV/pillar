@@ -1,3 +1,5 @@
+import random
+
 class Actor(object):
 	def __init__(self, name):
 		self.name = name
@@ -63,6 +65,13 @@ class Actor(object):
 			return False
 		else:
 			return True
+
+	def isBlocking(self):
+		block_roll = random.randint(1,100)
+		if self.blocking <= block_roll:
+			return True
+		else:
+			return False
 	
 	# This should be used for unending environment effects or second actions for bosses
 	def isSomethingElse(self):
@@ -118,6 +127,8 @@ class Actor(object):
 	natural_mana = 0
 	natural_def = 0
 	evasion = 0
+	blocking = 0
+	has_used_skill_this_turn = False # Could turn this into a count to allow for retributive "shield" attacks based on number of hits taken in a round
 		
 class Enemy(Actor):
 	def __init__(self, name):
@@ -332,7 +343,3 @@ class Command:
 		self.percent = commands.loc[name,"Percent"]
 		self.race_bonus = commands.loc[name,"Race Bonus"]
 		self.human_spirit = commands.loc[name, "Human Spirit"]
-
-	def remainingUses(self):
-		if self.remaining <= 4:
-			print("**%d uses left!**" % (self.remaining-1), end = " ")

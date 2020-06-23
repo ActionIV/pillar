@@ -786,6 +786,8 @@ if operation == 1:
 							block_roll = random.randint(1,100)
 							if block_roll <= (commands.loc[target.command, "Percent"] + target.getAgility()):
 								blocked = True
+								if def_target_type == "Block":
+									afterTurn(target, commands.loc[target.command, "Growth Stat"], players)
 
 						# SETTING HIT CHANCE
 						if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
@@ -987,6 +989,7 @@ if operation == 1:
 								else:
 									buildResistances(enemy_barriers, barriers, commands)
 								counterAttack(target, attacker, counter_command, damage, barriers)  # removed damage / counter_protection_mult since it was resulting in high dmg
+								#afterTurn(target, counter_command.growth, players)
 								print("")
 
 					elif command.targeting in ("Group", "All Enemies"):
@@ -1030,6 +1033,8 @@ if operation == 1:
 									block_roll = random.randint(1,100)
 									if block_roll <= (commands.loc[iter_target.command, "Percent"] + iter_target.getAgility()):
 										blocked = True
+										if foe_target_type == "Block":
+											afterTurn(target, commands.loc[target.command, "Growth Stat"], players)
 
 								# SETTING HIT CHANCE
 								if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
