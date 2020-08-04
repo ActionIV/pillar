@@ -334,7 +334,7 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 			counter_dmg = avenger_str * 2
 		else:
 			counter_dmg = damage_received
-		damage = int(counter_dmg * command.multiplier / 10 + random.randint(1,avenger_str))
+		damage = int(counter_dmg * command.multiplier / 10 + random.randint(0,avenger_str))
 	elif command.stat == "Uses":
 		counter_dmg = (command.min_dmg - command.remaining) * command.multiplier
 		if damage_received < counter_dmg:
@@ -438,7 +438,7 @@ def rollDamage(command, attacker):
 	return damage
 
 def calculateDamage(stat, multiplier):
-	atk_power = stat * multiplier + random.randint(1, stat)
+	atk_power = stat * multiplier + random.randint(0, stat)
 	return atk_power
 
 def determineDefense(defender, attack, damage):
@@ -483,9 +483,9 @@ def actConfused(attacker, commands, players):
 
 def rollHeal(command, healer, ally):
 	if command.att_type == "Magic":
-		heal = (healer.getMana() + ally.getMana()) * command.multiplier + random.randint(1, healer.getMana())
+		heal = (healer.getMana() + ally.getMana()) * command.multiplier + random.randint(0, healer.getMana())
 	else:
-		heal = command.min_dmg + random.randint(1,command.rand_dmg)
+		heal = command.min_dmg + random.randint(0,command.rand_dmg)
 	if ally.isTargetable():
 		heal = applyHeal(heal, ally)
 		print("%s recovers %d HP." % (ally.name, heal), end = " ")
@@ -500,39 +500,41 @@ def applyHeal(heal, target):
 		target.current_HP += heal
 	return heal
 
-def affectStat(target, command):
+def affectStat(target, command, caster_mana):
 	# Change stat to use last three chars of Effect string
-	stat = command.stat
+	split_str = command.effect.split()
+	effect = split_str[0]
+	stat = split_str[1]
 	rand = random.randint(0, command.rand_dmg)
 	amount = command.min_dmg + rand
-
-#	debuff_chance = random.randint(1,100)
-
-#	if debuff_chance > 80:
-#		print("Resisted.", end = " ")
-#		return
 	
-	if "Debuff" in command.effect:
-		amount = amount * -1
+	if effect == "Debuff":
+		debuff_chance = random.randint(1,100)
+		debuff_check = 2 * (caster_mana - target.getMana()) + 70
+
+		if debuff_chance > debuff_check:
+			print("Resisted.", end = " ")
+			return
+		else:
+			amount = amount * -1
 	if stat == "Str":
+		if target.current_Str <= abs(amount) and effect == "Debuff":
+			amount = target.current_Str*-1
 		target.current_Str += amount
-		if target.current_Str <= 0:
-			target.current_Str = 0
 	elif stat == "Agl":
+		if target.current_Agl <= abs(amount) and effect == "Debuff":
+			amount = target.current_Agl*-1
 		target.current_Agl += amount
-		if target.current_Agl <= 0:
-			target.current_Agl = 0
 	elif stat == "Mana":
+		if target.current_Mana <= abs(amount) and effect == "Debuff":
+			amount = target.current_Mana*-1
 		target.current_Mana += amount
-		if target.current_Mana <= 0:
-			target.current_Mana = 0
 	elif stat == "Def":
+		if target.current_Def <= abs(amount) and effect == "Debuff":
+			amount = target.current_Def*-1
 		target.current_Def += amount
-		if target.current_Def <= 0:
-			target.current_Def = 0
-	if "Debuff" in command.effect:
-		split_str = command.effect.split()
-		stat = split_str[1]
+	
+	if effect == "Debuff":
 		print("%s's %s decreases by %d." % (target.name, stat, amount*-1), end = " ")
 	else:
 		print("%s's %s increases by %d." % (target.name, stat, amount), end = " ")

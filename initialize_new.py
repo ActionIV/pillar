@@ -447,7 +447,7 @@ if operation == 1:
 
 				# Start of round triggers (shield barriers)
 				if (commands.loc[attacker.command, "Target Type"] == "Block" and commands.loc[attacker.command, "Effect"] != "None"):
-					if commands.loc[attacker.command, "Effect"] in ("Nullify", "Reflect"):
+					if commands.loc[attacker.command, "Effect"] in ("Nullify", "Reflect", "Magic Resistance"):
 						pass
 					elif attacker.role == "Enemy":
 						enemy_barriers.append(commands.loc[attacker.command, "Effect"])
@@ -457,12 +457,14 @@ if operation == 1:
 			# INITIATIVE AND EVASION
 			for count in range(len(combatants)):
 				# Evasion sets the base for initiative
+				# Penalize defense above the natural defense stat (which monsters ignore anyway)
+				defense_difference = combatants[count].current_Def - combatants[count].natural_def
 				# If STR >= DEF, then apply no penalty. Monsters use this since they're naturally balanced
-				if combatants[count].current_Str >= combatants[count].current_Def or combatants[count].getRace() == "Monster" or combatants[count].getRole() == "Enemy":
+				if combatants[count].current_Str >= defense_difference or combatants[count].getRace() == "Monster" or combatants[count].getRole() == "Enemy":
 					combatants[count].evasion = combatants[count].current_Agl
 				# If DEF > STR, apply a penalty equal to the difference
 				else:
-					combatants[count].evasion = combatants[count].current_Agl + combatants[count].current_Str - combatants[count].current_Def
+					combatants[count].evasion = max(0, combatants[count].current_Agl + combatants[count].current_Str - defense_difference)
 
 				# Initiative
 				if not combatants[count].isDead():
@@ -475,8 +477,8 @@ if operation == 1:
 						init_boost += 5
 					if "Quick" in commands.loc[combatants[count].command, "Effect"]:
 						init_boost += commands.loc[combatants[count].command, "Min DMG"]
-					variable = 1+(random.randint(1, initiative_var)/100)
-					combatants[count].initiative = combatants[count].evasion * variable + init_boost
+					variable = 1+(random.randint(0, initiative_var)/100)
+					combatants[count].initiative = max(1,combatants[count].evasion) * variable + init_boost
 
 				# Evasion modifiers - must be done after Initiative since evasion is used as a base for initiative
 				if "Evasive" in commands.loc[combatants[count].command, "Effect"]:
@@ -605,7 +607,7 @@ if operation == 1:
 
 					elif attacker.target_type == "Block":
 						print("%s is defending with %s." % (attacker.name, attacker.command), end = " ")
-						if commands.loc[attacker.command, "Effect"] != "None" and commands.loc[attacker.command, "Effect"] not in ("Nullify", "Reflect"):
+						if commands.loc[attacker.command, "Effect"] != "None" and commands.loc[attacker.command, "Effect"] not in ("Nullify", "Reflect", "Magic Resistance"):
 							print("A barrier covered the enemies.")
 						else:
 							print("")
@@ -664,7 +666,7 @@ if operation == 1:
 						attacker.add_target(attacker.name)
 					elif temp_target == "Block":
 						print("%s is defending with %s." % (attacker.name, attacker.command), end = " ")
-						if commands.loc[attacker.command, "Effect"] != "None" and commands.loc[attacker.command, "Effect"] not in ("Nullify", "Reflect"):
+						if commands.loc[attacker.command, "Effect"] != "None" and commands.loc[attacker.command, "Effect"] not in ("Nullify", "Reflect", "Magic Resistance"):
 							print("A barrier covered the party.")
 						else:
 							print("")
@@ -759,9 +761,11 @@ if operation == 1:
 					barriers = []
 					target = combatants[defender]
 					tar_position = target.position
+					# SHOULD I CREATE A "TARGET" COMMAND CLASS INSTANCE HERE?
 					if target.command != "None":
 						def_target_type = commands.loc[target.command, "Target Type"]
 						def_command_effect = commands.loc[target.command, "Effect"]
+						def_command_percent = commands.loc[target.command, "Percent"]
 					else:
 						def_target_type = "None"
 						def_command_effect = "None"
@@ -792,9 +796,13 @@ if operation == 1:
 						# SETTING HIT CHANCE
 						if command.att_type in ("Melee", "Ranged") and "Never miss" not in command.effect:
 							hit_chance = hitScore(command, attacker, target.evasion)
-						# Magic attacks no longer always hit. Status magic gets to pass
+						# Magic attacks no longer always hit. Status and debuff magic gets to pass
 						elif command.att_type in ("Magic") and command.stat != "Status" and "Never miss" not in command.effect:
-							hit_chance = hitScore(command, attacker, target.getMana())
+							if "Magic Resistance" in def_command_effect:
+								target_res = target.getMana() + int(def_command_percent / 8)
+							else:
+								target_res = target.getMana()
+							hit_chance = hitScore(command, attacker, target_res)
 						# Never miss property
 						else:
 							hit_chance = 100
@@ -962,32 +970,28 @@ if operation == 1:
 									print("--%d damage to %s." % (damage, target.name), end = " ")
 								if applyDamage(damage, target) == 1:
 									print("%s fell." % target.name)
-								# elif "Stop" in command.effect:
-								# 	stop_roll = random.randint(1, 100)
-								# 	if stop_roll <= command.percent:
-								# 		print("Stopped.")
-								# 		target.command = "None"
-								# 		target.
-								# 	else:
-								# 		print("")
 								else:
 									print("")
 
-							# Counter-attacks if any exist and the target survived
-							if target.isActive() and (def_target_type == "Counter" or "Counter" in def_command_effect):
+							# PERSISTENT COUNTERS - would need to add "or persistent counter exists for target"
+							# counter_command needs to have logic to assign a persistent counter
+							# Only allow one counter to be active at a time?
+
+							checkForCounter(target, def_target_type, def_command_type)
+							# Counter-attacks if any exist, if it's the same attack type (e.g. Melee counter and Melee attack) and the target survived
+							if target.isActive() and (def_target_type == "Counter" or "Counter" in def_command_effect) and commands.loc[target.command, "Type"] == command.att_type:
 								r_uses = 0
 								skill_slot = 0
 								if target.role in ("Player", "NPC"):
 									skill_slot = target.skillSlot()
 									r_uses = target.uses[skill_slot]
-									#r_uses = players.loc[target.name, "S%d Uses Left" % skill_slot]
 								else:
 									r_uses = int(commands.loc[target.command, "#Uses"] * remaining_uses_for_enemies_mult)
 								counter_command = Command(target.command, commands, r_uses)
 								if target.role == "Enemy":
 									buildResistances(player_barriers, barriers, commands)
 								else:
-									buildResistances(enemy_barriers, barriers, commands)
+									buildResistances(enemy_barriers, barriers, commands)	
 								counterAttack(target, attacker, counter_command, damage, barriers)  # removed damage / counter_protection_mult since it was resulting in high dmg
 								#afterTurn(target, counter_command.growth, players)
 								print("")
@@ -1041,7 +1045,11 @@ if operation == 1:
 									hit_chance = hitScore(command, attacker, iter_target.evasion)
 								# Magic attacks no longer always hit. Status magic gets a pass
 								elif command.att_type in ("Magic") and command.stat != "Status" and "Never miss" not in command.effect:
-									hit_chance = hitScore(command, attacker, target.getMana())
+									if "Magic Resistance" in def_command_effect:
+										target_res = target.getMana() + int(def_command_effect / 8)
+									else:
+										target_res = target.getMana()
+									hit_chance = hitScore(command, attacker, target_res)
 								# Never miss property
 								else:
 									hit_chance = 100
@@ -1084,9 +1092,9 @@ if operation == 1:
 						else:
 							# Currently, no damage component with Debuff abilities. No resistance either...add it?
 							if "Debuff" in command.effect:
-								target = affectStat(target, command)
-								print("") # REMOVE THIS ONCE STAT GETS CHANGED IN affectStat FUNCTION
-								continue
+								for who in range(len(combatants)):
+									if combatants[who].name == target.name and combatants[who].isTargetable():
+										affectStat(combatants[who], command, attacker.getMana())
 							if command.status != "None":
 								for who in range(len(combatants)):
 									if combatants[who].name == target.name and combatants[who].isTargetable():
@@ -1139,6 +1147,8 @@ if operation == 1:
 								who = 0
 								while num_hits < group_hits and who < len(combatants):
 									if combatants[who].name == target.name and combatants[who].isTargetable() and combatants[who].position == tar_position:
+										if combatants[who].stats_used == "Nemesis":
+											damage = int(damage / 2)
 										body_count += applyDamage(damage, combatants[who])
 										num_hits += 1
 										tar_position += 1
@@ -1187,7 +1197,7 @@ if operation == 1:
 						if "Heal" in command.effect:
 							rollHeal(command, attacker, target)
 						if "Buff" in command.effect:
-							target = affectStat(target, command)
+							affectStat(target, command, 0)
 						print("")
 				
 					elif command.targeting == "Self":
@@ -1195,7 +1205,7 @@ if operation == 1:
 						if command.remaining <= 4:
 							print("**%d uses left!**" % (command.remaining-1), end = " ")
 						if "Buff" in command.effect:
-							attacker = affectStat(attacker, command)
+							affectStat(attacker, command, 0)
 
 					elif command.targeting == "Allies":
 						if foe == 0:
@@ -1222,7 +1232,7 @@ if operation == 1:
 									rollHeal(command, attacker, combatants[who])
 								if "Buff" in command.effect:
 									print("%s's" % combatants[who], end = " ")
-									combatants[who] == affectStat(combatants[who], command)
+									affectStat(combatants[who], command, 0)
 								print("")
 
 				# Post-action tracking
@@ -1338,10 +1348,29 @@ if operation == 1:
 			print("| %s: %d/%d %s" % (combatants[pos].name, combatants[pos].current_HP, combatants[pos].HP, combatants[pos].characterStatus()), end = " [")
 			# Print skill counts at the end of a battle
 			for skill in range(len(combatants[pos].skills)):
-				if combatants[pos].uses[skill] < 1:
+				if combatants[pos].uses[skill] < 0 or combatants[pos].skills[skill] == "blank":
 					pass
 				else:
-					print("%s-%d" % (combatants[pos].skills[skill], combatants[pos].uses[skill]), end = ", ")
+					tar_type = commands.loc[combatants[pos].skills[skill], "Target Type"]
+					if tar_type == "All Enemies":
+						tar_type = "AE"
+					elif tar_type == "Ally":
+						tar_type = "A"
+					elif tar_type == "Allies":
+						tar_type = "AA"
+					elif tar_type == "Block":
+						tar_type = "D"
+					elif tar_type == "Counter":
+						tar_type = "C"
+					elif tar_type == "Single":
+						tar_type = "Si"
+					elif tar_type == "Sweep":
+						tar_type = "Sw"
+					elif tar_type == "Group":
+						tar_type = "G"
+					else:
+						tar_type == "U"
+					print("%s(%s)-%d" % (combatants[pos].skills[skill], tar_type, combatants[pos].uses[skill]), end = ", ")
 			print("]")
 		#print("")
 

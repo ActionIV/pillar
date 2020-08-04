@@ -24,6 +24,9 @@ class Actor(object):
 				self.stats_used = stat_used
 			else:
 				self.stats_used = self.stats_used + ", " + stat_used
+		else:
+			if stat_used in ("Nemesis"):
+				self.stats_used = stat_used
 
 	def add_target(self, target):
 		self.targets.append(target)
