@@ -32,6 +32,7 @@ player_surprise_chance = 25
 enemy_surprise_chance = 25
 initiative_var = 25
 break_confuse = 10
+do_nothing_while_confused = 15
 single_target_odds = 50
 remaining_uses_for_enemies_mult = 1.0
 blocked_ranged_mult = 0.5
@@ -520,7 +521,13 @@ if operation == 1:
 				# Should confused targets flip a coin as to which side they attack as opposed to picking from the total pool?
 				if attacker.isConfused():
 					confuse_roll = random.randint(1,100)
-					if confuse_roll > break_confuse:
+					# Confuse roll is greater than 15 and less than or equal to 25
+					if confuse_roll > do_nothing_while_confused and confuse_roll <= (break_confuse + do_nothing_while_confused):
+						print("%s is confused and does nothing." % attacker.name)
+						attacker.stopped = "y"
+						continue
+					# Confuse roll is greater than 25
+					elif confuse_roll > (break_confuse + do_nothing_while_confused):
 						print("%s is confused." % attacker.name, end = " ")
 						attacker.target_type = commands.loc[attacker.command, "Target Type"]
 						confuse_targets = []
@@ -753,7 +760,7 @@ if operation == 1:
 						elif foe == 0 and command.targeting == "Sweep":
 							print("%s attacks the front line with %s." % (attacker.name, attacker.command), end = " ")
 						elif command.targeting not in ("All Enemies", "Allies", "All"):
-							attacker.command = "None"  # Is there a way to remove this?
+							#attacker.command = "None"  # Is there a way to remove this?
 							print("%s did nothing." % attacker.name)
 						continue
 
@@ -784,7 +791,7 @@ if operation == 1:
 							print("**%d uses left!**" % (command.remaining-1), end = " ")
 
 						# Blockable logic
-						if "Never miss" not in command.effect:
+						if "Never miss" not in command.effect and command.att_type in ("Melee", "Ranged"):
 							blockable = True
 						if (def_target_type == "Block" or "Block" in def_command_effect) and blockable and target.isActive():
 							block_roll = random.randint(1,100)
@@ -914,6 +921,7 @@ if operation == 1:
 								damage += offense - defense
 							# Ranged attacks get blocked for 50% damage
 							if blocked == True:
+								print("Partially blocked by %s." % target.command, end = " ")
 								damage = int(damage * blocked_ranged_mult)
 							# If weapon resistance is found against a non-magical attack, damage is halved
 							if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", barriers) and "Pierce" not in command.effect:
@@ -941,7 +949,7 @@ if operation == 1:
 									reversed = False
 									if absorb_type == "Absorb":
 										if target.family in ("Golem"):
-											print("Cannot absorb from %s." % target.name)
+											print("Cannot absorb from %s." % target.name, end = " ")
 											absorb = 0
 										elif target.family in ("God", "Plant"):
 											reversed = True
@@ -949,7 +957,7 @@ if operation == 1:
 										if target.family == "Undead":
 											reversed = True
 										elif target.family in ("God", "Golem"):
-											print("Cannot drain from %s." % target.name)
+											print("Cannot drain from %s." % target.name, end = " ")
 											absorb = 0
 									elif absorb_type == "Dissolve":
 										pass
@@ -977,7 +985,7 @@ if operation == 1:
 							# counter_command needs to have logic to assign a persistent counter
 							# Only allow one counter to be active at a time?
 
-							checkForCounter(target, def_target_type, def_command_type)
+							#checkForCounter(target, def_target_type, def_command_type)
 							# Counter-attacks if any exist, if it's the same attack type (e.g. Melee counter and Melee attack) and the target survived
 							if target.isActive() and (def_target_type == "Counter" or "Counter" in def_command_effect) and commands.loc[target.command, "Type"] == command.att_type:
 								r_uses = 0
@@ -1110,7 +1118,7 @@ if operation == 1:
 								if checkWeakness(command.element, target):
 									print("Hits weakness.", end = " ")
 									if command.att_type == "Magic":
-										offense = offense + 5 * command.multiplier # Add 5 mana to magic attack against weakness
+										offense = offense + 3 * command.multiplier # Add 3 mana to magic attack against weakness
 										defense = 0
 									else:
 										critical_hit = True
@@ -1497,6 +1505,7 @@ elif operation == 2:
 			print("INVENTORY: %s" % players.iloc[count,42])
 			print("GOLD: %d" % players.iloc[count,43])
 			print("")
+# TRANSFORMATIONS
 elif operation == 3:
 	more = "y"
 	while more != "n":
@@ -1509,7 +1518,7 @@ elif operation == 3:
 			current_monster = input("Starter class?: ")
 		else:
 			current_monster = mp.loc[who, "CLASS"]
-		meat = input("Meat from which monster?: ")
+		meat = input("Meat from which monster?: ")  #Add option to allow numeric entry for family. If numeric, ask for DS
 
 
 		meat_type = ""
@@ -1523,6 +1532,9 @@ elif operation == 3:
 		type_diff = 0
 		variant = False
 		variation = ""
+		transformation_list = mp.loc[who,"CLASS NOTES"]
+		count = transformation_list.count(",")
+		bonus_increment = int(count/9)
 
 		for row in range(transformations.shape[0]):
 			for col in range(transformations.shape[1]):
@@ -1556,9 +1568,11 @@ elif operation == 3:
 			col += 2
 
 		for member in range(len(family_tree)):
+			# If first family member has a higher DS than the max DS the transformation will allow, take the first family member
 			if member == 0 and max_ds <= family_tree[member][1]:
 				new_monster = family_tree[member][0]
 				break
+			# If the max DS is less than the non-first family member, calculate the gap and decide which member is the resultant transformation
 			elif max_ds < family_tree[member][1]:
 				gap_up = family_tree[member][1] - meat_ds
 				gap_down = meat_ds - family_tree[member-1][1]
@@ -1567,6 +1581,7 @@ elif operation == 3:
 				else:
 					new_monster = family_tree[member-1][0]
 				break
+			# If the max DS matches the family member, that's the result
 			else:
 				new_monster = family_tree[member][0]
 

@@ -52,6 +52,7 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 		drop_chance = 20 + number
 		enemy_level = 1
 
+		# Drop chances
 		for enemy in range(len(combatants)):
 			if combatants[enemy].name == key:
 				if drop_roll <= drop_chance:
@@ -66,9 +67,14 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 							if combatants[enemy].skills[item_roll] != "blank" and commands.loc[combatants[enemy].skills[item_roll], "Price"] >= 0:
 								drop = combatants[enemy].skills[item_roll]
 								print("%s dropped %s." % (combatants[enemy].name, drop))
-					#break
-				# Otherwise, drop gold
-				#else:
+							# Mutants can leave their essence behind if a skill or trait is selected
+							elif combatants[enemy].Type == 1:
+								print("%s left its essence behind." % combatants[enemy].name)
+							# Robots leave parts behind if the selected drop is not equippable
+							elif combatants[enemy].Type == 3:
+								print("%s dropped %s Parts." % (combatants[enemy].name, combatants[enemy].name))
+
+				# Gold drops no matter what
 				enemy_level = combatants[enemy].DS
 				if enemy_level > highest_ds:
 					highest_ds = enemy_level
@@ -412,7 +418,7 @@ def rollDamage(command, attacker):
 		if isinstance(command.rand_dmg, int) and command.rand_dmg > 0:
 			# Robot race bonus to random damage with guns - TURNED OFF FOR NOW
 			if command.race_bonus == attacker.family:
-				damage = command.min_dmg + random.randint(0,command.rand_dmg) #*2
+				damage = command.min_dmg + random.randint(0,command.rand_dmg) * 2
 			else:
 				damage = command.min_dmg + random.randint(0,command.rand_dmg)
 		elif command.rand_dmg == "Str":
