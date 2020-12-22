@@ -18,7 +18,7 @@ text_path = "battles.log"
 
 workbook = pandas.ExcelFile(path1)
 log = pandas.ExcelFile(path2)
-writer = pandas.ExcelWriter(path3, engine = 'openpyxl')
+writer = pandas.ExcelWriter(path3, engine = 'openpyxl') # pylint: disable=abstract-class-instantiated
 
 monsters = workbook.parse("Monster", index_col = 'Index')
 commands = workbook.parse("Weapon", index_col = 'Index')
@@ -408,22 +408,6 @@ if operation == 1:
 				# CONFUSION CHECK - for those confused at the start of a round
 				if attacker.isConfused():
 					attacker.command = actConfused(attacker, commands, players)
-					# options = []
-					# conf_command = 0
-					# remaining_uses = 100
-					# while conf_command == 0:
-					# 	conf_command = 1
-					# 	for skill in range(len(attacker.skills)):
-					# 		if attacker.skills[skill] != "blank" and commands.loc[attacker.skills[skill],"Target Type"] != "None":
-					# 			options.append(attacker.skills[skill])
-					# 	confuse_command_roll = random.randint(0, len(options)-1)
-					# 	attacker.command = options[confuse_command_roll]
-
-					# 	# Check PC in case ability was expired during combat
-					# 	if attacker.role in ("Player", "NPC"):
-					# 		remaining_uses = players.loc[attacker.name, "S%d Uses Left" % confuse_command_roll]
-					# 		if remaining_uses <= 0:
-					# 			conf_command = 0
 
 				# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
 				# Could also be used for random ability selection for players if an appropriate MS were assigned
@@ -446,7 +430,7 @@ if operation == 1:
 					attacker.command = input("Invalid command. Enter a new one: ")
 					sys.stdout = open(text_path, 'a')
 
-				# Start of round triggers (shield barriers)
+				# Start of round triggers (shield barriers, counters with elements)
 				if (commands.loc[attacker.command, "Target Type"] == "Block" and commands.loc[attacker.command, "Effect"] != "None"):
 					if commands.loc[attacker.command, "Effect"] in ("Nullify", "Reflect", "Magic Resistance"):
 						pass
@@ -454,6 +438,11 @@ if operation == 1:
 						enemy_barriers.append(commands.loc[attacker.command, "Effect"])
 					else:
 						player_barriers.append(commands.loc[attacker.command, "Effect"])
+				
+				elif commands.loc[attacker.command, "Target Type"] == "Counter" and "Persist" in commands.loc[attacker.command, "Effect"]:
+					counter_element = commands.loc[attacker.command, "Element"]
+					if counter_element != "None":
+						attacker.resists.append(counter_element)
 
 			# INITIATIVE AND EVASION
 			for count in range(len(combatants)):
@@ -1004,7 +993,7 @@ if operation == 1:
 								#afterTurn(target, counter_command.growth, players)
 								print("")
 
-					elif command.targeting in ("Group", "All Enemies"):
+					elif command.targeting in ("Group", "All Enemies", "All"):
 						if command.targeting == "Group" and target.role == "Enemy":
 							print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
 							if command.remaining <= 4:
@@ -1014,7 +1003,10 @@ if operation == 1:
 						else:
 							# Only print the command text the first time through
 							if foe == 0:
-								print("%s attacks all enemies with %s." % (attacker.name, attacker.command), end = " ")
+								if command.targeting == "All Enemies":
+									print("%s attacks all enemies with %s." % (attacker.name, attacker.command), end = " ")
+								else:
+									print("%s attacks everyone with %s." % (attacker.name, attacker.command), end = " ")
 								if command.remaining <= 4:
 									print("**%d uses left!**" % (command.remaining-1))
 								else:
@@ -1110,6 +1102,10 @@ if operation == 1:
 											inflictCondition(command, attacker, combatants[who], True)
 										else:
 											inflicted += inflictCondition(command, attacker, combatants[who], False)
+								if inflicted > 0:
+									print("%d %ss were afflicted with %s." % (inflicted, target.name, command.status), end = " ")
+								elif inflicted == 0 and target.role == "Enemy":
+									print("%s resisted %s." % (target.name, command.status), end = " ")
 							offense = rollDamage(command, attacker)
 							defense = determineDefense(target, command, offense)
 
@@ -1139,8 +1135,6 @@ if operation == 1:
 								damage = int(damage * critical_mult)
 
 						# No damage on pure Status attacks
-						if inflicted > 0:
-							print("%d %ss were afflicted with %s." % (inflicted, target.name, command.status), end = " ")
 						if command.stat == "Status":
 							print("")
 							continue

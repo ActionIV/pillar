@@ -142,7 +142,10 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 							#players[pc].skills[skill] = gained_skill
 							#player_table.loc[players[pc].name, "S%d" % skill] = gained_skill
 
-			# OTHER STATS
+			# OTHER STAT GROWTHS
+			# If no action was taken, try to grow the stat for the action that would've been taken
+			if not players[pc].stats_used:
+				players[pc].stats_used.append(commands.loc[players[pc].command, "Growth Stat"])
 			str_count = players[pc].stats_used.count("Str")
 			agl_count = players[pc].stats_used.count("Agl")
 			mana_count = players[pc].stats_used.count("Mana")
@@ -580,12 +583,12 @@ def inflictCondition(command, attacker, target, output):
 def applyCondition(status, target, output):
 	if status == "Stone":
 		target.stoned = "y"
-		target.blinded = "n"
+		target.blinded = "n" # Remove setting Blind to N for Blind to persist?
 		target.poisoned = "n"
 		target.confused = "n"
 		target.paralyzed = "n"
 		target.asleep = "n"
-		target.cursed = "n"
+		target.cursed = "n" # Remove setting Cursed to N for Cursed to persist?
 		if output:
 			print("Turned %s to stone." % target.name, end = " ")
 	elif status == "Curse":
@@ -612,15 +615,19 @@ def applyCondition(status, target, output):
 		target.confused = "y"
 		if output:
 			print("Confused %s." % target.name, end = " ")
+	elif status == "Fear":
+		target.afraid = "y"
+		if output:
+			print("Terrified %s." % target.name, end = " ")
 	elif status == "Stun":
 		target.current_HP = 0
 		target.lives -= 1
-		target.blinded = "n"
+		target.blinded = "n" # Should Blind persist past death?
 		target.poisoned = "n"
 		target.confused = "n"
 		target.paralyzed = "n"
 		target.asleep = "n"
-		target.cursed = "n"
+		target.cursed = "n" # Should Curse persist past death?
 		if output:
 			print("%s fell." % target.name, end = " ")
 	elif status == "Stop":
@@ -650,6 +657,9 @@ def removeCondition(status, target):
 	elif status == "Confuse" and target.isConfused():
 		target.confused = "n"
 		print("Returned %s to sanity." % target.name, end = " ")
+	elif status == "Fear" and target.isAfraid():
+		target.afraid = "n"
+		print("Calmed %s down." % target.name, end = " ")
 	elif status == "Revive" and target.isDead():
 		target.current_HP = 1
 		target.lives += 1
@@ -662,6 +672,7 @@ def removeCondition(status, target):
 		target.paralyzed = "n"
 		target.asleep = "n"
 		target.cursed = "n"
+		target.afraid = "n"
 		print("%s was restored." % target.name, end = " ")
 	else:
 		print("No effect on %s." % target.name, end = " ")
@@ -701,7 +712,7 @@ def checkResistance(target, element, barriers):
 def separateResists(check, resist_table):
 	# Only take the element field if the check is against armor, traits, or MAGI
 	element = resist_table.loc[check, "Element"]
-	if (resist_table.loc[check, "Type"] in ("Armor", "Trait", "MAGI")) and (element != "None"):
+	if (resist_table.loc[check, "Type"] in ("Armor", "Trait", "MAGI", "Shield")) and (element != "None"):
 		elements = []
 		elements = element.split(', ')
 		count = 0
