@@ -182,6 +182,12 @@ class Enemy(Actor):
 				defense = int(defense/2)
 		return defense
 
+	def getEvasion(self, commands):
+		evasion = self.current_Agl
+		if "Evasive" in commands.loc[self.command, "Effect"]:
+			evasion += commands.loc[self.command, "Percent"]
+		return evasion
+
 	role = "Enemy"
 	MS = 0
 	DS = 0
@@ -254,6 +260,24 @@ class Player(Actor):
 			defense += (5+self.magi_count)
 		return defense
 
+	def getEvasion(self, commands):
+		# Penalize defense above the natural defense stat (which monsters ignore anyway)
+		defense_difference = self.current_Def - self.natural_def
+		evasion = self.current_Agl
+
+		if self.magi == "Speed Magi":
+			evasion += (5+self.magi_count)
+
+		if "Evasive" in commands.loc[self.command, "Effect"]:
+			evasion += commands.loc[self.command, "Percent"]
+
+		# If STR >= DEF, then apply no penalty. Monsters use this since they're naturally balanced
+		if self.getStrength() >= defense_difference or self.getRace() == "Monster":
+			return evasion
+		# If DEF > STR, apply a penalty equal to the difference
+		else:
+			return max(0, evasion + self.getStrength() - defense_difference)
+
 	def skillSlot(self):
 		for slot in range(len(self.skills)):
 			if self.command == self.skills[slot]:
@@ -306,6 +330,23 @@ class NPC(Actor):
 		if self.isCursed():
 			defense = int(defense/2)
 		return defense
+
+	def getEvasion(self, commands):
+		# Penalize defense above the natural defense stat (which monsters ignore anyway)
+		defense_difference = self.current_Def - self.natural_def
+		evasion = self.current_Agl
+	#	if self.magi == "Speed Magi":
+	#		evasion += (5+self.magi_count)
+
+		if "Evasive" in commands.loc[self.command, "Effect"]:
+			evasion += commands.loc[self.command, "Percent"]
+
+		# If STR >= DEF, then apply no penalty. Monsters use this since they're naturally balanced
+		if self.getStrength() >= defense_difference or self.getRace() == "Monster":
+			return evasion
+		# If DEF > STR, apply a penalty equal to the difference
+		else:
+			return max(0, evasion + self.getStrength() - defense_difference)
 
 	def skillSlot(self):
 		for slot in range(len(self.skills)):
