@@ -25,10 +25,10 @@ class Actor(object):
 			else:
 				self.stats_used = self.stats_used + ", " + stat_used
 		else:
-			if stat_used in ("Nemesis"):
+			if stat_used in ("Nemesis", "Zealot"):
 				self.stats_used = stat_used
 
-	def add_target(self, target):
+	def addTarget(self, target):
 		self.targets.append(target)
 
 	def isStoned(self):
@@ -233,7 +233,7 @@ class Player(Actor):
 		if self.isCursed():
 			strength = int(strength/2)
 		if self.magi == "Power Magi":
-			strength += (5+self.magi_count)
+			strength += (4+self.magi_count)
 		return strength
 
 	def getAgility(self):
@@ -243,13 +243,13 @@ class Player(Actor):
 		if self.isBlinded():
 			agility = int(agility/2)
 		if self.magi == "Speed Magi":
-			agility += (5+self.magi_count)
+			agility += (4+self.magi_count)
 		return agility
 
 	def getMana(self):
 		mana = self.current_Mana
 		if self.magi == "Mana Magi":
-			mana += (5+self.magi_count)
+			mana += (4+self.magi_count)
 		return mana
 
 	def getDefense(self):
@@ -257,16 +257,16 @@ class Player(Actor):
 		if self.isCursed():
 			defense = int(defense/2)
 		if self.magi == "Defense Magi":
-			defense += (5+self.magi_count)
+			defense += (4+self.magi_count)
 		return defense
 
 	def getEvasion(self, commands):
 		# Penalize defense above the natural defense stat (which monsters ignore anyway)
-		defense_difference = self.current_Def - self.natural_def
+		defense_difference = self.Def - self.natural_def
 		evasion = self.current_Agl
 
 		if self.magi == "Speed Magi":
-			evasion += (5+self.magi_count)
+			evasion += (4+self.magi_count)
 
 		if "Evasive" in commands.loc[self.command, "Effect"]:
 			evasion += commands.loc[self.command, "Percent"]
@@ -333,10 +333,10 @@ class NPC(Actor):
 
 	def getEvasion(self, commands):
 		# Penalize defense above the natural defense stat (which monsters ignore anyway)
-		defense_difference = self.current_Def - self.natural_def
+		defense_difference = self.Def - self.natural_def
 		evasion = self.current_Agl
 	#	if self.magi == "Speed Magi":
-	#		evasion += (5+self.magi_count)
+	#		evasion += (4+self.magi_count)
 
 		if "Evasive" in commands.loc[self.command, "Effect"]:
 			evasion += commands.loc[self.command, "Percent"]
@@ -387,3 +387,10 @@ class Command:
 		self.percent = commands.loc[name,"Percent"]
 		self.race_bonus = commands.loc[name,"Race Bonus"]
 		self.human_spirit = commands.loc[name, "Human Spirit"]
+
+	def useAlert(self, role):
+		if self.remaining <= 4 and role != "Enemy":
+			print("**%d uses left!**" % (self.remaining-1), end = " ")
+			return True
+		else:
+			return False

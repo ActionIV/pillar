@@ -78,6 +78,7 @@ players["MAGI Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
 players.fillna("blank", inplace = True)
 for each in range(len(battles)):
 	battles[each]["COMMAND"].fillna("None", inplace=True)
+	battles[each]["TARGET"].fillna("None", inplace=True)
 	battles[each]["CURRENT HP"].fillna(-1, inplace=True, downcast = 'infer')
 	battles[each]["CURRENT STR"].fillna(-1, inplace=True, downcast = 'infer')
 	battles[each]["CURRENT AGL"].fillna(-1, inplace=True, downcast = 'infer')
@@ -183,6 +184,10 @@ while run_sim != "n":
 		current_com.confused = active_battle.iloc[current_com.group, 18]
 		current_com.environment = active_battle.iloc[current_com.group, 19]
 		current_com.addAction(active_battle.iloc[current_com.group, 20], active_battle.iloc[current_com.group, 21])
+
+		# Apply the None command to an incapacitated character
+		if not current_com.isActive():
+			current_com.command = "None"
 	
 		# Lookup the static Enemy data
 		if current_com.role == "Enemy":
@@ -195,6 +200,11 @@ while run_sim != "n":
 			current_com.Mana = monsters.loc[current_com.name,"Mana"]
 			current_com.Def = monsters.loc[current_com.name,"Def"]
 			current_com.family = monsters.loc[current_com.name,"Family"]
+
+			if "Zealot" in current_com.stats_used:
+				current_com.HP = int(current_com.HP * 1.5)
+				current_com.Str += 3
+				current_com.Agl += 3
 	
 			# SEE AfterTurn LOGIC TO REWRITE TO A LOOP
 			current_com.skills.append(monsters.loc[current_com.name,"S0"])
@@ -259,6 +269,9 @@ while run_sim != "n":
 				current_com.uses.append(players.loc[current_com.name,"MAGI Uses Left"])
 
 			current_com.gold = players.loc[current_com.name,"GOLD"]
+
+			if current_com.role == "NPC":
+				current_com.MS = players.loc[current_com.name, "CLASS NOTES"]
 		# Should be NPC code, but no separate sheet for that yet
 		else:
 			break
@@ -406,7 +419,7 @@ while run_sim != "n":
 			# ENEMY COMMAND SELECTION - uses Move Probability table based on MS
 			# Could also be used for random ability selection for players if an appropriate MS were assigned
 			# May want to add one for when MS exists, another for completely random if it doesn't (or always pick top command)
-			if attacker.command == "None" and attacker.role in ("Enemy"):
+			if attacker.command == "None" and attacker.role in ("Enemy", "NPC"):
 				row = attacker.MS
 				roll = random.randint(0,255)
 				for choice in range(7):
@@ -418,7 +431,7 @@ while run_sim != "n":
 
 			# COMMAND CHECK - does the command exist?
 			try:
-				commands.loc[attacker.command]
+				commands.loc[attacker.command, "Command"]
 			except KeyError:
 				sys.stdout = stdout
 				attacker.command = input("Invalid command. Enter a new one: ")
@@ -504,7 +517,7 @@ while run_sim != "n":
 					confuse_targets = []
 					if attacker.target_type in ("Single", "Group", "Ally"):
 						sel_target = randomTarget(confuse_targets, combatants)
-						attacker.add_target(sel_target)
+						attacker.addTarget(sel_target)
 					# Should barriers be applied to the enemies if the confusion targets the other side? If so, need to change barrier logic
 					elif attacker.target_type == "Block":
 						print("%s is defending with %s." % (attacker.name, attacker.command), end = " ")
@@ -524,7 +537,7 @@ while run_sim != "n":
 						for each in range(len(party_order)):
 							attacker.targets.append(party_order[each][0])
 					elif attacker.target_type == "Self":
-						attacker.add_target(attacker.name)
+						attacker.addTarget(attacker.name)
 					elif attacker.target_type in ("All Enemies", "Allies"):
 						sel_target = randomTarget(confuse_targets, combatants)
 						which_side = ""
@@ -564,7 +577,7 @@ while run_sim != "n":
 						roll = random.randint(1,100)
 						# Increase a player's chance to be targeted if using a shield
 						if commands.loc[combatants[party_order[choice][2]].command, "Type"] == "Shield":
-							target_odds = single_target_odds + commands.loc[combatants[party_order[choice][2]].command, "Percent"] / 5
+							target_odds = single_target_odds + int(commands.loc[combatants[party_order[choice][2]].command, "Percent"] / 5)
 						else:
 							target_odds = single_target_odds
 						# If the PC party is larger than 5, reduce the target chances by 5% for each one over 5
@@ -576,12 +589,19 @@ while run_sim != "n":
 					# If a target isn't selected via the weighted method...
 					if sel_target == "":
 						sel_target = randomTarget(party_order, combatants)
-					attacker.add_target(sel_target)
+					attacker.addTarget(sel_target)
+					
+				elif attacker.target_type == "Random":
+					number_of_hits = int(commands.loc[attacker.command, "Hits"])
+					hit_num = 0
+					while hit_num < number_of_hits:
+						attacker.addTarget(randomTarget(party_order, combatants))
+						hit_num += 1
 
 				# Blocking effects happen at start of turn. This is an announcement of the ability's usage on the character's turn
 				elif attacker.target_type == "Group":
 					sel_target = randomTarget(party_order, combatants)
-					attacker.add_target(sel_target)
+					attacker.addTarget(sel_target)
 
 				elif attacker.target_type == "Block":
 					print("%s is defending with %s." % (attacker.name, attacker.command), end = " ")
@@ -596,9 +616,9 @@ while run_sim != "n":
 					print("%s is waiting for the attack." % attacker.name)
 					combatants[count] = afterTurn(attacker, commands.loc[attacker.command, "Growth Stat"], players)
 					continue
-				elif attacker.target_type == "All Enemies":
+				elif attacker.target_type in ("All Enemies", "Sweep"):
 					for each in range(len(party_order)):
-						attacker.add_target(party_order[each][0])
+						attacker.addTarget(party_order[each][0])
 				# Enemy healers will always target the ally that has taken the most damage
 				elif attacker.target_type == "Ally":
 					target_name = ""
@@ -619,7 +639,7 @@ while run_sim != "n":
 					for each in range(len(party_order)):
 						attacker.targets.append(party_order[each][0])
 				elif attacker.target_type == "Self":
-					attacker.add_target(attacker.name)
+					attacker.addTarget(attacker.name)
 				else:
 					print("Invalid target!")
 					break
@@ -638,10 +658,18 @@ while run_sim != "n":
 				# ################## REMOVE IF HAVING ISSUES #####################
 
 				temp_target = commands.loc[attacker.command, "Target Type"]
+
+				# NPC Rule - if the NPC wasn't given a target by the party, choose the target for it
+				if attacker.role == "NPC" and attacker.target_type == "None" and temp_target in ("Single", "Group", "Ally"):
+					attacker.target_type = randomTarget(enemy_groups, combatants)
+
 				if temp_target in ("Single", "Group", "Ally"):
-					attacker.add_target(attacker.target_type)
+					attacker.addTarget(attacker.target_type)
+				elif temp_target == "Random":
+					for hits in commands.loc[attacker.command, "Hits"]:
+						attacker.addTarget(randomTarget(enemy_groups, combatants))
 				elif temp_target == "Self":
-					attacker.add_target(attacker.name)
+					attacker.addTarget(attacker.name)
 				elif temp_target == "Block":
 					print("%s is defending with %s." % (attacker.name, attacker.command), end = " ")
 					if commands.loc[attacker.command, "Effect"] != "None" and commands.loc[attacker.command, "Effect"] not in ("Nullify", "Reflect", "Magic Resistance"):
@@ -686,6 +714,10 @@ while run_sim != "n":
 			# Construct the command class for this instance
 			command = Command(attacker.command, commands, remaining_uses)
 
+			# Change Hits to be 1 if random since it was used for target selection
+			if command.targeting == "Random":
+				command.hits = 1
+
 			# Human Spirit Chance - Low chance, but unlocks new ability
 			if attacker.role == "Player" and attacker.Class == "Human" and not attacker.isConfused():
 				biggest_foe = 1
@@ -697,16 +729,19 @@ while run_sim != "n":
 						spirit_target_HP = int(players.loc[attacker.targets[tar], "HP"])
 						biggest_foe = equivalentLevel(spirit_target_HP, 26, 50)
 				spirit_diff = biggest_foe - human_spirit
+				# Double the chance if below half health
+				if attacker.current_HP < int(attacker.HP / 2):
+					spirit_diff = spirit_diff * 2
 				# Reward melee attacks against greater opponents with 5 bonus points
 				if command.att_type == "Melee" and spirit_diff > 1:
 					spirit_diff += 5
 				spirit_chance = random.randint(1,200)
 				# If command has a spirit flare ability, use it
 				# NEED TO REMAP IF RACE_BONUS == "ROBOT"
-				# attacker.command STILL HAS OLD NAME IN IT. CHANGE OR LEAVE IT?
 				if spirit_chance < spirit_diff and command.human_spirit != "":
 					print("The human spirit shines bright!", end = " ")
 					command = Command(command.human_spirit, commands, remaining_uses)
+					attacker.command = command.name
 
 			# Cycle through targets for attacks
 			for foe in range(len(attacker.targets)):
@@ -718,20 +753,21 @@ while run_sim != "n":
 				if defender == 100:
 					if foe == 0 and command.targeting == "All Enemies":
 						print("%s attacks all enemies with %s." % (attacker.name, attacker.command), end = " ")
-						if command.remaining <= 4:
-							print("**%d uses left!**", (command.remaining-1))
+						if command.useAlert(attacker.getRole()):
+							pass
 						else:
 							print("")
 					elif foe == 0 and command.targeting == "Allies":
 						print("%s uses %s." % (attacker.name, attacker.command), end = " ")
-						if command.remaining <= 4:
-							print("**%d uses left!**" % (command.remaining-1))
+						if command.useAlert(attacker.getRole()):
+							pass
 						else:
 							print("")
 					elif foe == 0 and command.targeting == "Sweep":
 						print("%s attacks the front line with %s." % (attacker.name, attacker.command), end = " ")
-					elif command.targeting not in ("All Enemies", "Allies", "All"):
+					elif command.targeting not in ("All Enemies", "Allies", "All", "Sweep"):
 						#attacker.command = "None"  # Is there a way to remove this?
+						attacker.has_used_skill_this_turn = True
 						print("%s did nothing." % attacker.name)
 					continue
 
@@ -754,13 +790,14 @@ while run_sim != "n":
 				weakness = False
 				damage = 0
 
-				if command.targeting in ("Single", "Sweep"):
+				if command.targeting in ("Single", "Sweep", "Random"):
 					if command.targeting == "Single":
 						print("%s attacks %s with %s." % (attacker.name, target.name, attacker.command), end = " ")
 					if foe == 0 and command.targeting == "Sweep":
 						print("%s attacks the front line with %s." % (attacker.name, attacker.command))
-					if command.remaining <= 4:
-						print("**%d uses left!**" % (command.remaining-1), end = " ")
+					if foe == 0 and command.targeting == "Random":
+						print("%s lashes out with %s." % (attacker.name, attacker.command))
+					command.useAlert(attacker.getRole())
 
 					# Blockable logic
 					if "Never miss" not in command.effect and command.att_type in ("Melee", "Ranged"):
@@ -788,6 +825,7 @@ while run_sim != "n":
 
 					# DETERMINE HIT
 					hit_count = 0
+
 					# For Multi-hit attacks, this will loop more than once
 					for hit in range(int(command.hits)):
 						hit_roll = random.randint(1,100)
@@ -976,8 +1014,7 @@ while run_sim != "n":
 				elif command.targeting in ("Group", "All Enemies", "All"):
 					if command.targeting == "Group" and target.role == "Enemy":
 						print("%s attacks %s group with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
-						if command.remaining <= 4:
-							print("**%d uses left!**" % (command.remaining-1), end = " ")
+						command.useAlert(attacker.getRole())
 					elif command.targeting == "Group" and target.role in ("Player", "NPC"):
 						print("%s attacks %s with %s." % (attacker.name, attacker.targets[foe], attacker.command), end = " ")
 					else:
@@ -987,8 +1024,8 @@ while run_sim != "n":
 								print("%s attacks all enemies with %s." % (attacker.name, attacker.command), end = " ")
 							else:
 								print("%s attacks everyone with %s." % (attacker.name, attacker.command), end = " ")
-							if command.remaining <= 4:
-								print("**%d uses left!**" % (command.remaining-1))
+							if command.useAlert(attacker.getRole()):
+								pass
 							else:
 								print("")
 						print("--", end = "")
@@ -1162,10 +1199,26 @@ while run_sim != "n":
 							else:
 								print("Missed!")
 
+						if target.isActive() and (def_target_type == "Counter" or "Counter" in def_command_effect) and commands.loc[target.command, "Type"] == command.att_type:
+							r_uses = 0
+							skill_slot = 0
+							if target.role in ("Player", "NPC"):
+								skill_slot = target.skillSlot()
+								r_uses = target.uses[skill_slot]
+							else:
+								r_uses = int(commands.loc[target.command, "#Uses"] * remaining_uses_for_enemies_mult)
+							counter_command = Command(target.command, commands, r_uses)
+							if target.role == "Enemy":
+								buildResistances(player_barriers, barriers, commands)
+							else:
+								buildResistances(enemy_barriers, barriers, commands)	
+							counterAttack(target, attacker, counter_command, damage, barriers)  # removed damage / counter_protection_mult since it was resulting in high dmg
+							#afterTurn(target, counter_command.growth, players)
+							print("")
+
 				elif command.targeting == "Ally":
 					print("%s uses %s for %s." % (attacker.name, attacker.command, attacker.targets[foe]), end = " ")
-					if command.remaining <= 4:
-						print("**%d uses left!**" % (command.remaining-1), end = " ")
+					command.useAlert(attacker.getRole())
 					# Reflect - change target into the caster
 					if ("Reflect" in def_command_effect or def_target_type == "Reflect") and command.att_type == "Magic":
 						print("%s reflected the spell with %s." % (target.name, target.command), end = " ")
@@ -1184,16 +1237,15 @@ while run_sim != "n":
 			
 				elif command.targeting == "Self":
 					print("%s uses %s." % (attacker.name, attacker.command), end = " ")
-					if command.remaining <= 4:
-						print("**%d uses left!**" % (command.remaining-1), end = " ")
+					command.useAlert(attacker.getRole())
 					if "Buff" in command.effect:
 						affectStat(attacker, command, 0)
 
 				elif command.targeting == "Allies":
 					if foe == 0:
 						print("%s uses %s." % (attacker.name, attacker.command), end = " ")
-						if command.remaining <= 4:
-							print("**%d uses left!**" % (command.remaining-1), end = " ")
+						if command.useAlert(attacker.getRole()):
+							pass
 						else:
 							print("")
 
@@ -1350,6 +1402,8 @@ while run_sim != "n":
 					tar_type = "Sw"
 				elif tar_type == "Group":
 					tar_type = "G"
+				elif tar_type == "Random":
+					tar_type = "R"
 				else:
 					tar_type == "U"
 				print("%s(%s)-%d" % (combatants[pos].skills[skill], tar_type, combatants[pos].uses[skill]), end = ", ")

@@ -53,7 +53,7 @@ while more != "n":
                 meat_type = transformations.loc[row,"MEAT TYPE"]
                 meat_add = transformations.loc[row,"ADD"]
                 meat_subtract = transformations.loc[row,"SUBTRACT"]
-            elif transformations.iloc[row,col] == current_monster:
+            if transformations.iloc[row,col] == current_monster:
                 current_ds = transformations.iloc[row,col+1]
                 current_class = transformations.loc[row,"FAMILY"]
                 current_type = transformations.loc[row,"MEAT TYPE"]

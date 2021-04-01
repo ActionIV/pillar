@@ -145,7 +145,7 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 			# OTHER STAT GROWTHS
 			# If no action was taken, try to grow the stat for the action that would've been taken
 			if not players[pc].stats_used:
-				players[pc].stats_used.append(commands.loc[players[pc].command, "Growth Stat"])
+				players[pc].stats_used = commands.loc[players[pc].command, "Growth Stat"]
 			str_count = players[pc].stats_used.count("Str")
 			agl_count = players[pc].stats_used.count("Agl")
 			mana_count = players[pc].stats_used.count("Mana")
@@ -199,6 +199,10 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 			players[pc].lives += 1
 		# Status Conditions
 		condition = ""
+		players[pc].poisoned = "n"
+		players[pc].confused = "n"
+		players[pc].paralyzed = "n"
+		players[pc].asleep = "n"
 		if players[pc].isBlinded():
 			condition.join("BLND")
 		if players[pc].isStoned():
@@ -290,8 +294,8 @@ def endOfTurn(attacker, traits):
 				print("%s regenerates %d HP." % (attacker.name, heal))
 				break # end loop since Regen should only be applied once
 
-	if attacker.role == "Enemy":
-		attacker.command = "None"
+	#if attacker.role == "Enemy":
+	#	attacker.command = "None"
 	return attacker
 
 ################################
@@ -393,6 +397,14 @@ def mightyBlow(target, crit_chance):
 
 def applyDamage(damage, target):
 	target.current_HP -= damage
+	# Damage to a sleeping target gives it a chance to wake up
+	if target.isAsleep():
+		roll = random.randint(1,100)
+		if roll <= 30:
+			print("%s woke up." % target.name)
+			target.asleep = "n"
+			target.stopped = "y"
+
 	if target.current_HP <= 0:
 		applyCondition("Stun", target, False)
 		return 1
@@ -588,7 +600,7 @@ def applyCondition(status, target, output):
 		target.confused = "n"
 		target.paralyzed = "n"
 		target.asleep = "n"
-		target.cursed = "n" # Remove setting Cursed to N for Cursed to persist?
+	#	target.cursed = "n" # Remove setting Cursed to N for Cursed to persist?
 		if output:
 			print("Turned %s to stone." % target.name, end = " ")
 	elif status == "Curse":
