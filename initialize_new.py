@@ -65,6 +65,7 @@ commands["Effect"].fillna("None", inplace = True)
 commands["Target Type"].fillna("None", inplace = True)
 commands["Hits"].fillna(1, inplace = True)
 commands["Price"].fillna(-1, inplace = True)
+commands["Percent"].fillna(0, inplace = True)
 players["Current HP"].fillna(-1, inplace = True, downcast = 'infer')
 players["S0 Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
 players["S1 Uses Left"].fillna(-1, inplace = True, downcast = 'infer')
@@ -130,7 +131,7 @@ while run_sim != "n":
 					active_battle.loc[len(active_battle.index)] = copy_row
 					place += 1
 				seen.add(combatants[place-1].name) # -1 because place was incremented at the end of the above for loop, which would exceed range
-				enemy_groups.append(tuple((combatants[place-1].name, 0, 0)))
+				enemy_groups.append(tuple((combatants[place-1].name, combatants[place-1].group, place-1)))
 				active_battle.drop(active_battle.tail(1).index,inplace=True)
 			else:
 				combatants.append(Enemy(active_battle.iloc[count,0]))
@@ -138,7 +139,7 @@ while run_sim != "n":
 				combatants[place].lives = active_battle.iloc[count,2]
 				combatants[place].group = count
 				if combatants[place].name not in seen:
-					enemy_groups.append(tuple((combatants[count].name, 0, 0)))
+					enemy_groups.append(tuple((combatants[count].name, combatants[count].group, place)))
 				seen.add(combatants[place].name)
 				place += 1
 
@@ -205,6 +206,9 @@ while run_sim != "n":
 				current_com.HP = int(current_com.HP * 1.5)
 				current_com.Str += 3
 				current_com.Agl += 3
+
+			if "Nemesis" in current_com.stats_used:
+				current_com.HP = int(current_com.HP * 2)
 	
 			# SEE AfterTurn LOGIC TO REWRITE TO A LOOP
 			current_com.skills.append(monsters.loc[current_com.name,"S0"])
@@ -660,8 +664,10 @@ while run_sim != "n":
 				temp_target = commands.loc[attacker.command, "Target Type"]
 
 				# NPC Rule - if the NPC wasn't given a target by the party, choose the target for it
-				if attacker.role == "NPC" and attacker.target_type == "None" and temp_target in ("Single", "Group", "Ally"):
+				if attacker.role == "NPC" and attacker.target_type == "None" and temp_target in ("Single", "Group"):
 					attacker.target_type = randomTarget(enemy_groups, combatants)
+				elif attacker.role == "NPC" and attacker.target_type == "None" and temp_target == "Ally":
+					attacker.target_type = randomTarget(party_order, combatants)
 
 				if temp_target in ("Single", "Group", "Ally"):
 					attacker.addTarget(attacker.target_type)
@@ -1166,7 +1172,7 @@ while run_sim != "n":
 							who = 0
 							while num_hits < group_hits and who < len(combatants):
 								if combatants[who].name == target.name and combatants[who].isTargetable() and combatants[who].position == tar_position:
-									if combatants[who].stats_used == "Nemesis":
+									if combatants[who].stats_used == "Nemesis" and command.targeting in ("All Enemies", "Sweep"):
 										damage = int(damage / 2)
 									body_count += applyDamage(damage, combatants[who])
 									num_hits += 1

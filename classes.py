@@ -165,8 +165,8 @@ class Enemy(Actor):
 		agility = self.current_Agl
 		if self.isParalyzed() or self.isAsleep():
 			return 0
-		if self.isBlinded():
-			agility = int(agility/2)
+#		if self.isBlinded():
+#			agility = int(agility/2)
 		return agility
 
 	def getMana(self):
@@ -240,8 +240,8 @@ class Player(Actor):
 		agility = self.current_Agl
 		if self.isParalyzed() or self.isAsleep():
 			return 0
-		if self.isBlinded():
-			agility = int(agility/2)
+#		if self.isBlinded():
+#			agility = int(agility/2)
 		if self.magi == "Speed Magi":
 			agility += (4+self.magi_count)
 		return agility
@@ -318,8 +318,8 @@ class NPC(Actor):
 		agility = self.current_Agl
 		if self.isParalyzed() or self.isAsleep():
 			return 0
-		if self.isBlinded():
-			agility = int(agility/2)
+#		if self.isBlinded():
+#			agility = int(agility/2)
 		return agility
 
 	def getMana(self):

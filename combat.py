@@ -16,7 +16,7 @@ def randomTarget(target_list, combatants):
 			if combatants[roll].isTargetable():
 				return combatants[roll].name
 			else:
-				continue
+				pass
 	else:
 		while target == "":
 			roll = random.randint(0,len(target_list)-1)
@@ -69,9 +69,11 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 								print("%s dropped %s." % (combatants[enemy].name, drop))
 							# Mutants can leave their essence behind if a skill or trait is selected
 							elif combatants[enemy].Type == 1:
+								drop = combatants[enemy].skills[item_roll]
 								print("%s left its essence behind." % combatants[enemy].name)
 							# Robots leave parts behind if the selected drop is not equippable
 							elif combatants[enemy].Type == 3:
+								drop = "Done"
 								print("%s dropped %s Parts." % (combatants[enemy].name, combatants[enemy].name))
 
 				# Gold drops no matter what
@@ -294,8 +296,8 @@ def endOfTurn(attacker, traits):
 				print("%s regenerates %d HP." % (attacker.name, heal))
 				break # end loop since Regen should only be applied once
 
-	#if attacker.role == "Enemy":
-	#	attacker.command = "None"
+	if attacker.role in ("NPC", "Enemy"):
+		attacker.command = "None"
 	return attacker
 
 ################################
@@ -304,24 +306,31 @@ def endOfTurn(attacker, traits):
 
 def hitScore(command, attacker, target_stat):
 	# Ranged attacks are based on Percent chance unless using a Gun
-	if command.att_type == "Ranged":
+	hit_score = 0
+	if command.att_type == "Ranged" and command.percent != 0:
 		# All guns and cannons have Robot Race Bonus and use STR as a calculation
 		if command.race_bonus == "Robot":
 			# Robots gain double their STR to hit with guns and cannons
 			if attacker.family == "Robot":
-				return attacker.getStrength() * 2 + command.percent
+				hit_score = attacker.getStrength() * 2 + command.percent - target_stat
 			else:
-				return attacker.getStrength() + command.percent
+				hit_score = attacker.getStrength() + command.percent - target_stat
 		# Bows use 2x AGL and the item's hit chance
 		else:
-			return attacker.getAgility() * 2 + command.percent # - target_agl
+			hit_score = attacker.getAgility() * 2 + command.percent - target_stat
 	# Spell resist formula
 	elif command.att_type == "Magic":
-		return min(95, 100 - (2 * (target_stat - attacker.getMana())))
+		hit_score = min(95, 100 - (2 * (target_stat - attacker.getMana())))
 
 	# Melee attacks just use AGL
 	else:
-		return min(97, 100 - (2 * (target_stat - attacker.getAgility())))
+		hit_score = min(97, 100 - (2 * (target_stat - attacker.getAgility())))
+
+	# CHANGE TO BLIND MECHANICS - Blind now reduces hit by 30% for any non-magic attack
+	if attacker.isBlinded() and command.att_type != "Magic":
+		return int(hit_score * 0.7)
+	else:
+		return hit_score
 
 def frontOfGroup(combatants, attacker, foe, command):
 	priority = 100
@@ -421,8 +430,8 @@ def rollDamage(command, attacker):
 	elif stat == "Agl":
 		damage = calculateDamage(attacker.getAgility(), multiplier)
 		# Blind should not effect DMG, so double it if blinded
-		if attacker.isBlinded():
-			damage = damage * 2
+		#if attacker.isBlinded():
+		#	damage = damage * 2
 	elif stat == "Mana":
 		# If the MAGI equipped is of the same element as the magic attack, increase the damage
 		if attacker.role == "Player" and attacker.magi.startswith(element):
@@ -468,9 +477,11 @@ def determineDefense(defender, attack, damage):
 	# Workaround to avoid having to pass target into rollDamage function just for the HP attacks
 	elif attack.stat == "HP":
 		return int(defender.HP * attack.percent/100) * -1
-	elif attack.att_type in ("Melee", "Ranged"):
+	# For melee and non-elemental ranged attacks, use Defense
+	elif attack.att_type == "Melee" or (attack.att_type == "Ranged" and attack.element == "None"):
 		return defender.getDefense() * 5
-	elif attack.att_type == "Magic":
+	# For magic attacks or elemental ranged attacks (which is a workaround to allow for blockable "magic" attacks), use Mana
+	elif attack.att_type == "Magic" or (attack.att_type == "Ranged" and attack.element != "None"):
 #		return int((200 - defender.getMana()) * damage / 200)
 		return int(damage * defender.getMana() / 200)
 
@@ -595,7 +606,7 @@ def inflictCondition(command, attacker, target, output):
 def applyCondition(status, target, output):
 	if status == "Stone":
 		target.stoned = "y"
-		target.blinded = "n" # Remove setting Blind to N for Blind to persist?
+	#	target.blinded = "n" # Remove setting Blind to N for Blind to persist?
 		target.poisoned = "n"
 		target.confused = "n"
 		target.paralyzed = "n"
@@ -634,12 +645,12 @@ def applyCondition(status, target, output):
 	elif status == "Stun":
 		target.current_HP = 0
 		target.lives -= 1
-		target.blinded = "n" # Should Blind persist past death?
+	#	target.blinded = "n" # Should Blind persist past death?
 		target.poisoned = "n"
 		target.confused = "n"
 		target.paralyzed = "n"
 		target.asleep = "n"
-		target.cursed = "n" # Should Curse persist past death?
+	#	target.cursed = "n" # Should Curse persist past death?
 		if output:
 			print("%s fell." % target.name, end = " ")
 	elif status == "Stop":
