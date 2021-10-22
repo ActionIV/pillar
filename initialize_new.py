@@ -126,6 +126,7 @@ while run_sim != "n":
 					combatants[place].position = pos + 1
 					combatants[place].lives = 1
 					combatants[place].group = count
+					combatants[place].place = place
 					#enemy_groups.append(tuple((combatants[place].name, 0, 0)))
 					copy_row = active_battle.iloc[count]
 					active_battle.loc[len(active_battle.index)] = copy_row
@@ -138,6 +139,7 @@ while run_sim != "n":
 				combatants[place].position = active_battle.iloc[count,3]
 				combatants[place].lives = active_battle.iloc[count,2]
 				combatants[place].group = count
+				combatants[place].group = place
 				if combatants[place].name not in seen:
 					enemy_groups.append(tuple((combatants[count].name, combatants[count].group, place)))
 				seen.add(combatants[place].name)
@@ -148,6 +150,7 @@ while run_sim != "n":
 			combatants[place].lives = active_battle.iloc[count,2]
 			combatants[place].position = int(active_battle.iloc[count,3])
 			combatants[place].group = count
+			combatants[place].place = place
 			place += 1
 
 		else:
@@ -155,6 +158,7 @@ while run_sim != "n":
 			combatants[place].lives = active_battle.iloc[count,2]
 			combatants[place].position = active_battle.iloc[count,3]
 			combatants[place].group = count
+			combatants[place].place = place
 			place += 1
 
 	# Create a unique list of enemy groups in order of entry
@@ -244,6 +248,10 @@ while run_sim != "n":
 				current_com.magi_count = int(equipped_magi[-1:])
 			else:
 				current_com.magi = "blank"
+
+			# HIT BONUS
+			if current_com.role == "Player":
+				current_com.hit_bonus = current_com.getHitBonus(commands)
 
 			# Grab natural stats for purposes of stat gain in humans and mutants. Do it for all just in case
 			current_com.natural_str = players.loc[current_com.name,"Natural STR"]
@@ -645,7 +653,7 @@ while run_sim != "n":
 				elif attacker.target_type == "Self":
 					attacker.addTarget(attacker.name)
 				else:
-					print("Invalid target!")
+					print("%s %ss." % (attacker.name, attacker.command))
 					break
 
 			# PC TARGET SETTING
@@ -672,8 +680,11 @@ while run_sim != "n":
 				if temp_target in ("Single", "Group", "Ally"):
 					attacker.addTarget(attacker.target_type)
 				elif temp_target == "Random":
-					for hits in commands.loc[attacker.command, "Hits"]:
+					number_of_hits = int(commands.loc[attacker.command, "Hits"])
+					hit_num = 0
+					while hit_num < number_of_hits:
 						attacker.addTarget(randomTarget(enemy_groups, combatants))
+						hit_num += 1
 				elif temp_target == "Self":
 					attacker.addTarget(attacker.name)
 				elif temp_target == "Block":
@@ -701,7 +712,7 @@ while run_sim != "n":
 					for each in range(len(party_order)):
 						attacker.targets.append(party_order[each][0])
 				else:
-					print("Invalid target!")
+					print("%s %ss." % (attacker.name, attacker.command))
 					continue
 
 			# Logic for finding remaining uses on a command for Players and NPCs
@@ -937,7 +948,7 @@ while run_sim != "n":
 							print("Partially blocked by %s." % target.command, end = " ")
 							damage = int(damage * blocked_ranged_mult)
 						# If weapon resistance is found against a non-magical attack, damage is halved
-						if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", barriers) and "Pierce" not in command.effect:
+						if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", barriers):
 							damage = int(damage * weapon_res_mult)
 						if critical_hit == True:
 							if command.att_type in ("Melee", "Ranged"):
@@ -1152,7 +1163,7 @@ while run_sim != "n":
 						# 	damage = int(damage/2)
 
 						# If weapon resistance is found against a non-magical attack, damage is halved
-						if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", barriers) and "Pierce" not in command.effect:
+						if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", barriers):
 							damage = int(damage * weapon_res_mult)
 						if critical_hit == True:
 							damage = int(damage * critical_mult)
@@ -1381,54 +1392,55 @@ while run_sim != "n":
 					break
 
 	# Print party status line at the end of a simulation
-	sys.stdout = open(text_path, 'a')
-	print("")
-	for each in range(len(party_order)):
-		pos = party_order[each][2]
-		print("| %s: %d/%d %s" % (combatants[pos].name, combatants[pos].current_HP, combatants[pos].HP, combatants[pos].characterStatus()), end = " [")
-		# Print skill counts at the end of a battle
-		for skill in range(len(combatants[pos].skills)):
-			if combatants[pos].uses[skill] < 0 or combatants[pos].skills[skill] == "blank":
-				pass
-			else:
-				tar_type = commands.loc[combatants[pos].skills[skill], "Target Type"]
-				if tar_type == "All Enemies":
-					tar_type = "AE"
-				elif tar_type == "Ally":
-					tar_type = "A"
-				elif tar_type == "Allies":
-					tar_type = "AA"
-				elif tar_type == "Block":
-					tar_type = "D"
-				elif tar_type == "Counter":
-					tar_type = "C"
-				elif tar_type == "Single":
-					tar_type = "Si"
-				elif tar_type == "Sweep":
-					tar_type = "Sw"
-				elif tar_type == "Group":
-					tar_type = "G"
-				elif tar_type == "Random":
-					tar_type = "R"
+	if not run_success:
+		sys.stdout = open(text_path, 'a')
+		print("")
+		for each in range(len(party_order)):
+			pos = party_order[each][2]
+			print("| %s: %d/%d %s" % (combatants[pos].name, combatants[pos].current_HP, combatants[pos].HP, combatants[pos].characterStatus()), end = " [")
+			# Print skill counts at the end of a battle
+			for skill in range(len(combatants[pos].skills)):
+				if combatants[pos].uses[skill] < 0 or combatants[pos].skills[skill] == "blank":
+					pass
 				else:
-					tar_type == "U"
-				print("%s(%s)-%d" % (combatants[pos].skills[skill], tar_type, combatants[pos].uses[skill]), end = ", ")
-		print("]")
-	#print("")
+					tar_type = commands.loc[combatants[pos].skills[skill], "Target Type"]
+					if tar_type == "All Enemies":
+						tar_type = "AE"
+					elif tar_type == "Ally":
+						tar_type = "A"
+					elif tar_type == "Allies":
+						tar_type = "AA"
+					elif tar_type == "Block":
+						tar_type = "D"
+					elif tar_type == "Counter":
+						tar_type = "C"
+					elif tar_type == "Single":
+						tar_type = "Si"
+					elif tar_type == "Sweep":
+						tar_type = "Sw"
+					elif tar_type == "Group":
+						tar_type = "G"
+					elif tar_type == "Random":
+						tar_type = "R"
+					else:
+						tar_type == "U"
+					print("%s(%s)-%d" % (combatants[pos].skills[skill], tar_type, combatants[pos].uses[skill]), end = ", ")
+			print("]")
+		#print("")
 
-	# Print enemy status line at the end of a simulation
-	enemy_list = []
-	for enemy in range(len(enemy_groups)):
-		for count in range(len(combatants)):
-			if combatants[count].role == "Enemy" and combatants[count].isTargetable() and combatants[count].name == enemy_groups[enemy][0]:
-				enemy_list.append(combatants[count].name)
+		# Print enemy status line at the end of a simulation
+		enemy_list = []
+		for enemy in range(len(enemy_groups)):
+			for count in range(len(combatants)):
+				if combatants[count].role == "Enemy" and combatants[count].isTargetable() and combatants[count].name == enemy_groups[enemy][0]:
+					enemy_list.append(combatants[count].name)
 
-	remaining_enemies = Counter(enemy_list)
-	remaining_enemies.keys()
-	for key, number in remaining_enemies.items():
-		print("{ %s - %d" % (key, number), end = " }")
-	print("")
-	print("")
+		remaining_enemies = Counter(enemy_list)
+		remaining_enemies.keys()
+		for key, number in remaining_enemies.items():
+			print("{ %s - %d" % (key, number), end = " }")
+		print("")
+		print("")
 
 	sys.stdout = stdout
 	print("Battle ended.")

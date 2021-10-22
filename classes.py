@@ -78,7 +78,7 @@ class Actor(object):
 	
 	# This should be used for unending environment effects or second actions for bosses
 	def isSomethingElse(self):
-		return True if self.environment == "y" else False
+		return True if self.environment == "y" or self.family == "Environment" else False
 
 	def characterStatus(self):
 		status = []
@@ -106,6 +106,7 @@ class Actor(object):
 	lives = 1
 	position = 0
 	group = 0
+	place = 0
 	initiative = 0
 	current_HP = 0
 	current_Str = 0
@@ -131,6 +132,7 @@ class Actor(object):
 	natural_def = 0
 	evasion = 0
 	blocking = 0
+	hit_bonus = 0
 	has_used_skill_this_turn = False # Could turn this into a count to allow for retributive "shield" attacks based on number of hits taken in a round
 		
 class Enemy(Actor):
@@ -277,6 +279,15 @@ class Player(Actor):
 		# If DEF > STR, apply a penalty equal to the difference
 		else:
 			return max(0, evasion + self.getStrength() - defense_difference)
+
+	def getHitBonus(self, commands):
+		hit_bonus = 0
+		for slot in range(len(self.skills)):
+			if commands.loc[self.skills[slot], "Type"] == "Armor" and commands.loc[self.skills[slot], "Hits"] > 1:
+				hit_bonus = commands.loc[self.skills[slot], "Hits"]
+			else:
+				pass
+		return hit_bonus
 
 	def skillSlot(self):
 		for slot in range(len(self.skills)):

@@ -41,9 +41,9 @@ while more != "n":
     type_diff = 0
     variant = False
     variation = ""
-    transformation_list = mp.loc[who,"CLASS NOTES"]
-    count = transformation_list.count(",")
-    bonus_increment = int(count/9)
+#    transformation_list = mp.loc[who,"CLASS NOTES"]
+#    count = transformation_list.count(",")
+    minimum_level = 1+int(mp.loc[who,"CLASS NOTES"]/18)
 
     for row in range(transformations.shape[0]):
         for col in range(transformations.shape[1]):
@@ -85,8 +85,11 @@ while more != "n":
         elif max_ds < family_tree[member][1]:
             gap_up = family_tree[member][1] - meat_ds
             gap_down = meat_ds - family_tree[member-1][1]
-            if gap_up < gap_down:
+            if gap_up <= gap_down:
                 new_monster = family_tree[member][0]
+            # If the new monster is below the minimum level threshold, transform back into current form
+            elif family_tree[member-1][1] < minimum_level:
+                new_monster = current_monster
             else:
                 new_monster = family_tree[member-1][0]
             break

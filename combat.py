@@ -20,12 +20,16 @@ def randomTarget(target_list, combatants):
 	else:
 		while target == "":
 			roll = random.randint(0,len(target_list)-1)
-			random_who = target_list[roll][2]
-			if combatants[random_who].isTargetable():
-				target = target_list[roll][0]
-				return target
-			else:
-				continue
+			random_who = target_list[roll][0]
+#			if combatants[random_who].isTargetable():
+#				target = target_list[roll][0]
+#				return target
+			for tar in range(len(combatants)):
+				if combatants[tar].name == random_who and combatants[tar].isTargetable():
+					target = combatants[tar].name # Substantial rewrite is required to allow for targeting randomly inside enemy groups
+					return target
+#			else:
+#				pass
 
 #####################################
 ####### END OF TURN FUNCTIONS #######
@@ -312,19 +316,19 @@ def hitScore(command, attacker, target_stat):
 		if command.race_bonus == "Robot":
 			# Robots gain double their STR to hit with guns and cannons
 			if attacker.family == "Robot":
-				hit_score = attacker.getStrength() * 2 + command.percent - target_stat
+				hit_score = attacker.getStrength() * 2 + command.percent - target_stat + attacker.hit_bonus
 			else:
-				hit_score = attacker.getStrength() + command.percent - target_stat
+				hit_score = attacker.getStrength() + command.percent - target_stat + attacker.hit_bonus
 		# Bows use 2x AGL and the item's hit chance
 		else:
-			hit_score = attacker.getAgility() * 2 + command.percent - target_stat
+			hit_score = attacker.getAgility() * 2 + command.percent - target_stat + attacker.hit_bonus
 	# Spell resist formula
 	elif command.att_type == "Magic":
-		hit_score = min(95, 100 - (2 * (target_stat - attacker.getMana())))
+		hit_score = min(95, 100 - (2 * (target_stat - attacker.getMana()) + attacker.hit_bonus))
 
 	# Melee attacks just use AGL
 	else:
-		hit_score = min(97, 100 - (2 * (target_stat - attacker.getAgility())))
+		hit_score = min(97, 100 - (2 * (target_stat - attacker.getAgility()) + attacker.hit_bonus))
 
 	# CHANGE TO BLIND MECHANICS - Blind now reduces hit by 30% for any non-magic attack
 	if attacker.isBlinded() and command.att_type != "Magic":
@@ -336,6 +340,9 @@ def frontOfGroup(combatants, attacker, foe, command):
 	priority = 100
 	defender = 100
 
+#	if isinstance(attacker.targets[foe], int):
+#		defender = attacker.targets[foe]
+#	else:
 	for tar in range(len(combatants)):
 		if (combatants[tar].name == attacker.targets[foe]) and (int(combatants[tar].position) < priority) and combatants[tar].isTargetable():
 			priority = combatants[tar].position
@@ -438,6 +445,8 @@ def rollDamage(command, attacker):
 			damage = calculateDamage(attacker.getMana() + 5 + attacker.magi_count, multiplier)
 		else:
 			damage = calculateDamage(attacker.getMana(), multiplier)
+	elif stat == "Phys":
+		damage = calculateDamage(attacker.getStrength() + attacker.getAgility(), multiplier)
 	elif stat == "Set":
 		if isinstance(command.rand_dmg, int) and command.rand_dmg > 0:
 			# Robot race bonus to random damage with guns - TURNED OFF FOR NOW
