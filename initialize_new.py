@@ -383,7 +383,7 @@ while run_sim != "n":
 				run_success = True
 			else:
 				for runner in range(len(combatants)):
-					if combatants[runner].role == "Enemy":
+					if combatants[runner].role == "Enemy" and combatants[runner].environment == "n":
 						enemies_AGL += combatants[runner].current_Agl
 					else:
 						if combatants[runner].isDead():
@@ -393,6 +393,11 @@ while run_sim != "n":
 				#enemies_AGL += random.randint(1,50)
 				if party_AGL > enemies_AGL:
 					run_success = True
+				else:
+					run_chance = int(party_AGL / enemies_AGL)
+					roll = random.randint(1,100)
+					if roll < run_chance:
+						run_success = True
 			if run_success:
 				print("Run!!")
 				break
@@ -930,7 +935,7 @@ while run_sim != "n":
 							if command.status != "None":
 								inflictCondition(command, attacker, target, True)
 
-						if "Critical" in command.effect:
+						if "Critical" in command.effect or ("Devastate" in command.effect and target.isAfflicted()):
 							if mightyBlow(target, crit_chance):
 								continue
 							else:
@@ -948,7 +953,7 @@ while run_sim != "n":
 							print("Partially blocked by %s." % target.command, end = " ")
 							damage = int(damage * blocked_ranged_mult)
 						# If weapon resistance is found against a non-magical attack, damage is halved
-						if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", barriers):
+						if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", barriers) and "Pierce" not in command.effect:
 							damage = int(damage * weapon_res_mult)
 						if critical_hit == True:
 							if command.att_type in ("Melee", "Ranged"):
@@ -972,7 +977,7 @@ while run_sim != "n":
 								absorb = int(damage * (command.percent / 100))
 								reversed = False
 								if absorb_type == "Absorb":
-									if target.family in ("Golem"):
+									if target.family in ("Golem", "Robot"):
 										print("Cannot absorb from %s." % target.name, end = " ")
 										absorb = 0
 									elif target.family in ("God", "Plant"):
@@ -980,7 +985,7 @@ while run_sim != "n":
 								elif absorb_type == "Drain":
 									if target.family == "Undead":
 										reversed = True
-									elif target.family in ("God", "Golem"):
+									elif target.family in ("God", "Golem", "Robot"):
 										print("Cannot drain from %s." % target.name, end = " ")
 										absorb = 0
 								elif absorb_type == "Dissolve":

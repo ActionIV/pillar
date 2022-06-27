@@ -210,11 +210,11 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 		players[pc].paralyzed = "n"
 		players[pc].asleep = "n"
 		if players[pc].isBlinded():
-			condition.join("BLND")
+			condition = condition + "BLND"
 		if players[pc].isStoned():
-			condition.join("STON")
+			condition = condition + "STON"
 		if players[pc].isCursed():
-			condition.join("CURS")
+			condition = condition + "CURS"
 		if condition == "":
 			condition = "GOOD"
 		player_table.loc[players[pc].name, "CONDITION"] = condition
@@ -252,8 +252,10 @@ def afterTurn(attacker, stat_used, table):
 		skill_slot = attacker.skillSlot()
 		if skill_slot < 8:
 			attacker.uses[skill_slot] -= 1
-		else:
+		elif skill_slot == 8:
 			table.loc[attacker.name, "MAGI Uses Left"] -= 1
+		else:
+			print("Skill not found! Decrement manually.")
 	return attacker
 
 def endOfTurn(attacker, traits):

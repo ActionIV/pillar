@@ -1,6 +1,9 @@
+from pickle import FALSE, TRUE
 import pandas
 import random
 import operator
+
+from sqlalchemy import true
 
 path1 = r"FFL2 Data.xlsx"
 path2 = r"Battle Log.xlsm"
@@ -28,12 +31,14 @@ while more != "n":
     else:
         current_monster = mp.loc[who, "CLASS"]
     meat = input("Meat from which monster?: ")  #Add option to allow numeric entry for family. If numeric, ask for DS
-
+    if meat == "debug":
+        meat = int(input("Enter number 0-35: "))
 
     meat_type = ""
     meat_class = 0
     meat_add = 0
     meat_subtract = 0
+    meat_skip = FALSE
     current_ds = 0
     current_class = 0
     current_type = ""
@@ -45,9 +50,17 @@ while more != "n":
 #    count = transformation_list.count(",")
     minimum_level = 1+int(mp.loc[who,"CLASS NOTES"]/18)
 
+    if type(meat) == int:
+        meat_ds = int(input("DS level: "))
+        meat_class = transformations.loc[meat,"FAMILY"]
+        meat_type = transformations.loc[meat,"MEAT TYPE"]
+        meat_add = transformations.loc[meat,"ADD"]
+        meat_subtract = transformations.loc[meat,"SUBTRACT"]
+        meat_skip = TRUE
+
     for row in range(transformations.shape[0]):
         for col in range(transformations.shape[1]):
-            if transformations.iloc[row,col] == meat:
+            if transformations.iloc[row,col] == meat and meat_skip == FALSE:
                 meat_ds = transformations.iloc[row,col+1]
                 meat_class = transformations.loc[row,"FAMILY"]
                 meat_type = transformations.loc[row,"MEAT TYPE"]

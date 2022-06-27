@@ -50,6 +50,9 @@ class Actor(object):
 	def isStopped(self):
 		return True if self.stopped == "y" else False
 
+	def isAfflicted(self):
+		return True if self.isCursed() or self.isBlinded() or self.isAsleep() or self.isParalyzed() or self.isPoisoned() or self.isConfused() or self.isStopped() else False
+
 	# Decrement lives upon death. Shouldn't need a dead flag that way
 	def isDead(self):
 		if self.lives == 0:
@@ -223,7 +226,7 @@ class Player(Actor):
 	
 	def getRole(self):
 	 	return self.role
-
+		 
 	def getRace(self):
 		if self.Class in ("Human", "Mutant", "Robot"):
 			return self.Class
@@ -293,6 +296,10 @@ class Player(Actor):
 		for slot in range(len(self.skills)):
 			if self.command == self.skills[slot]:
 				return slot
+		if self.command == self.magi:
+			return 8
+		else:
+			return 9
 
 class NPC(Actor):
 	role = "NPC"
@@ -363,6 +370,8 @@ class NPC(Actor):
 		for slot in range(len(self.skills)):
 			if self.command == self.skills[slot]:
 				return slot
+			else:
+				return 9
 
 class Command:
 	stat = ""
