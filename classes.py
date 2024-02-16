@@ -188,10 +188,17 @@ class Enemy(Actor):
 		return defense
 
 	def getEvasion(self, commands):
+		defense_difference = self.Def - self.natural_def
 		evasion = self.current_Agl
 		if "Evasive" in commands.loc[self.command, "Effect"]:
 			evasion += commands.loc[self.command, "Percent"]
-		return evasion
+
+		# If STR >= DEF, then apply no penalty. Monsters use this since they're naturally balanced
+		if self.getStrength() >= defense_difference or self.getRace() == "Monster":
+			return evasion
+		# If DEF > STR, apply a penalty equal to the difference
+		else:
+			return max(0, evasion + self.getStrength() - defense_difference)
 
 	role = "Enemy"
 	MS = 0
@@ -218,6 +225,7 @@ class Player(Actor):
 	magi = ""
 	magi_count = 0
 	gold = 0
+	notes = ""
 
 	def __init__(self, name):
 		Actor.__init__(self, name)
@@ -301,6 +309,14 @@ class Player(Actor):
 		else:
 			return 9
 
+	def humanBonus(self, weapon_type):
+		if self.Class == "Human" and self.notes != "blank":
+			mastery_list = self.notes.split(",")
+			for num in range(len(mastery_list)):
+				if weapon_type in mastery_list[num]:
+					return 5*int(mastery_list[num][-1])
+			return 0
+
 class NPC(Actor):
 	role = "NPC"
 	MS = 0
@@ -375,6 +391,7 @@ class NPC(Actor):
 
 class Command:
 	stat = ""
+	symbol = ""
 	uses = 0
 	remaining = 0
 	multiplier = 0
@@ -391,6 +408,7 @@ class Command:
 
 	def __init__(self, name, commands, remaining_uses):
 		self.name = name
+		self.symbol = commands.loc[name,"Symbol"]
 		self.uses = commands.loc[name, "#Uses"]
 		self.remaining = remaining_uses
 		self.growth = commands.loc[name,"Growth Stat"]

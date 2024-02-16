@@ -37,7 +37,7 @@ single_target_odds = 50
 remaining_uses_for_enemies_mult = 1.0
 blocked_ranged_mult = 0.5
 critical_mult = 1.5
-counter_protection_mult = 0.75
+counter_protection_mult = 0.5
 cut_base = 50
 cut_chance = 0.5
 crit_chance = 30
@@ -249,9 +249,10 @@ while run_sim != "n":
 			else:
 				current_com.magi = "blank"
 
-			# HIT BONUS
+			# HIT BONUS AND SPECIALIZATION NOTES
 			if current_com.role == "Player":
 				current_com.hit_bonus = current_com.getHitBonus(commands)
+				current_com.notes = players.loc[current_com.name, "CLASS NOTES"]
 
 			# Grab natural stats for purposes of stat gain in humans and mutants. Do it for all just in case
 			current_com.natural_str = players.loc[current_com.name,"Natural STR"]
@@ -390,6 +391,9 @@ while run_sim != "n":
 							party_AGL += 100
 						else:
 							party_AGL += combatants[runner].current_Agl
+				# Improve or reduce chances of running based on party size (smaller party, greater chance to run)
+				party_AGL += 10*(4-len(combatants))
+
 				#enemies_AGL += random.randint(1,50)
 				if party_AGL > enemies_AGL:
 					run_success = True
@@ -590,19 +594,40 @@ while run_sim != "n":
 				attacker.target_type = commands.loc[attacker.command, "Target Type"]
 
 				if attacker.target_type == "Single":
-					for choice in range(len(party_order)):
-						roll = random.randint(1,100)
-						# Increase a player's chance to be targeted if using a shield
-						if commands.loc[combatants[party_order[choice][2]].command, "Type"] == "Shield":
-							target_odds = single_target_odds + int(commands.loc[combatants[party_order[choice][2]].command, "Percent"] / 5)
-						else:
-							target_odds = single_target_odds
-						# If the PC party is larger than 5, reduce the target chances by 5% for each one over 5
-						if len(party_order) > 5:
-							target_odds -= (len(party_order)-5)*5
-						if roll <= target_odds and combatants[party_order[choice][2]].isTargetable():
-							sel_target = party_order[choice][0]
-							break
+					if "Rear" in commands.loc[attacker.command, "Effect"]:
+						for choice in reversed(range(len(party_order+1))):
+							roll = random.randint(1,100)
+							# Increase a player's chance to be targeted if using a shield
+							if commands.loc[combatants[party_order[choice][2]].command, "Type"] == "Shield":
+								target_odds = single_target_odds + int(commands.loc[combatants[party_order[choice][2]].command, "Percent"] / 5)
+							else:
+								target_odds = single_target_odds
+							# If the target has a target-increasing item/trait, add it to target_odds
+							if "LED" in combatants[party_order[choice][2]].skills:
+								target_odds = single_target_odds + int(commands.loc["LED","Percent"])
+							# If the PC party is larger than 5, reduce the target chances by 5% for each one over 5
+							if len(party_order) > 5:
+								target_odds -= (len(party_order)-5)*5
+							if roll <= target_odds and combatants[party_order[choice][2]].isTargetable():
+								sel_target = party_order[choice][0]
+								break
+					else:
+						for choice in range(len(party_order)):
+							roll = random.randint(1,100)
+							# Increase a player's chance to be targeted if using a shield
+							if commands.loc[combatants[party_order[choice][2]].command, "Type"] == "Shield":
+								target_odds = single_target_odds + int(commands.loc[combatants[party_order[choice][2]].command, "Percent"] / 5)
+							else:
+								target_odds = single_target_odds
+							# If the target has a target-increasing item/trait, add it to target_odds
+							if "LED" in combatants[party_order[choice][2]].skills:
+								target_odds = single_target_odds + int(commands.loc["LED","Percent"])
+							# If the PC party is larger than 5, reduce the target chances by 5% for each one over 5
+							if len(party_order) > 5:
+								target_odds -= (len(party_order)-5)*5
+							if roll <= target_odds and combatants[party_order[choice][2]].isTargetable():
+								sel_target = party_order[choice][0]
+								break
 					# If a target isn't selected via the weighted method...
 					if sel_target == "":
 						sel_target = randomTarget(party_order, combatants)
@@ -615,11 +640,11 @@ while run_sim != "n":
 						attacker.addTarget(randomTarget(party_order, combatants))
 						hit_num += 1
 
-				# Blocking effects happen at start of turn. This is an announcement of the ability's usage on the character's turn
 				elif attacker.target_type == "Group":
 					sel_target = randomTarget(party_order, combatants)
 					attacker.addTarget(sel_target)
 
+				# Blocking effects happen at start of turn. This is an announcement of the ability's usage on the character's turn
 				elif attacker.target_type == "Block":
 					print("%s is defending with %s." % (attacker.name, attacker.command), end = " ")
 					if commands.loc[attacker.command, "Effect"] != "None" and commands.loc[attacker.command, "Effect"] not in ("Nullify", "Reflect", "Magic Resistance"):
@@ -787,7 +812,7 @@ while run_sim != "n":
 							print("")
 					elif foe == 0 and command.targeting == "Sweep":
 						print("%s attacks the front line with %s." % (attacker.name, attacker.command), end = " ")
-					elif command.targeting not in ("All Enemies", "Allies", "All", "Sweep"):
+					elif command.targeting not in ("All Enemies", "Allies", "All", "Sweep", "Random"):
 						#attacker.command = "None"  # Is there a way to remove this?
 						attacker.has_used_skill_this_turn = True
 						print("%s did nothing." % attacker.name)
@@ -837,7 +862,7 @@ while run_sim != "n":
 					# Magic attacks no longer always hit. Status and debuff magic gets to pass
 					elif command.att_type in ("Magic") and command.stat != "Status" and "Never miss" not in command.effect:
 						if "Magic Resistance" in def_command_effect:
-							target_res = target.getMana() + int(def_command_percent / 8)
+							target_res = target.getMana() + int(def_command_percent / 10)
 						else:
 							target_res = target.getMana()
 						hit_chance = hitScore(command, attacker, target_res)
@@ -938,8 +963,8 @@ while run_sim != "n":
 						if "Critical" in command.effect or ("Devastate" in command.effect and target.isAfflicted()):
 							if mightyBlow(target, crit_chance):
 								continue
-							else:
-								critical_hit = True
+#							else:
+#								critical_hit = True
 
 					#	if command.status != "None":
 					#		inflictCondition(command, attacker, target, True)
@@ -956,8 +981,9 @@ while run_sim != "n":
 						if command.att_type in ("Melee", "Ranged") and checkResistance(target, "Weapon", barriers) and "Pierce" not in command.effect:
 							damage = int(damage * weapon_res_mult)
 						if critical_hit == True:
-							if command.att_type in ("Melee", "Ranged"):
+							if command.att_type in ("Melee", "Ranged") or command.stat == "Set":
 								damage = int(damage * critical_mult)
+								print("Critical hit!", end = " ")
 							# Reset damage for a single-target magic critical
 							else:
 								damage = offense + 5 * command.multiplier # Add 5 mana to magic attack against weakness
@@ -1085,7 +1111,7 @@ while run_sim != "n":
 							# Magic attacks no longer always hit. Status magic gets a pass
 							elif command.att_type in ("Magic") and command.stat != "Status" and "Never miss" not in command.effect:
 								if "Magic Resistance" in def_command_effect:
-									target_res = target.getMana() + int(def_command_effect / 8)
+									target_res = target.getMana() + int(command.percent / 10)
 								else:
 									target_res = target.getMana()
 								hit_chance = hitScore(command, attacker, target_res)
@@ -1262,6 +1288,9 @@ while run_sim != "n":
 					command.useAlert(attacker.getRole())
 					if "Buff" in command.effect:
 						affectStat(attacker, command, 0)
+					if "Heal" in command.effect:
+						rollHeal(command, attacker, target)
+					print("")
 
 				elif command.targeting == "Allies":
 					if foe == 0:

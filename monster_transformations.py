@@ -123,7 +123,8 @@ while more != "n":
         variant_roll = random.randint(1,11)
         if variant_roll < 6:
             variation = "Increased stats."
-            stat_increase = 1 + max((5*ds_diff)/100,0.1)
+            stat_increase = 1 + max((5*minimum_level)/100,0.1)
+            #stat_increase = minimum_level
             new_HP = int(new_HP * stat_increase)
             new_Str = max(new_Str + 1, int(new_Str * stat_increase))
             new_Agl = max(new_Agl + 1, int(new_Agl * stat_increase))
@@ -133,12 +134,13 @@ while more != "n":
             variation = "Evolved skill."
         else:
             variation = "Increased stats and evolved skill."
-            stat_increase = 1 + max((5*ds_diff)/100,0.1)
+            stat_increase = 1 + max((5*minimum_level)/100,0.1)
+            #stat_increase = minimum_level
             new_HP = int(new_HP * stat_increase)
-            new_Str = int(new_Str * stat_increase)
-            new_Agl = int(new_Agl * stat_increase)
-            new_Mana = int(new_Mana * stat_increase)
-            new_Def = int(new_Def * stat_increase)
+            new_Str = max(new_Str + 1, int(new_Str * stat_increase))
+            new_Agl = max(new_Agl + 1, int(new_Agl * stat_increase))
+            new_Mana = max(new_Mana + 1, int(new_Mana * stat_increase))
+            new_Def = max(new_Def + 1, int(new_Def * stat_increase))
     
     print("%s eats %s meat. Changed from %s to %s." % (who, meat, current_monster, new_monster), end = " ")
     if variant == True:

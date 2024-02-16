@@ -38,11 +38,14 @@ def randomTarget(target_list, combatants):
 def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 	enemies = []
 	players = []
+	npcs = []
 	for each in range(len(combatants)):
 		if combatants[each].role == "Enemy":
 			enemies.append(combatants[each].name)
 		elif combatants[each].role == "Player":
 			players.append(combatants[each])
+		else:
+			npcs.append(combatants[each])
 
 	# GOLD, ITEMS, AND MEAT
 	defeated = Counter(enemies)
@@ -86,7 +89,7 @@ def postBattle(combatants, m_skills, growth_rates, commands, player_table):
 					highest_ds = enemy_level
 				total_gold = total_gold + (33 + (3*(number-1))) * enemy_level * number
 				break
-	indy_gold = round(total_gold / len(players))
+	indy_gold = round(total_gold / (len(players) + len(npcs)))
 	print("Each party member receives %d GP." % indy_gold)
 
 	# PLAYER TABLE UPDATES
@@ -332,6 +335,13 @@ def hitScore(command, attacker, target_stat):
 	else:
 		hit_score = min(97, 100 - (2 * (target_stat - attacker.getAgility()) + attacker.hit_bonus))
 
+	# Check Humans for masteries
+	if attacker.family == "Human" and attacker.role == "Player":
+		hit_score += int(attacker.humanBonus(command.symbol))
+
+	if hit_score < 5:
+		hit_score = 5
+
 	# CHANGE TO BLIND MECHANICS - Blind now reduces hit by 30% for any non-magic attack
 	if attacker.isBlinded() and command.att_type != "Magic":
 		return int(hit_score * 0.7)
@@ -345,14 +355,25 @@ def frontOfGroup(combatants, attacker, foe, command):
 #	if isinstance(attacker.targets[foe], int):
 #		defender = attacker.targets[foe]
 #	else:
-	for tar in range(len(combatants)):
-		if (combatants[tar].name == attacker.targets[foe]) and (int(combatants[tar].position) < priority) and combatants[tar].isTargetable():
-			priority = combatants[tar].position
-			defender = tar
-		elif (combatants[tar].name == attacker.targets[foe] and command.targeting in ("Ally", "Allies")):
-			if (combatants[tar].isDead() and command.status == ("Revive")) or (combatants[tar].isStoned() and command.status == ("Stone")):
+	if command.effect in "Rear":
+		priority = 0
+		for tar in range(len(combatants)):
+			if (combatants[tar].name == attacker.targets[foe]) and (int(combatants[tar].position) > priority) and combatants[tar].isTargetable():
 				priority = combatants[tar].position
 				defender = tar
+			elif (combatants[tar].name == attacker.targets[foe] and command.targeting in ("Ally", "Allies")):
+				if (combatants[tar].isDead() and command.status == ("Revive")) or (combatants[tar].isStoned() and command.status == ("Stone")):
+					priority = combatants[tar].position
+					defender = tar
+	else:
+		for tar in range(len(combatants)):
+			if (combatants[tar].name == attacker.targets[foe]) and (int(combatants[tar].position) < priority) and combatants[tar].isTargetable():
+				priority = combatants[tar].position
+				defender = tar
+			elif (combatants[tar].name == attacker.targets[foe] and command.targeting in ("Ally", "Allies")):
+				if (combatants[tar].isDead() and command.status == ("Revive")) or (combatants[tar].isStoned() and command.status == ("Stone")):
+					priority = combatants[tar].position
+					defender = tar
 	return defender
 
 def counterAttack(avenger, attacker, command, damage_received, barriers):
@@ -371,7 +392,7 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 		if damage_received < counter_dmg:
 			damage = int(counter_dmg / 2)
 		else:
-			damage = int(damage_received / 2)
+			damage = damage_received
 
 	# For MANA or Status-based counters
 	else:
@@ -433,6 +454,7 @@ def rollDamage(command, attacker):
 	stat = command.stat
 	multiplier = command.multiplier
 	element = command.element
+
 	if stat == "Str":
 		damage = calculateDamage(attacker.getStrength(), multiplier)
 	# Currently, Blind status will also reduce AGL damage. Leave it or fix it?
@@ -451,7 +473,7 @@ def rollDamage(command, attacker):
 		damage = calculateDamage(attacker.getStrength() + attacker.getAgility(), multiplier)
 	elif stat == "Set":
 		if isinstance(command.rand_dmg, int) and command.rand_dmg > 0:
-			# Robot race bonus to random damage with guns - TURNED OFF FOR NOW
+			# Robot race bonus to random damage with guns
 			if command.race_bonus == attacker.family:
 				damage = command.min_dmg + random.randint(0,command.rand_dmg) * 2
 			else:
@@ -476,6 +498,11 @@ def rollDamage(command, attacker):
 				damage = int(damage * 1.5)
 	else:
 		damage = 0
+
+	# Check Humans for masteries. 10% damage multiplier per level (humanBonus/50)
+	if attacker.family == "Human" and attacker.role == "Player":
+		damage = int(damage * (1+(int(attacker.humanBonus(command.symbol))/50)))
+		
 	return damage
 
 def calculateDamage(stat, multiplier):
