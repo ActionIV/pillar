@@ -425,12 +425,15 @@ def counterAttack(avenger, attacker, command, damage_received, barriers):
 
 # NOT PLACED IN COMBAT CODE YET
 def mightyBlow(target, crit_chance):
-	crit_roll = random.randint(1,100)
-	if crit_roll <= crit_chance:
-		target.current_HP = 0
-		target.lives -= 1
-		print("Mighty blow! %s fell." % target.name)
-		return True
+	if target.family != "God":
+		crit_roll = random.randint(1,100)
+		if crit_roll <= crit_chance:
+			target.current_HP = 0
+			target.lives -= 1
+			print("Mighty blow! %s fell." % target.name)
+			return True
+		else:
+			return False
 	else:
 		return False
 

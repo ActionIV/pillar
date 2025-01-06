@@ -24,6 +24,11 @@ while gen != "n":
     num2 = 0
     num3 = 0
 
+    try:
+	    encounters.loc[encounters["ZONE"] == zone]
+    except KeyError:
+	    zone = input("Invalid zone. Enter a new one: ")
+
     zone_table = encounters.loc[encounters["ZONE"] == zone]
     for row in range(encounters.shape[0]):
         if zone_table.iloc[row, 2] >= roll:

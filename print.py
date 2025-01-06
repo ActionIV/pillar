@@ -111,7 +111,8 @@ elif option == 3:
             if players.iloc[each,44] == "blank":
                 print("[", end = " ")
             else:
-                print("%s" % players.iloc[each,44], end = " [")
+                if players.iloc[each,44] != "GOOD":
+                    print("%s" % players.iloc[each,44], end = " [")
             # Print skill counts at the end of a battle
             i=0
             pos = 14

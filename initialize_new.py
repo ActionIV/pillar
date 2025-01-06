@@ -207,7 +207,7 @@ while run_sim != "n":
 			current_com.family = monsters.loc[current_com.name,"Family"]
 
 			if "Zealot" in current_com.stats_used:
-				current_com.HP = int(current_com.HP * 1.5)
+				current_com.HP = int(current_com.HP * 1.25)
 				current_com.Str += 3
 				current_com.Agl += 3
 
